@@ -6,16 +6,16 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-export * from './processAddMemberNft';
-export * from './processAddMemberWallet';
-export * from './processDistributeNft';
-export * from './processDistributeToken';
-export * from './processDistributeWallet';
-export * from './processInit';
-export * from './processInitForMint';
-export * from './processRemoveMember';
-export * from './processSetForTokenMemberStake';
-export * from './processSetTokenMemberStake';
-export * from './processSignMetadata';
-export * from './processTransferShares';
-export * from './processUnstake';
+export * from './addMemberNft';
+export * from './addMemberWallet';
+export * from './distributeNft';
+export * from './distributeToken';
+export * from './distributeWallet';
+export * from './init';
+export * from './initForMint';
+export * from './removeMember';
+export * from './setForTokenMemberStake';
+export * from './setTokenMemberStake';
+export * from './signMetadata';
+export * from './transferShares';
+export * from './unstake';

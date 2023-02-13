@@ -19,9 +19,11 @@ import {
 } from '@metaplex-foundation/umi-core';
 
 // Accounts.
-export type ProcessDistributeWalletInstructionAccounts = {
+export type DistributeNftInstructionAccounts = {
   payer?: Signer;
   member: PublicKey;
+  membershipMintTokenAccount: PublicKey;
+  membershipKey: PublicKey;
   membershipVoucher: PublicKey;
   fanout: PublicKey;
   holdingAccount: PublicKey;
@@ -35,50 +37,41 @@ export type ProcessDistributeWalletInstructionAccounts = {
 };
 
 // Arguments.
-export type ProcessDistributeWalletInstructionData = {
+export type DistributeNftInstructionData = {
   discriminator: Array<number>;
   distributeForMint: boolean;
 };
 
-export type ProcessDistributeWalletInstructionArgs = {
-  distributeForMint: boolean;
-};
+export type DistributeNftInstructionArgs = { distributeForMint: boolean };
 
-export function getProcessDistributeWalletInstructionDataSerializer(
+export function getDistributeNftInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<
-  ProcessDistributeWalletInstructionArgs,
-  ProcessDistributeWalletInstructionData
-> {
+): Serializer<DistributeNftInstructionArgs, DistributeNftInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    ProcessDistributeWalletInstructionArgs,
-    ProcessDistributeWalletInstructionData,
-    ProcessDistributeWalletInstructionData
+    DistributeNftInstructionArgs,
+    DistributeNftInstructionData,
+    DistributeNftInstructionData
   >(
-    s.struct<ProcessDistributeWalletInstructionData>(
+    s.struct<DistributeNftInstructionData>(
       [
         ['discriminator', s.array(s.u8, 8)],
         ['distributeForMint', s.bool()],
       ],
-      'ProcessDistributeWalletInstructionArgs'
+      'ProcessDistributeNftInstructionArgs'
     ),
     (value) =>
       ({
         ...value,
-        discriminator: [252, 168, 167, 66, 40, 201, 182, 163],
-      } as ProcessDistributeWalletInstructionData)
-  ) as Serializer<
-    ProcessDistributeWalletInstructionArgs,
-    ProcessDistributeWalletInstructionData
-  >;
+        discriminator: [108, 240, 68, 81, 144, 83, 58, 153],
+      } as DistributeNftInstructionData)
+  ) as Serializer<DistributeNftInstructionArgs, DistributeNftInstructionData>;
 }
 
 // Instruction.
-export function processDistributeWallet(
+export function distributeNft(
   context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
-  input: ProcessDistributeWalletInstructionAccounts &
-    ProcessDistributeWalletInstructionArgs
+  input: DistributeNftInstructionAccounts & DistributeNftInstructionArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -89,6 +82,8 @@ export function processDistributeWallet(
   // Resolved accounts.
   const payerAccount = input.payer ?? context.payer;
   const memberAccount = input.member;
+  const membershipMintTokenAccountAccount = input.membershipMintTokenAccount;
+  const membershipKeyAccount = input.membershipKey;
   const membershipVoucherAccount = input.membershipVoucher;
   const fanoutAccount = input.fanout;
   const holdingAccountAccount = input.holdingAccount;
@@ -122,6 +117,20 @@ export function processDistributeWallet(
     pubkey: memberAccount,
     isSigner: false,
     isWritable: isWritable(memberAccount, true),
+  });
+
+  // Membership Mint Token Account.
+  keys.push({
+    pubkey: membershipMintTokenAccountAccount,
+    isSigner: false,
+    isWritable: isWritable(membershipMintTokenAccountAccount, true),
+  });
+
+  // Membership Key.
+  keys.push({
+    pubkey: membershipKeyAccount,
+    isSigner: false,
+    isWritable: isWritable(membershipKeyAccount, false),
   });
 
   // Membership Voucher.
@@ -196,9 +205,7 @@ export function processDistributeWallet(
 
   // Data.
   const data =
-    getProcessDistributeWalletInstructionDataSerializer(context).serialize(
-      input
-    );
+    getDistributeNftInstructionDataSerializer(context).serialize(input);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

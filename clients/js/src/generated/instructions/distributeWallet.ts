@@ -19,10 +19,9 @@ import {
 } from '@metaplex-foundation/umi-core';
 
 // Accounts.
-export type ProcessDistributeTokenInstructionAccounts = {
+export type DistributeWalletInstructionAccounts = {
   payer?: Signer;
   member: PublicKey;
-  membershipMintTokenAccount: PublicKey;
   membershipVoucher: PublicKey;
   fanout: PublicKey;
   holdingAccount: PublicKey;
@@ -33,55 +32,50 @@ export type ProcessDistributeTokenInstructionAccounts = {
   systemProgram?: PublicKey;
   rent?: PublicKey;
   tokenProgram?: PublicKey;
-  membershipMint: PublicKey;
-  memberStakeAccount: PublicKey;
 };
 
 // Arguments.
-export type ProcessDistributeTokenInstructionData = {
+export type DistributeWalletInstructionData = {
   discriminator: Array<number>;
   distributeForMint: boolean;
 };
 
-export type ProcessDistributeTokenInstructionArgs = {
-  distributeForMint: boolean;
-};
+export type DistributeWalletInstructionArgs = { distributeForMint: boolean };
 
-export function getProcessDistributeTokenInstructionDataSerializer(
+export function getDistributeWalletInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
 ): Serializer<
-  ProcessDistributeTokenInstructionArgs,
-  ProcessDistributeTokenInstructionData
+  DistributeWalletInstructionArgs,
+  DistributeWalletInstructionData
 > {
   const s = context.serializer;
   return mapSerializer<
-    ProcessDistributeTokenInstructionArgs,
-    ProcessDistributeTokenInstructionData,
-    ProcessDistributeTokenInstructionData
+    DistributeWalletInstructionArgs,
+    DistributeWalletInstructionData,
+    DistributeWalletInstructionData
   >(
-    s.struct<ProcessDistributeTokenInstructionData>(
+    s.struct<DistributeWalletInstructionData>(
       [
         ['discriminator', s.array(s.u8, 8)],
         ['distributeForMint', s.bool()],
       ],
-      'ProcessDistributeTokenInstructionArgs'
+      'ProcessDistributeWalletInstructionArgs'
     ),
     (value) =>
       ({
         ...value,
-        discriminator: [126, 105, 46, 135, 28, 36, 117, 212],
-      } as ProcessDistributeTokenInstructionData)
+        discriminator: [252, 168, 167, 66, 40, 201, 182, 163],
+      } as DistributeWalletInstructionData)
   ) as Serializer<
-    ProcessDistributeTokenInstructionArgs,
-    ProcessDistributeTokenInstructionData
+    DistributeWalletInstructionArgs,
+    DistributeWalletInstructionData
   >;
 }
 
 // Instruction.
-export function processDistributeToken(
+export function distributeWallet(
   context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
-  input: ProcessDistributeTokenInstructionAccounts &
-    ProcessDistributeTokenInstructionArgs
+  input: DistributeWalletInstructionAccounts & DistributeWalletInstructionArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -92,7 +86,6 @@ export function processDistributeToken(
   // Resolved accounts.
   const payerAccount = input.payer ?? context.payer;
   const memberAccount = input.member;
-  const membershipMintTokenAccountAccount = input.membershipMintTokenAccount;
   const membershipVoucherAccount = input.membershipVoucher;
   const fanoutAccount = input.fanout;
   const holdingAccountAccount = input.holdingAccount;
@@ -112,8 +105,6 @@ export function processDistributeToken(
     ...context.programs.get('splToken').publicKey,
     isWritable: false,
   };
-  const membershipMintAccount = input.membershipMint;
-  const memberStakeAccountAccount = input.memberStakeAccount;
 
   // Payer.
   signers.push(payerAccount);
@@ -128,13 +119,6 @@ export function processDistributeToken(
     pubkey: memberAccount,
     isSigner: false,
     isWritable: isWritable(memberAccount, true),
-  });
-
-  // Membership Mint Token Account.
-  keys.push({
-    pubkey: membershipMintTokenAccountAccount,
-    isSigner: false,
-    isWritable: isWritable(membershipMintTokenAccountAccount, true),
   });
 
   // Membership Voucher.
@@ -207,25 +191,9 @@ export function processDistributeToken(
     isWritable: isWritable(tokenProgramAccount, false),
   });
 
-  // Membership Mint.
-  keys.push({
-    pubkey: membershipMintAccount,
-    isSigner: false,
-    isWritable: isWritable(membershipMintAccount, true),
-  });
-
-  // Member Stake Account.
-  keys.push({
-    pubkey: memberStakeAccountAccount,
-    isSigner: false,
-    isWritable: isWritable(memberStakeAccountAccount, true),
-  });
-
   // Data.
   const data =
-    getProcessDistributeTokenInstructionDataSerializer(context).serialize(
-      input
-    );
+    getDistributeWalletInstructionDataSerializer(context).serialize(input);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

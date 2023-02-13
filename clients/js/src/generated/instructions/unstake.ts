@@ -18,7 +18,7 @@ import {
 } from '@metaplex-foundation/umi-core';
 
 // Accounts.
-export type ProcessUnstakeInstructionAccounts = {
+export type UnstakeInstructionAccounts = {
   member: Signer;
   fanout: PublicKey;
   membershipVoucher: PublicKey;
@@ -31,20 +31,20 @@ export type ProcessUnstakeInstructionAccounts = {
 };
 
 // Arguments.
-export type ProcessUnstakeInstructionData = { discriminator: Array<number> };
+export type UnstakeInstructionData = { discriminator: Array<number> };
 
-export type ProcessUnstakeInstructionArgs = {};
+export type UnstakeInstructionArgs = {};
 
-export function getProcessUnstakeInstructionDataSerializer(
+export function getUnstakeInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<ProcessUnstakeInstructionArgs, ProcessUnstakeInstructionData> {
+): Serializer<UnstakeInstructionArgs, UnstakeInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    ProcessUnstakeInstructionArgs,
-    ProcessUnstakeInstructionData,
-    ProcessUnstakeInstructionData
+    UnstakeInstructionArgs,
+    UnstakeInstructionData,
+    UnstakeInstructionData
   >(
-    s.struct<ProcessUnstakeInstructionData>(
+    s.struct<UnstakeInstructionData>(
       [['discriminator', s.array(s.u8, 8)]],
       'ProcessUnstakeInstructionArgs'
     ),
@@ -52,14 +52,14 @@ export function getProcessUnstakeInstructionDataSerializer(
       ({
         ...value,
         discriminator: [217, 160, 136, 174, 149, 62, 79, 133],
-      } as ProcessUnstakeInstructionData)
-  ) as Serializer<ProcessUnstakeInstructionArgs, ProcessUnstakeInstructionData>;
+      } as UnstakeInstructionData)
+  ) as Serializer<UnstakeInstructionArgs, UnstakeInstructionData>;
 }
 
 // Instruction.
-export function processUnstake(
+export function unstake(
   context: Pick<Context, 'serializer' | 'programs'>,
-  input: ProcessUnstakeInstructionAccounts
+  input: UnstakeInstructionAccounts
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -149,9 +149,7 @@ export function processUnstake(
   });
 
   // Data.
-  const data = getProcessUnstakeInstructionDataSerializer(context).serialize(
-    {}
-  );
+  const data = getUnstakeInstructionDataSerializer(context).serialize({});
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

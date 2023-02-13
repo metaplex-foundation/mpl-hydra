@@ -18,7 +18,7 @@ import {
 } from '@metaplex-foundation/umi-core';
 
 // Accounts.
-export type ProcessTransferSharesInstructionAccounts = {
+export type TransferSharesInstructionAccounts = {
   authority?: Signer;
   fromMember: PublicKey;
   toMember: PublicKey;
@@ -28,26 +28,23 @@ export type ProcessTransferSharesInstructionAccounts = {
 };
 
 // Arguments.
-export type ProcessTransferSharesInstructionData = {
+export type TransferSharesInstructionData = {
   discriminator: Array<number>;
   shares: bigint;
 };
 
-export type ProcessTransferSharesInstructionArgs = { shares: number | bigint };
+export type TransferSharesInstructionArgs = { shares: number | bigint };
 
-export function getProcessTransferSharesInstructionDataSerializer(
+export function getTransferSharesInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<
-  ProcessTransferSharesInstructionArgs,
-  ProcessTransferSharesInstructionData
-> {
+): Serializer<TransferSharesInstructionArgs, TransferSharesInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    ProcessTransferSharesInstructionArgs,
-    ProcessTransferSharesInstructionData,
-    ProcessTransferSharesInstructionData
+    TransferSharesInstructionArgs,
+    TransferSharesInstructionData,
+    TransferSharesInstructionData
   >(
-    s.struct<ProcessTransferSharesInstructionData>(
+    s.struct<TransferSharesInstructionData>(
       [
         ['discriminator', s.array(s.u8, 8)],
         ['shares', s.u64],
@@ -58,18 +55,14 @@ export function getProcessTransferSharesInstructionDataSerializer(
       ({
         ...value,
         discriminator: [195, 175, 36, 50, 101, 22, 28, 87],
-      } as ProcessTransferSharesInstructionData)
-  ) as Serializer<
-    ProcessTransferSharesInstructionArgs,
-    ProcessTransferSharesInstructionData
-  >;
+      } as TransferSharesInstructionData)
+  ) as Serializer<TransferSharesInstructionArgs, TransferSharesInstructionData>;
 }
 
 // Instruction.
-export function processTransferShares(
+export function transferShares(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: ProcessTransferSharesInstructionAccounts &
-    ProcessTransferSharesInstructionArgs
+  input: TransferSharesInstructionAccounts & TransferSharesInstructionArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -130,7 +123,7 @@ export function processTransferShares(
 
   // Data.
   const data =
-    getProcessTransferSharesInstructionDataSerializer(context).serialize(input);
+    getTransferSharesInstructionDataSerializer(context).serialize(input);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

@@ -19,11 +19,10 @@ import {
 } from '@metaplex-foundation/umi-core';
 
 // Accounts.
-export type ProcessDistributeNftInstructionAccounts = {
+export type DistributeTokenInstructionAccounts = {
   payer?: Signer;
   member: PublicKey;
   membershipMintTokenAccount: PublicKey;
-  membershipKey: PublicKey;
   membershipVoucher: PublicKey;
   fanout: PublicKey;
   holdingAccount: PublicKey;
@@ -34,53 +33,49 @@ export type ProcessDistributeNftInstructionAccounts = {
   systemProgram?: PublicKey;
   rent?: PublicKey;
   tokenProgram?: PublicKey;
+  membershipMint: PublicKey;
+  memberStakeAccount: PublicKey;
 };
 
 // Arguments.
-export type ProcessDistributeNftInstructionData = {
+export type DistributeTokenInstructionData = {
   discriminator: Array<number>;
   distributeForMint: boolean;
 };
 
-export type ProcessDistributeNftInstructionArgs = {
-  distributeForMint: boolean;
-};
+export type DistributeTokenInstructionArgs = { distributeForMint: boolean };
 
-export function getProcessDistributeNftInstructionDataSerializer(
+export function getDistributeTokenInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<
-  ProcessDistributeNftInstructionArgs,
-  ProcessDistributeNftInstructionData
-> {
+): Serializer<DistributeTokenInstructionArgs, DistributeTokenInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    ProcessDistributeNftInstructionArgs,
-    ProcessDistributeNftInstructionData,
-    ProcessDistributeNftInstructionData
+    DistributeTokenInstructionArgs,
+    DistributeTokenInstructionData,
+    DistributeTokenInstructionData
   >(
-    s.struct<ProcessDistributeNftInstructionData>(
+    s.struct<DistributeTokenInstructionData>(
       [
         ['discriminator', s.array(s.u8, 8)],
         ['distributeForMint', s.bool()],
       ],
-      'ProcessDistributeNftInstructionArgs'
+      'ProcessDistributeTokenInstructionArgs'
     ),
     (value) =>
       ({
         ...value,
-        discriminator: [108, 240, 68, 81, 144, 83, 58, 153],
-      } as ProcessDistributeNftInstructionData)
+        discriminator: [126, 105, 46, 135, 28, 36, 117, 212],
+      } as DistributeTokenInstructionData)
   ) as Serializer<
-    ProcessDistributeNftInstructionArgs,
-    ProcessDistributeNftInstructionData
+    DistributeTokenInstructionArgs,
+    DistributeTokenInstructionData
   >;
 }
 
 // Instruction.
-export function processDistributeNft(
+export function distributeToken(
   context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
-  input: ProcessDistributeNftInstructionAccounts &
-    ProcessDistributeNftInstructionArgs
+  input: DistributeTokenInstructionAccounts & DistributeTokenInstructionArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -92,7 +87,6 @@ export function processDistributeNft(
   const payerAccount = input.payer ?? context.payer;
   const memberAccount = input.member;
   const membershipMintTokenAccountAccount = input.membershipMintTokenAccount;
-  const membershipKeyAccount = input.membershipKey;
   const membershipVoucherAccount = input.membershipVoucher;
   const fanoutAccount = input.fanout;
   const holdingAccountAccount = input.holdingAccount;
@@ -112,6 +106,8 @@ export function processDistributeNft(
     ...context.programs.get('splToken').publicKey,
     isWritable: false,
   };
+  const membershipMintAccount = input.membershipMint;
+  const memberStakeAccountAccount = input.memberStakeAccount;
 
   // Payer.
   signers.push(payerAccount);
@@ -133,13 +129,6 @@ export function processDistributeNft(
     pubkey: membershipMintTokenAccountAccount,
     isSigner: false,
     isWritable: isWritable(membershipMintTokenAccountAccount, true),
-  });
-
-  // Membership Key.
-  keys.push({
-    pubkey: membershipKeyAccount,
-    isSigner: false,
-    isWritable: isWritable(membershipKeyAccount, false),
   });
 
   // Membership Voucher.
@@ -212,9 +201,23 @@ export function processDistributeNft(
     isWritable: isWritable(tokenProgramAccount, false),
   });
 
+  // Membership Mint.
+  keys.push({
+    pubkey: membershipMintAccount,
+    isSigner: false,
+    isWritable: isWritable(membershipMintAccount, true),
+  });
+
+  // Member Stake Account.
+  keys.push({
+    pubkey: memberStakeAccountAccount,
+    isSigner: false,
+    isWritable: isWritable(memberStakeAccountAccount, true),
+  });
+
   // Data.
   const data =
-    getProcessDistributeNftInstructionDataSerializer(context).serialize(input);
+    getDistributeTokenInstructionDataSerializer(context).serialize(input);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

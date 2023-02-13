@@ -2,15 +2,10 @@ const path = require("path");
 const {
   Kinobi,
   RenderJavaScriptVisitor,
-  SetAccountDiscriminatorFromFieldVisitor,
-  SetInstructionAccountDefaultValuesVisitor,
-  SetLeafWrappersVisitor,
-  SetStructDefaultValuesVisitor,
   UpdateProgramsVisitor,
-  UpdateAccountsVisitor,
-  UpdateDefinedTypesVisitor,
-  UpdateInstructionsVisitor,
-  vEnum,
+  TransformNodesVisitor,
+  assertInstructionNode,
+  InstructionNode,
 } = require("@metaplex-foundation/kinobi");
 
 // Paths.
@@ -27,57 +22,23 @@ kinobi.update(
   })
 );
 
-// Update Accounts.
+// Remove "process" prefix from instructions.
 kinobi.update(
-  new UpdateAccountsVisitor({
-    //
-  })
-);
-
-// Update Instructions.
-kinobi.update(
-  new UpdateInstructionsVisitor({
-    //
-  })
-);
-
-// Update Types.
-kinobi.update(
-  new UpdateDefinedTypesVisitor({
-    //
-  })
-);
-
-// Set account discriminators.
-const tmKey = (name) => ({
-  field: "key",
-  value: vEnum("TokenMetadataKey", name),
-});
-kinobi.update(
-  new SetAccountDiscriminatorFromFieldVisitor({
-    "mplTokenMetadata.Edition": tmKey("EditionV1"),
-  })
-);
-
-// Set default values for instruction accounts.
-kinobi.update(
-  new SetInstructionAccountDefaultValuesVisitor([
-    //
+  new TransformNodesVisitor([
+    {
+      selector: { type: "instruction" },
+      transformer: (node) => {
+        assertInstructionNode(node);
+        if (!node.name.startsWith("process")) return node;
+        return new InstructionNode(
+          { ...node.metadata, name: node.name.replace(/^process/, "") },
+          node.accounts,
+          node.args,
+          node.subInstructions
+        );
+      },
+    },
   ])
-);
-
-// Wrap leaves.
-kinobi.update(
-  new SetLeafWrappersVisitor({
-    //
-  })
-);
-
-// Set struct default values.
-kinobi.update(
-  new SetStructDefaultValuesVisitor({
-    //
-  })
 );
 
 // Render JavaScript.

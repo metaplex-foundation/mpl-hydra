@@ -17,61 +17,62 @@ import {
   mapSerializer,
   publicKey,
 } from '@metaplex-foundation/umi-core';
+import {
+  AddMemberArgs,
+  AddMemberArgsArgs,
+  getAddMemberArgsSerializer,
+} from '../types';
 
 // Accounts.
-export type ProcessInitForMintInstructionAccounts = {
+export type AddMemberWalletInstructionAccounts = {
   authority?: Signer;
+  member: PublicKey;
   fanout: PublicKey;
-  fanoutForMint: PublicKey;
-  mintHoldingAccount: PublicKey;
-  mint: PublicKey;
+  membershipAccount: PublicKey;
   systemProgram?: PublicKey;
   rent?: PublicKey;
+  tokenProgram?: PublicKey;
 };
 
 // Arguments.
-export type ProcessInitForMintInstructionData = {
+export type AddMemberWalletInstructionData = {
   discriminator: Array<number>;
-  bumpSeed: number;
+  args: AddMemberArgs;
 };
 
-export type ProcessInitForMintInstructionArgs = { bumpSeed: number };
+export type AddMemberWalletInstructionArgs = { args: AddMemberArgsArgs };
 
-export function getProcessInitForMintInstructionDataSerializer(
+export function getAddMemberWalletInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<
-  ProcessInitForMintInstructionArgs,
-  ProcessInitForMintInstructionData
-> {
+): Serializer<AddMemberWalletInstructionArgs, AddMemberWalletInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    ProcessInitForMintInstructionArgs,
-    ProcessInitForMintInstructionData,
-    ProcessInitForMintInstructionData
+    AddMemberWalletInstructionArgs,
+    AddMemberWalletInstructionData,
+    AddMemberWalletInstructionData
   >(
-    s.struct<ProcessInitForMintInstructionData>(
+    s.struct<AddMemberWalletInstructionData>(
       [
         ['discriminator', s.array(s.u8, 8)],
-        ['bumpSeed', s.u8],
+        ['args', getAddMemberArgsSerializer(context)],
       ],
-      'ProcessInitForMintInstructionArgs'
+      'ProcessAddMemberWalletInstructionArgs'
     ),
     (value) =>
       ({
         ...value,
-        discriminator: [140, 150, 232, 195, 93, 219, 35, 170],
-      } as ProcessInitForMintInstructionData)
+        discriminator: [201, 9, 59, 128, 69, 117, 220, 235],
+      } as AddMemberWalletInstructionData)
   ) as Serializer<
-    ProcessInitForMintInstructionArgs,
-    ProcessInitForMintInstructionData
+    AddMemberWalletInstructionArgs,
+    AddMemberWalletInstructionData
   >;
 }
 
 // Instruction.
-export function processInitForMint(
+export function addMemberWallet(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: ProcessInitForMintInstructionAccounts &
-    ProcessInitForMintInstructionArgs
+  input: AddMemberWalletInstructionAccounts & AddMemberWalletInstructionArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -81,16 +82,19 @@ export function processInitForMint(
 
   // Resolved accounts.
   const authorityAccount = input.authority ?? context.identity;
+  const memberAccount = input.member;
   const fanoutAccount = input.fanout;
-  const fanoutForMintAccount = input.fanoutForMint;
-  const mintHoldingAccountAccount = input.mintHoldingAccount;
-  const mintAccount = input.mint;
+  const membershipAccountAccount = input.membershipAccount;
   const systemProgramAccount = input.systemProgram ?? {
     ...context.programs.get('splSystem').publicKey,
     isWritable: false,
   };
   const rentAccount =
     input.rent ?? publicKey('SysvarRent111111111111111111111111111111111');
+  const tokenProgramAccount = input.tokenProgram ?? {
+    ...context.programs.get('splToken').publicKey,
+    isWritable: false,
+  };
 
   // Authority.
   signers.push(authorityAccount);
@@ -100,6 +104,13 @@ export function processInitForMint(
     isWritable: isWritable(authorityAccount, true),
   });
 
+  // Member.
+  keys.push({
+    pubkey: memberAccount,
+    isSigner: false,
+    isWritable: isWritable(memberAccount, false),
+  });
+
   // Fanout.
   keys.push({
     pubkey: fanoutAccount,
@@ -107,25 +118,11 @@ export function processInitForMint(
     isWritable: isWritable(fanoutAccount, true),
   });
 
-  // Fanout For Mint.
+  // Membership Account.
   keys.push({
-    pubkey: fanoutForMintAccount,
+    pubkey: membershipAccountAccount,
     isSigner: false,
-    isWritable: isWritable(fanoutForMintAccount, true),
-  });
-
-  // Mint Holding Account.
-  keys.push({
-    pubkey: mintHoldingAccountAccount,
-    isSigner: false,
-    isWritable: isWritable(mintHoldingAccountAccount, true),
-  });
-
-  // Mint.
-  keys.push({
-    pubkey: mintAccount,
-    isSigner: false,
-    isWritable: isWritable(mintAccount, false),
+    isWritable: isWritable(membershipAccountAccount, true),
   });
 
   // System Program.
@@ -142,9 +139,16 @@ export function processInitForMint(
     isWritable: isWritable(rentAccount, false),
   });
 
+  // Token Program.
+  keys.push({
+    pubkey: tokenProgramAccount,
+    isSigner: false,
+    isWritable: isWritable(tokenProgramAccount, false),
+  });
+
   // Data.
   const data =
-    getProcessInitForMintInstructionDataSerializer(context).serialize(input);
+    getAddMemberWalletInstructionDataSerializer(context).serialize(input);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

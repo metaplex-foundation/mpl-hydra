@@ -18,7 +18,7 @@ import {
 } from '@metaplex-foundation/umi-core';
 
 // Accounts.
-export type ProcessSignMetadataInstructionAccounts = {
+export type SignMetadataInstructionAccounts = {
   authority?: Signer;
   fanout: PublicKey;
   holdingAccount: PublicKey;
@@ -27,25 +27,20 @@ export type ProcessSignMetadataInstructionAccounts = {
 };
 
 // Arguments.
-export type ProcessSignMetadataInstructionData = {
-  discriminator: Array<number>;
-};
+export type SignMetadataInstructionData = { discriminator: Array<number> };
 
-export type ProcessSignMetadataInstructionArgs = {};
+export type SignMetadataInstructionArgs = {};
 
-export function getProcessSignMetadataInstructionDataSerializer(
+export function getSignMetadataInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<
-  ProcessSignMetadataInstructionArgs,
-  ProcessSignMetadataInstructionData
-> {
+): Serializer<SignMetadataInstructionArgs, SignMetadataInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    ProcessSignMetadataInstructionArgs,
-    ProcessSignMetadataInstructionData,
-    ProcessSignMetadataInstructionData
+    SignMetadataInstructionArgs,
+    SignMetadataInstructionData,
+    SignMetadataInstructionData
   >(
-    s.struct<ProcessSignMetadataInstructionData>(
+    s.struct<SignMetadataInstructionData>(
       [['discriminator', s.array(s.u8, 8)]],
       'ProcessSignMetadataInstructionArgs'
     ),
@@ -53,17 +48,14 @@ export function getProcessSignMetadataInstructionDataSerializer(
       ({
         ...value,
         discriminator: [188, 67, 163, 49, 0, 150, 63, 89],
-      } as ProcessSignMetadataInstructionData)
-  ) as Serializer<
-    ProcessSignMetadataInstructionArgs,
-    ProcessSignMetadataInstructionData
-  >;
+      } as SignMetadataInstructionData)
+  ) as Serializer<SignMetadataInstructionArgs, SignMetadataInstructionData>;
 }
 
 // Instruction.
-export function processSignMetadata(
+export function signMetadata(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: ProcessSignMetadataInstructionAccounts
+  input: SignMetadataInstructionAccounts
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -115,9 +107,7 @@ export function processSignMetadata(
   });
 
   // Data.
-  const data = getProcessSignMetadataInstructionDataSerializer(
-    context
-  ).serialize({});
+  const data = getSignMetadataInstructionDataSerializer(context).serialize({});
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

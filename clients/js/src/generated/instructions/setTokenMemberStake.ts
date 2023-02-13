@@ -18,9 +18,8 @@ import {
 } from '@metaplex-foundation/umi-core';
 
 // Accounts.
-export type ProcessSetForTokenMemberStakeInstructionAccounts = {
-  authority?: Signer;
-  member: PublicKey;
+export type SetTokenMemberStakeInstructionAccounts = {
+  member: Signer;
   fanout: PublicKey;
   membershipVoucher: PublicKey;
   membershipMint: PublicKey;
@@ -31,50 +30,48 @@ export type ProcessSetForTokenMemberStakeInstructionAccounts = {
 };
 
 // Arguments.
-export type ProcessSetForTokenMemberStakeInstructionData = {
+export type SetTokenMemberStakeInstructionData = {
   discriminator: Array<number>;
   shares: bigint;
 };
 
-export type ProcessSetForTokenMemberStakeInstructionArgs = {
-  shares: number | bigint;
-};
+export type SetTokenMemberStakeInstructionArgs = { shares: number | bigint };
 
-export function getProcessSetForTokenMemberStakeInstructionDataSerializer(
+export function getSetTokenMemberStakeInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
 ): Serializer<
-  ProcessSetForTokenMemberStakeInstructionArgs,
-  ProcessSetForTokenMemberStakeInstructionData
+  SetTokenMemberStakeInstructionArgs,
+  SetTokenMemberStakeInstructionData
 > {
   const s = context.serializer;
   return mapSerializer<
-    ProcessSetForTokenMemberStakeInstructionArgs,
-    ProcessSetForTokenMemberStakeInstructionData,
-    ProcessSetForTokenMemberStakeInstructionData
+    SetTokenMemberStakeInstructionArgs,
+    SetTokenMemberStakeInstructionData,
+    SetTokenMemberStakeInstructionData
   >(
-    s.struct<ProcessSetForTokenMemberStakeInstructionData>(
+    s.struct<SetTokenMemberStakeInstructionData>(
       [
         ['discriminator', s.array(s.u8, 8)],
         ['shares', s.u64],
       ],
-      'ProcessSetForTokenMemberStakeInstructionArgs'
+      'ProcessSetTokenMemberStakeInstructionArgs'
     ),
     (value) =>
       ({
         ...value,
-        discriminator: [210, 40, 6, 254, 2, 80, 154, 109],
-      } as ProcessSetForTokenMemberStakeInstructionData)
+        discriminator: [167, 29, 12, 30, 44, 193, 249, 142],
+      } as SetTokenMemberStakeInstructionData)
   ) as Serializer<
-    ProcessSetForTokenMemberStakeInstructionArgs,
-    ProcessSetForTokenMemberStakeInstructionData
+    SetTokenMemberStakeInstructionArgs,
+    SetTokenMemberStakeInstructionData
   >;
 }
 
 // Instruction.
-export function processSetForTokenMemberStake(
-  context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: ProcessSetForTokenMemberStakeInstructionAccounts &
-    ProcessSetForTokenMemberStakeInstructionArgs
+export function setTokenMemberStake(
+  context: Pick<Context, 'serializer' | 'programs'>,
+  input: SetTokenMemberStakeInstructionAccounts &
+    SetTokenMemberStakeInstructionArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -83,7 +80,6 @@ export function processSetForTokenMemberStake(
   const programId: PublicKey = context.programs.get('mplHydra').publicKey;
 
   // Resolved accounts.
-  const authorityAccount = input.authority ?? context.identity;
   const memberAccount = input.member;
   const fanoutAccount = input.fanout;
   const membershipVoucherAccount = input.membershipVoucher;
@@ -99,19 +95,12 @@ export function processSetForTokenMemberStake(
     isWritable: false,
   };
 
-  // Authority.
-  signers.push(authorityAccount);
-  keys.push({
-    pubkey: authorityAccount.publicKey,
-    isSigner: true,
-    isWritable: isWritable(authorityAccount, true),
-  });
-
   // Member.
+  signers.push(memberAccount);
   keys.push({
-    pubkey: memberAccount,
-    isSigner: false,
-    isWritable: isWritable(memberAccount, false),
+    pubkey: memberAccount.publicKey,
+    isSigner: true,
+    isWritable: isWritable(memberAccount, true),
   });
 
   // Fanout.
@@ -165,9 +154,7 @@ export function processSetForTokenMemberStake(
 
   // Data.
   const data =
-    getProcessSetForTokenMemberStakeInstructionDataSerializer(
-      context
-    ).serialize(input);
+    getSetTokenMemberStakeInstructionDataSerializer(context).serialize(input);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

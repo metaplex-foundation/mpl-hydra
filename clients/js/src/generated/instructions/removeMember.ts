@@ -18,7 +18,7 @@ import {
 } from '@metaplex-foundation/umi-core';
 
 // Accounts.
-export type ProcessRemoveMemberInstructionAccounts = {
+export type RemoveMemberInstructionAccounts = {
   authority?: Signer;
   member: PublicKey;
   fanout: PublicKey;
@@ -27,25 +27,20 @@ export type ProcessRemoveMemberInstructionAccounts = {
 };
 
 // Arguments.
-export type ProcessRemoveMemberInstructionData = {
-  discriminator: Array<number>;
-};
+export type RemoveMemberInstructionData = { discriminator: Array<number> };
 
-export type ProcessRemoveMemberInstructionArgs = {};
+export type RemoveMemberInstructionArgs = {};
 
-export function getProcessRemoveMemberInstructionDataSerializer(
+export function getRemoveMemberInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<
-  ProcessRemoveMemberInstructionArgs,
-  ProcessRemoveMemberInstructionData
-> {
+): Serializer<RemoveMemberInstructionArgs, RemoveMemberInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    ProcessRemoveMemberInstructionArgs,
-    ProcessRemoveMemberInstructionData,
-    ProcessRemoveMemberInstructionData
+    RemoveMemberInstructionArgs,
+    RemoveMemberInstructionData,
+    RemoveMemberInstructionData
   >(
-    s.struct<ProcessRemoveMemberInstructionData>(
+    s.struct<RemoveMemberInstructionData>(
       [['discriminator', s.array(s.u8, 8)]],
       'ProcessRemoveMemberInstructionArgs'
     ),
@@ -53,17 +48,14 @@ export function getProcessRemoveMemberInstructionDataSerializer(
       ({
         ...value,
         discriminator: [9, 45, 36, 163, 245, 40, 150, 85],
-      } as ProcessRemoveMemberInstructionData)
-  ) as Serializer<
-    ProcessRemoveMemberInstructionArgs,
-    ProcessRemoveMemberInstructionData
-  >;
+      } as RemoveMemberInstructionData)
+  ) as Serializer<RemoveMemberInstructionArgs, RemoveMemberInstructionData>;
 }
 
 // Instruction.
-export function processRemoveMember(
+export function removeMember(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: ProcessRemoveMemberInstructionAccounts
+  input: RemoveMemberInstructionAccounts
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -115,9 +107,7 @@ export function processRemoveMember(
   });
 
   // Data.
-  const data = getProcessRemoveMemberInstructionDataSerializer(
-    context
-  ).serialize({});
+  const data = getRemoveMemberInstructionDataSerializer(context).serialize({});
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

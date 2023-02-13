@@ -17,67 +17,69 @@ import {
   mapSerializer,
   publicKey,
 } from '@metaplex-foundation/umi-core';
-import {
-  AddMemberArgs,
-  AddMemberArgsArgs,
-  getAddMemberArgsSerializer,
-} from '../types';
+import { MembershipModel, getMembershipModelSerializer } from '../types';
 
 // Accounts.
-export type ProcessAddMemberNftInstructionAccounts = {
+export type InitInstructionAccounts = {
   authority?: Signer;
   fanout: PublicKey;
-  membershipAccount: PublicKey;
-  mint: PublicKey;
-  metadata: PublicKey;
+  holdingAccount: PublicKey;
   systemProgram?: PublicKey;
+  membershipMint: PublicKey;
   rent?: PublicKey;
   tokenProgram?: PublicKey;
 };
 
 // Arguments.
-export type ProcessAddMemberNftInstructionData = {
+export type InitInstructionData = {
   discriminator: Array<number>;
-  args: AddMemberArgs;
+  bumpSeed: number;
+  nativeAccountBumpSeed: number;
+  name: string;
+  totalShares: bigint;
+  model: MembershipModel;
 };
 
-export type ProcessAddMemberNftInstructionArgs = { args: AddMemberArgsArgs };
+export type InitInstructionArgs = {
+  bumpSeed: number;
+  nativeAccountBumpSeed: number;
+  name: string;
+  totalShares: number | bigint;
+  model: MembershipModel;
+};
 
-export function getProcessAddMemberNftInstructionDataSerializer(
+export function getInitInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<
-  ProcessAddMemberNftInstructionArgs,
-  ProcessAddMemberNftInstructionData
-> {
+): Serializer<InitInstructionArgs, InitInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    ProcessAddMemberNftInstructionArgs,
-    ProcessAddMemberNftInstructionData,
-    ProcessAddMemberNftInstructionData
+    InitInstructionArgs,
+    InitInstructionData,
+    InitInstructionData
   >(
-    s.struct<ProcessAddMemberNftInstructionData>(
+    s.struct<InitInstructionData>(
       [
         ['discriminator', s.array(s.u8, 8)],
-        ['args', getAddMemberArgsSerializer(context)],
+        ['bumpSeed', s.u8],
+        ['nativeAccountBumpSeed', s.u8],
+        ['name', s.string()],
+        ['totalShares', s.u64],
+        ['model', getMembershipModelSerializer(context)],
       ],
-      'ProcessAddMemberNftInstructionArgs'
+      'ProcessInitInstructionArgs'
     ),
     (value) =>
       ({
         ...value,
-        discriminator: [92, 255, 105, 209, 25, 41, 3, 7],
-      } as ProcessAddMemberNftInstructionData)
-  ) as Serializer<
-    ProcessAddMemberNftInstructionArgs,
-    ProcessAddMemberNftInstructionData
-  >;
+        discriminator: [172, 5, 165, 143, 86, 159, 50, 237],
+      } as InitInstructionData)
+  ) as Serializer<InitInstructionArgs, InitInstructionData>;
 }
 
 // Instruction.
-export function processAddMemberNft(
+export function init(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: ProcessAddMemberNftInstructionAccounts &
-    ProcessAddMemberNftInstructionArgs
+  input: InitInstructionAccounts & InitInstructionArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -88,13 +90,12 @@ export function processAddMemberNft(
   // Resolved accounts.
   const authorityAccount = input.authority ?? context.identity;
   const fanoutAccount = input.fanout;
-  const membershipAccountAccount = input.membershipAccount;
-  const mintAccount = input.mint;
-  const metadataAccount = input.metadata;
+  const holdingAccountAccount = input.holdingAccount;
   const systemProgramAccount = input.systemProgram ?? {
     ...context.programs.get('splSystem').publicKey,
     isWritable: false,
   };
+  const membershipMintAccount = input.membershipMint;
   const rentAccount =
     input.rent ?? publicKey('SysvarRent111111111111111111111111111111111');
   const tokenProgramAccount = input.tokenProgram ?? {
@@ -117,25 +118,11 @@ export function processAddMemberNft(
     isWritable: isWritable(fanoutAccount, true),
   });
 
-  // Membership Account.
+  // Holding Account.
   keys.push({
-    pubkey: membershipAccountAccount,
+    pubkey: holdingAccountAccount,
     isSigner: false,
-    isWritable: isWritable(membershipAccountAccount, true),
-  });
-
-  // Mint.
-  keys.push({
-    pubkey: mintAccount,
-    isSigner: false,
-    isWritable: isWritable(mintAccount, false),
-  });
-
-  // Metadata.
-  keys.push({
-    pubkey: metadataAccount,
-    isSigner: false,
-    isWritable: isWritable(metadataAccount, false),
+    isWritable: isWritable(holdingAccountAccount, true),
   });
 
   // System Program.
@@ -143,6 +130,13 @@ export function processAddMemberNft(
     pubkey: systemProgramAccount,
     isSigner: false,
     isWritable: isWritable(systemProgramAccount, false),
+  });
+
+  // Membership Mint.
+  keys.push({
+    pubkey: membershipMintAccount,
+    isSigner: false,
+    isWritable: isWritable(membershipMintAccount, true),
   });
 
   // Rent.
@@ -160,8 +154,7 @@ export function processAddMemberNft(
   });
 
   // Data.
-  const data =
-    getProcessAddMemberNftInstructionDataSerializer(context).serialize(input);
+  const data = getInitInstructionDataSerializer(context).serialize(input);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

@@ -24,59 +24,53 @@ import {
 } from '../types';
 
 // Accounts.
-export type ProcessAddMemberWalletInstructionAccounts = {
+export type AddMemberNftInstructionAccounts = {
   authority?: Signer;
-  member: PublicKey;
   fanout: PublicKey;
   membershipAccount: PublicKey;
+  mint: PublicKey;
+  metadata: PublicKey;
   systemProgram?: PublicKey;
   rent?: PublicKey;
   tokenProgram?: PublicKey;
 };
 
 // Arguments.
-export type ProcessAddMemberWalletInstructionData = {
+export type AddMemberNftInstructionData = {
   discriminator: Array<number>;
   args: AddMemberArgs;
 };
 
-export type ProcessAddMemberWalletInstructionArgs = { args: AddMemberArgsArgs };
+export type AddMemberNftInstructionArgs = { args: AddMemberArgsArgs };
 
-export function getProcessAddMemberWalletInstructionDataSerializer(
+export function getAddMemberNftInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<
-  ProcessAddMemberWalletInstructionArgs,
-  ProcessAddMemberWalletInstructionData
-> {
+): Serializer<AddMemberNftInstructionArgs, AddMemberNftInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    ProcessAddMemberWalletInstructionArgs,
-    ProcessAddMemberWalletInstructionData,
-    ProcessAddMemberWalletInstructionData
+    AddMemberNftInstructionArgs,
+    AddMemberNftInstructionData,
+    AddMemberNftInstructionData
   >(
-    s.struct<ProcessAddMemberWalletInstructionData>(
+    s.struct<AddMemberNftInstructionData>(
       [
         ['discriminator', s.array(s.u8, 8)],
         ['args', getAddMemberArgsSerializer(context)],
       ],
-      'ProcessAddMemberWalletInstructionArgs'
+      'ProcessAddMemberNftInstructionArgs'
     ),
     (value) =>
       ({
         ...value,
-        discriminator: [201, 9, 59, 128, 69, 117, 220, 235],
-      } as ProcessAddMemberWalletInstructionData)
-  ) as Serializer<
-    ProcessAddMemberWalletInstructionArgs,
-    ProcessAddMemberWalletInstructionData
-  >;
+        discriminator: [92, 255, 105, 209, 25, 41, 3, 7],
+      } as AddMemberNftInstructionData)
+  ) as Serializer<AddMemberNftInstructionArgs, AddMemberNftInstructionData>;
 }
 
 // Instruction.
-export function processAddMemberWallet(
+export function addMemberNft(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: ProcessAddMemberWalletInstructionAccounts &
-    ProcessAddMemberWalletInstructionArgs
+  input: AddMemberNftInstructionAccounts & AddMemberNftInstructionArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -86,9 +80,10 @@ export function processAddMemberWallet(
 
   // Resolved accounts.
   const authorityAccount = input.authority ?? context.identity;
-  const memberAccount = input.member;
   const fanoutAccount = input.fanout;
   const membershipAccountAccount = input.membershipAccount;
+  const mintAccount = input.mint;
+  const metadataAccount = input.metadata;
   const systemProgramAccount = input.systemProgram ?? {
     ...context.programs.get('splSystem').publicKey,
     isWritable: false,
@@ -108,13 +103,6 @@ export function processAddMemberWallet(
     isWritable: isWritable(authorityAccount, true),
   });
 
-  // Member.
-  keys.push({
-    pubkey: memberAccount,
-    isSigner: false,
-    isWritable: isWritable(memberAccount, false),
-  });
-
   // Fanout.
   keys.push({
     pubkey: fanoutAccount,
@@ -127,6 +115,20 @@ export function processAddMemberWallet(
     pubkey: membershipAccountAccount,
     isSigner: false,
     isWritable: isWritable(membershipAccountAccount, true),
+  });
+
+  // Mint.
+  keys.push({
+    pubkey: mintAccount,
+    isSigner: false,
+    isWritable: isWritable(mintAccount, false),
+  });
+
+  // Metadata.
+  keys.push({
+    pubkey: metadataAccount,
+    isSigner: false,
+    isWritable: isWritable(metadataAccount, false),
   });
 
   // System Program.
@@ -152,9 +154,7 @@ export function processAddMemberWallet(
 
   // Data.
   const data =
-    getProcessAddMemberWalletInstructionDataSerializer(context).serialize(
-      input
-    );
+    getAddMemberNftInstructionDataSerializer(context).serialize(input);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;
