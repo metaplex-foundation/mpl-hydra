@@ -1,14 +1,10 @@
-import { MetaplexPlugin } from '@lorisleiva/js-core';
+import { MetaplexPlugin } from '@metaplex-foundation/umi-core';
 import { mplEssentials } from '@lorisleiva/mpl-essentials';
-import {
-  getMplTokenAuthRulesProgram,
-  getMplTokenMetadataProgram,
-} from './generated';
+import { getMplHydraProgram } from './generated';
 
-export const mplDigitalAsset = (): MetaplexPlugin => ({
+export const mplHydra = (): MetaplexPlugin => ({
   install(metaplex) {
     metaplex.use(mplEssentials());
-    metaplex.programs.add(getMplTokenAuthRulesProgram(), false);
-    metaplex.programs.add(getMplTokenMetadataProgram(), false);
+    metaplex.programs.add(getMplHydraProgram(), false);
   },
 });

@@ -18,12 +18,12 @@ const clientDir = path.join(__dirname, "..", "clients");
 const idlDir = path.join(__dirname, "..", "idls");
 
 // Instanciate Kinobi.
-const kinobi = new Kinobi([path.join(idlDir, "mpl_hydra.json")]);
+const kinobi = new Kinobi([path.join(idlDir, "hydra.json")]);
 
 // Update Programs.
 kinobi.update(
   new UpdateProgramsVisitor({
-    //
+    hydra: { name: "mplHydra" },
   })
 );
 
