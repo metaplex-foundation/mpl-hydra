@@ -1,9 +1,5 @@
 {
   "private": true,
-  "workspaces": [
-    "programs/*",
-    "clients/*"
-  ],
   "scripts": {
     "generate": "pnpm generate:idls && pnpm generate:clients",
     "generate:idls": "node ./configs/shank.cjs",
