@@ -60,7 +60,7 @@ jobs:
       - name: Install Solana
         uses: ./.github/actions/install-solana
         with:
-          version: ${{ vars.SOLA_VERSION }}
+          version: ${{ vars.SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
 
       - name: Install Node.js
