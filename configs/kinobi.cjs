@@ -4,8 +4,10 @@ const {
   RenderJavaScriptVisitor,
   UpdateProgramsVisitor,
   TransformNodesVisitor,
-  assertInstructionNode,
+  UpdateAccountsVisitor,
   InstructionNode,
+  TypeLeafNode,
+  assertInstructionNode,
 } = require("@metaplex-foundation/kinobi");
 
 // Paths.
@@ -39,6 +41,84 @@ kinobi.update(
       },
     },
   ])
+);
+
+// Update Accounts.
+kinobi.update(
+  new UpdateAccountsVisitor({
+    fanout: {
+      size: 300,
+      seeds: [
+        { kind: "literal", value: "fanout-config" },
+        {
+          kind: "variable",
+          name: "name",
+          description: "The name of the fanout account",
+          type: new TypeLeafNode("string"),
+        },
+      ],
+    },
+    fanoutMembershipVoucher: {
+      size: 153,
+      seeds: [
+        { kind: "literal", value: "fanout-membership" },
+        {
+          kind: "variable",
+          name: "fanout",
+          description: "The address of the fanout account",
+          type: new TypeLeafNode("publicKey"),
+        },
+        {
+          kind: "variable",
+          name: "member",
+          description: "The member's public key",
+          type: new TypeLeafNode("publicKey"),
+        },
+      ],
+    },
+    fanoutMint: {
+      size: 200,
+      seeds: [
+        { kind: "literal", value: "fanout-config" },
+        {
+          kind: "variable",
+          name: "fanout",
+          description: "The address of the fanout account",
+          type: new TypeLeafNode("publicKey"),
+        },
+        {
+          kind: "variable",
+          name: "mint",
+          description: "The address of the mint account",
+          type: new TypeLeafNode("publicKey"),
+        },
+      ],
+    },
+    fanoutMembershipMintVoucher: {
+      size: 105,
+      seeds: [
+        { kind: "literal", value: "fanout-membership" },
+        {
+          kind: "variable",
+          name: "fanout",
+          description: "The address of the fanout account",
+          type: new TypeLeafNode("publicKey"),
+        },
+        {
+          kind: "variable",
+          name: "membership",
+          description: "The address of the membership account",
+          type: new TypeLeafNode("publicKey"),
+        },
+        {
+          kind: "variable",
+          name: "mint",
+          description: "The address of the mint account",
+          type: new TypeLeafNode("publicKey"),
+        },
+      ],
+    },
+  })
 );
 
 // Render JavaScript.

@@ -9,6 +9,7 @@
 import {
   Account,
   Context,
+  Pda,
   PublicKey,
   RpcAccount,
   RpcGetAccountOptions,
@@ -18,6 +19,7 @@ import {
   deserializeAccount,
   gpaBuilder,
   mapSerializer,
+  utf8,
 } from '@metaplex-foundation/umi-core';
 
 export type FanoutMembershipMintVoucher =
@@ -156,5 +158,26 @@ export function getFanoutMembershipMintVoucherAccountDataSerializer(
 }
 
 export function getFanoutMembershipMintVoucherSize(_context = {}): number {
-  return 73;
+  return 105;
+}
+
+export function findFanoutMembershipMintVoucherPda(
+  context: Pick<Context, 'eddsa' | 'programs' | 'serializer'>,
+  seeds: {
+    /** The address of the fanout account */
+    fanout: PublicKey;
+    /** The address of the membership account */
+    membership: PublicKey;
+    /** The address of the mint account */
+    mint: PublicKey;
+  }
+): Pda {
+  const s = context.serializer;
+  const programId: PublicKey = context.programs.get('mplHydra').publicKey;
+  return context.eddsa.findPda(programId, [
+    utf8.serialize('fanout-membership'),
+    s.publicKey.serialize(seeds.fanout),
+    s.publicKey.serialize(seeds.membership),
+    s.publicKey.serialize(seeds.mint),
+  ]);
 }

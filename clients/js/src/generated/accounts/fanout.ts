@@ -10,6 +10,7 @@ import {
   Account,
   Context,
   Option,
+  Pda,
   PublicKey,
   RpcAccount,
   RpcGetAccountOptions,
@@ -19,6 +20,7 @@ import {
   deserializeAccount,
   gpaBuilder,
   mapSerializer,
+  utf8,
 } from '@metaplex-foundation/umi-core';
 import { MembershipModel, getMembershipModelSerializer } from '../types';
 
@@ -184,8 +186,21 @@ export function getFanoutAccountDataSerializer(
   ) as Serializer<FanoutAccountArgs, FanoutAccountData>;
 }
 
-export function getFanoutSize(
-  context: Pick<Context, 'serializer'>
-): number | null {
-  return getFanoutAccountDataSerializer(context).fixedSize;
+export function getFanoutSize(_context = {}): number {
+  return 300;
+}
+
+export function findFanoutPda(
+  context: Pick<Context, 'eddsa' | 'programs' | 'serializer'>,
+  seeds: {
+    /** The name of the fanout account */
+    name: string;
+  }
+): Pda {
+  const s = context.serializer;
+  const programId: PublicKey = context.programs.get('mplHydra').publicKey;
+  return context.eddsa.findPda(programId, [
+    utf8.serialize('fanout-config'),
+    s.string().serialize(seeds.name),
+  ]);
 }
