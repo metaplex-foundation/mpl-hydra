@@ -63,7 +63,7 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-idl-generators
 
-      - name: Generate IDLs and clients
+      - name: Generate IDLs and client(s)
         run: pnpm generate
 
       - name: Commit generated clients
