@@ -63,6 +63,20 @@ jobs:
           version: ${{ vars.SOLANA_VERSION }}
           cache: ${{ env.CACHE }}
 
+      - name: Cache program dependencies
+        if: env.CACHE == 'true'
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            ./programs/hydra/target/
+          key: ${{ runner.os }}-program-hydra-${{ hashFiles('./programs/hydra/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-program-hydra
+
       - name: Install Node.js
         uses: ./.github/actions/install-node
         with:
