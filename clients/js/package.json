@@ -25,7 +25,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "@metaplex-foundation/umi-core": "^0.2.0",
-    "@lorisleiva/mpl-essentials": "^0.0.5"
+    "@metaplex-foundation/mpl-essentials": "^0.2.0"
   },
   "devDependencies": {
     "@ava/typescript": "^3.0.1",

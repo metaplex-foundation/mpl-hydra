@@ -2,7 +2,7 @@ lockfileVersion: 5.4
 
 specifiers:
   '@ava/typescript': ^3.0.1
-  '@lorisleiva/mpl-essentials': ^0.0.5
+  '@metaplex-foundation/mpl-essentials': ^0.2.0
   '@metaplex-foundation/umi-core': ^0.2.0
   '@metaplex-foundation/umi-test': ^0.2.0
   '@solana/web3.js': ^1.73.0
@@ -20,7 +20,7 @@ specifiers:
   typescript: ^4.6.2
 
 dependencies:
-  '@lorisleiva/mpl-essentials': 0.0.5
+  '@metaplex-foundation/mpl-essentials': 0.2.0
   '@metaplex-foundation/umi-core': 0.2.0
 
 devDependencies:
@@ -94,16 +94,6 @@ packages:
     resolution: {integrity: sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==}
     dev: true
 
-  /@lorisleiva/js-core/0.0.54:
-    resolution: {integrity: sha512-syxJMNnNqisIKcrr7QPbq15iR8aopjAd5PzmNZE/FV7QlHq9xjqZaTpsljg8INLlUshoa71W2MDGA8BBlfI4Dg==}
-    dev: false
-
-  /@lorisleiva/mpl-essentials/0.0.5:
-    resolution: {integrity: sha512-P/lmj1ASo8uILW956WmDHbFHnjh5w8TzXkJqy9kAkwE7OyJSc8DVdrtd9JDMmcdytnYCfS3yAyE180llGLx6OA==}
-    dependencies:
-      '@lorisleiva/js-core': 0.0.54
-    dev: false
-
   /@metaplex-foundation/beet/0.7.1:
     resolution: {integrity: sha512-hNCEnS2WyCiYyko82rwuISsBY3KYpe828ubsd2ckeqZr7tl0WVLivGkoyA/qdiaaHEBGdGl71OpfWa2rqL3DiA==}
     dependencies:
@@ -113,6 +103,12 @@ packages:
     transitivePeerDependencies:
       - supports-color
     dev: true
+
+  /@metaplex-foundation/mpl-essentials/0.2.0:
+    resolution: {integrity: sha512-puoLaFbGmibQiDSSxabhwoVxl6LME6s53YSIpEWOzQ9hagnt0VQd+FlGj2EgmfFM662XqjujRguZVtdgJmTuqQ==}
+    dependencies:
+      '@metaplex-foundation/umi-core': 0.2.0
+    dev: false
 
   /@metaplex-foundation/umi-core/0.2.0:
     resolution: {integrity: sha512-U+Rt+8lSD0wFuLVxVAW6dMi/QWQs5YDSb9xP6wechoumkGNdOOfyyotK2jx6jPUMHv3auopQ7Fwr3AQE0TDGWg==}
