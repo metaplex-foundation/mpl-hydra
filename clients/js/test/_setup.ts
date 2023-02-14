@@ -1,6 +1,5 @@
 /* eslint-disable import/no-extraneous-dependencies */
-import { createMetaplex as baseCreateMetaplex } from '@metaplex-foundation/umi-test';
+import { createUmi as baseCreateUmi } from '@metaplex-foundation/umi-test';
 import { mplHydra } from '../src';
 
-export const createMetaplex = async () =>
-  (await baseCreateMetaplex()).use(mplHydra());
+export const createUmi = async () => (await baseCreateUmi()).use(mplHydra());

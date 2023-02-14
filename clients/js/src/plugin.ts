@@ -1,10 +1,10 @@
-import { MetaplexPlugin } from '@metaplex-foundation/umi-core';
+import { UmiPlugin } from '@metaplex-foundation/umi-core';
 import { mplEssentials } from '@lorisleiva/mpl-essentials';
 import { getMplHydraProgram } from './generated';
 
-export const mplHydra = (): MetaplexPlugin => ({
-  install(metaplex) {
-    metaplex.use(mplEssentials());
-    metaplex.programs.add(getMplHydraProgram(), false);
+export const mplHydra = (): UmiPlugin => ({
+  install(umi) {
+    umi.use(mplEssentials());
+    umi.programs.add(getMplHydraProgram(), false);
   },
 });
