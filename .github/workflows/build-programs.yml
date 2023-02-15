@@ -58,14 +58,19 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ./programs/${{ matrix.program }}/target/
-          key: ${{ runner.os }}-program-${{ matrix.program }}-${{ hashFiles(format('./programs/{0}/Cargo.lock', matrix.program)) }}
+            ./programs/**/target/
+          key: ${{ runner.os }}-programs-${{ hashFiles(programs/**/Cargo.lock) }}
           restore-keys: |
-            ${{ runner.os }}-program-${{ matrix.program }}
+            ${{ runner.os }}-programs
+            ${{ runner.os }}-program
 
-      - name: Build program
-        working-directory: ./programs/${{ matrix.program }}
-        run: cargo build-bpf
+      - name: Build programs
+        env:
+          PROGRAMS: ${{ vars.PROGRAMS }}
+        run: |
+          for program in $(echo $PROGRAMS | jq -c '.[]' | sed 's/"//g'); do
+            (cd ./programs/$program; cargo build-bpf)
+          done
 
       - name: Upload program builds
         uses: actions/upload-artifact@v3

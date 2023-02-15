@@ -68,10 +68,10 @@ jobs:
             ~/.cargo/registry/index/
             ~/.cargo/registry/cache/
             ~/.cargo/git/db/
-            ./programs/hydra/target/
-          key: ${{ runner.os }}-program-hydra-${{ hashFiles('./programs/hydra/Cargo.lock') }}
+            ./programs/**/target/
+          key: ${{ runner.os }}-programs-${{ hashFiles(programs/**/Cargo.lock) }}
           restore-keys: |
-            ${{ runner.os }}-program-hydra
+            ${{ runner.os }}-programs
 
       - name: Install Node.js
         uses: ./.github/actions/install-node
