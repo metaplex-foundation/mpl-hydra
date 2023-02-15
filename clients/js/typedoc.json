@@ -1,5 +1,6 @@
 {
   "entryPoints": ["src/index.ts"],
+  "plugin": ["./typedoc-plugin.js"],
   "includeVersion": true,
   "readme": "none",
   "out": "docs"
