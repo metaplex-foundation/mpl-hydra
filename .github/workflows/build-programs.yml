@@ -29,9 +29,6 @@ jobs:
   build_programs:
     name: Build
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        program: ${{ fromJson(vars.PROGRAMS) }}
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
