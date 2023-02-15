@@ -144,6 +144,12 @@ kinobi.update(
       accounts: {
         fanout: { defaultsTo: { kind: "pda" } },
         holdingAccount: { defaultsTo: holdingAccountPdaDefaults },
+        membershipMint: {
+          defaultsTo: {
+            kind: "publicKey",
+            publicKey: "So11111111111111111111111111111111111111112",
+          },
+        },
       },
     },
   })

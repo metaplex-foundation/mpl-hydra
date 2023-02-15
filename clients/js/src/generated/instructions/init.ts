@@ -27,7 +27,7 @@ export type InitInstructionAccounts = {
   fanout?: PublicKey;
   holdingAccount?: PublicKey;
   systemProgram?: PublicKey;
-  membershipMint: PublicKey;
+  membershipMint?: PublicKey;
   rent?: PublicKey;
   tokenProgram?: PublicKey;
 };
@@ -100,7 +100,9 @@ export function init(
     ...context.programs.get('splSystem').publicKey,
     isWritable: false,
   };
-  const membershipMintAccount = input.membershipMint;
+  const membershipMintAccount =
+    input.membershipMint ??
+    publicKey('So11111111111111111111111111111111111111112');
   const rentAccount =
     input.rent ?? publicKey('SysvarRent111111111111111111111111111111111');
   const tokenProgramAccount = input.tokenProgram ?? {
