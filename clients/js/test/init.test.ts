@@ -1,7 +1,5 @@
-import { createMint } from '@metaplex-foundation/mpl-essentials';
 import {
   generateRandomString,
-  generateSigner,
   none,
   publicKey,
   transactionBuilder,
@@ -18,24 +16,15 @@ import {
 import { createUmi } from './_setup';
 
 test('it can create a fanout account', async (t) => {
-  // Given a bunch of accounts.
+  // Given a name.
   const umi = await createUmi();
   const name = generateRandomString();
-  const fanout = findFanoutPda(umi, { name });
-  const nativeAccount = findFanoutNativeAccountPda(umi, { fanout });
-  const membershipMint = generateSigner(umi);
 
-  // When we create a new fanout account from them.
+  // When we create a new fanout account from it.
   await transactionBuilder(umi)
-    .add(createMint(umi, { mint: membershipMint }))
     .add(
       init(umi, {
-        fanout,
-        holdingAccount: nativeAccount,
-        membershipMint: membershipMint.publicKey,
         name,
-        bumpSeed: fanout.bump,
-        nativeAccountBumpSeed: nativeAccount.bump,
         model: MembershipModel.Wallet,
         totalShares: 100,
       })
@@ -43,6 +32,8 @@ test('it can create a fanout account', async (t) => {
     .sendAndConfirm();
 
   // Then a new fanout account was created with the right data.
+  const fanout = findFanoutPda(umi, { name });
+  const nativeAccount = findFanoutNativeAccountPda(umi, { fanout });
   const fanoutAccount = await fetchFanout(umi, fanout);
   t.like(fanoutAccount, <Fanout>{
     publicKey: publicKey(fanout),
