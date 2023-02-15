@@ -13,24 +13,13 @@ jobs:
     environment:
       name: js-client-documentation
       url: https://mpl-hydra-js-docs-lorismatic-metaplex.vercel.app/
-    env:
-      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
     steps:
       - name: Git checkout
         uses: actions/checkout@v3
 
-      - name: Install Node.js
-        uses: ./.github/actions/install-node
-        with:
-          version: ${{ vars.NODE_VERSION }}
-          cache: ${{ env.CACHE }}
-
-      - name: Install dependencies
-        uses: ./.github/actions/install-js-client
-        with:
-          cache: ${{ env.CACHE }}
-
-      - name: Deploy Project to Vercel
+      - name: Deploy to Vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
         working-directory: ./clients/js
         run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
