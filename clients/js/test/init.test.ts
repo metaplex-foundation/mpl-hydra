@@ -1,11 +1,14 @@
 import { createMint } from '@metaplex-foundation/mpl-essentials';
 import {
-  base58PublicKey,
+  generateRandomString,
   generateSigner,
+  none,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi-test';
 import test from 'ava';
 import {
+  Fanout,
   fetchFanout,
   findFanoutNativeAccountPda,
   findFanoutPda,
@@ -17,17 +20,10 @@ import { createUmi } from './_setup';
 test('it can create a fanout account', async (t) => {
   // Given a bunch of accounts.
   const umi = await createUmi();
-  const name = 'my-fanout-account';
+  const name = generateRandomString();
   const fanout = findFanoutPda(umi, { name });
   const nativeAccount = findFanoutNativeAccountPda(umi, { fanout });
   const membershipMint = generateSigner(umi);
-
-  console.log({
-    identity: base58PublicKey(umi.identity),
-    fanout: base58PublicKey(fanout),
-    nativeAccount: base58PublicKey(nativeAccount),
-    membershipMint: base58PublicKey(membershipMint),
-  });
 
   // When we create a new fanout account from them.
   await transactionBuilder(umi)
@@ -48,6 +44,19 @@ test('it can create a fanout account', async (t) => {
 
   // Then a new fanout account was created with the right data.
   const fanoutAccount = await fetchFanout(umi, fanout);
-  console.log(fanoutAccount);
-  t.pass();
+  t.like(fanoutAccount, <Fanout>{
+    publicKey: publicKey(fanout),
+    authority: publicKey(umi.identity),
+    name,
+    accountKey: publicKey(nativeAccount),
+    totalShares: 100n,
+    totalMembers: 0n,
+    totalInflow: 0n,
+    lastSnapshotAmount: 0n,
+    bumpSeed: fanout.bump,
+    totalAvailableShares: 100n,
+    membershipModel: MembershipModel.Wallet,
+    membershipMint: none(),
+    totalStakedShares: none(),
+  });
 });
