@@ -20,7 +20,6 @@ import {
   deserializeAccount,
   gpaBuilder,
   mapSerializer,
-  utf8,
 } from '@metaplex-foundation/umi-core';
 import { MembershipModel, getMembershipModelSerializer } from '../types';
 
@@ -200,7 +199,7 @@ export function findFanoutPda(
   const s = context.serializer;
   const programId: PublicKey = context.programs.get('mplHydra').publicKey;
   return context.eddsa.findPda(programId, [
-    utf8.serialize('fanout-config'),
-    s.string().serialize(seeds.name),
+    s.variableString().serialize('fanout-config'),
+    s.variableString().serialize(seeds.name),
   ]);
 }

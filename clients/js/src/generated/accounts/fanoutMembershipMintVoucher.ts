@@ -19,7 +19,6 @@ import {
   deserializeAccount,
   gpaBuilder,
   mapSerializer,
-  utf8,
 } from '@metaplex-foundation/umi-core';
 
 export type FanoutMembershipMintVoucher =
@@ -175,7 +174,7 @@ export function findFanoutMembershipMintVoucherPda(
   const s = context.serializer;
   const programId: PublicKey = context.programs.get('mplHydra').publicKey;
   return context.eddsa.findPda(programId, [
-    utf8.serialize('fanout-membership'),
+    s.variableString().serialize('fanout-membership'),
     s.publicKey.serialize(seeds.fanout),
     s.publicKey.serialize(seeds.membership),
     s.publicKey.serialize(seeds.mint),

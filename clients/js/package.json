@@ -10,7 +10,8 @@
     "test": "ava",
     "lint": "eslint --ext js,ts,tsx src",
     "lint:fix": "eslint --fix --ext js,ts,tsx src",
-    "format": "prettier --write src/ && prettier --write test/"
+    "format": "prettier --check src test",
+    "format:fix": "prettier --write src test"
   },
   "files": [
     "/dist/src"
@@ -24,12 +25,12 @@
   "author": "Metaplex Maintainers <contact@metaplex.com>",
   "license": "Apache-2.0",
   "dependencies": {
-    "@metaplex-foundation/umi-core": "^0.2.0",
+    "@metaplex-foundation/umi-core": "^0.2.1",
     "@metaplex-foundation/mpl-essentials": "^0.2.0"
   },
   "devDependencies": {
     "@ava/typescript": "^3.0.1",
-    "@metaplex-foundation/umi-test": "^0.2.0",
+    "@metaplex-foundation/umi-test": "^0.2.1",
     "@solana/web3.js": "^1.73.0",
     "@typescript-eslint/eslint-plugin": "^5.0.0",
     "@typescript-eslint/parser": "^5.46.1",

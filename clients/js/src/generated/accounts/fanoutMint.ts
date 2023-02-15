@@ -19,7 +19,6 @@ import {
   deserializeAccount,
   gpaBuilder,
   mapSerializer,
-  utf8,
 } from '@metaplex-foundation/umi-core';
 
 export type FanoutMint = Account<FanoutMintAccountData>;
@@ -173,7 +172,7 @@ export function findFanoutMintPda(
   const s = context.serializer;
   const programId: PublicKey = context.programs.get('mplHydra').publicKey;
   return context.eddsa.findPda(programId, [
-    utf8.serialize('fanout-config'),
+    s.variableString().serialize('fanout-config'),
     s.publicKey.serialize(seeds.fanout),
     s.publicKey.serialize(seeds.mint),
   ]);
