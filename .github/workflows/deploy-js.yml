@@ -38,14 +38,14 @@ jobs:
 
   test_js:
     name: JS client
-    needs: [build_programs]
+    needs: build_programs
     uses: ./.github/workflows/test-js.yml
     secrets: inherit
 
   deploy_js:
     name: JS client / Deploy
     runs-on: ubuntu-latest
-    needs: [test_js]
+    needs: test_js
     permissions:
       contents: write
     steps:
@@ -98,3 +98,20 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: js@v${{ steps.bump.outputs.new_version }}
+
+  deploy_js_docs:
+    name: JS client / Deploy docs
+    runs-on: ubuntu-latest
+    environment:
+      name: js-client-documentation
+      url: https://mpl-hydra-js-docs-lorismatic-metaplex.vercel.app/
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v3
+
+      - name: Deploy to Vercel
+        env:
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        working-directory: ./clients/js
+        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
