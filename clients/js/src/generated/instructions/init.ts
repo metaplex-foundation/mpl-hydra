@@ -17,13 +17,15 @@ import {
   mapSerializer,
   publicKey,
 } from '@metaplex-foundation/umi-core';
+import { findFanoutNativeAccountPda } from '../../hooked';
+import { findFanoutPda } from '../accounts';
 import { MembershipModel, getMembershipModelSerializer } from '../types';
 
 // Accounts.
 export type InitInstructionAccounts = {
   authority?: Signer;
-  fanout: PublicKey;
-  holdingAccount: PublicKey;
+  fanout?: PublicKey;
+  holdingAccount?: PublicKey;
   systemProgram?: PublicKey;
   membershipMint: PublicKey;
   rent?: PublicKey;
@@ -66,7 +68,7 @@ export function getInitInstructionDataSerializer(
         ['totalShares', s.u64],
         ['model', getMembershipModelSerializer(context)],
       ],
-      'ProcessInitInstructionArgs'
+      'InitInstructionArgs'
     ),
     (value) =>
       ({
@@ -78,7 +80,7 @@ export function getInitInstructionDataSerializer(
 
 // Instruction.
 export function init(
-  context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
+  context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'identity'>,
   input: InitInstructionAccounts & InitInstructionArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
@@ -89,8 +91,11 @@ export function init(
 
   // Resolved accounts.
   const authorityAccount = input.authority ?? context.identity;
-  const fanoutAccount = input.fanout;
-  const holdingAccountAccount = input.holdingAccount;
+  const fanoutAccount =
+    input.fanout ?? findFanoutPda(context, { name: input.name });
+  const holdingAccountAccount =
+    input.holdingAccount ??
+    findFanoutNativeAccountPda(context, { fanout: publicKey(fanoutAccount) });
   const systemProgramAccount = input.systemProgram ?? {
     ...context.programs.get('splSystem').publicKey,
     isWritable: false,
@@ -157,7 +162,7 @@ export function init(
   const data = getInitInstructionDataSerializer(context).serialize(input);
 
   // Bytes Created On Chain.
-  const bytesCreatedOnChain = 0;
+  const bytesCreatedOnChain = 557;
 
   return {
     instruction: { keys, programId, data },

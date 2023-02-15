@@ -8,6 +8,7 @@ const {
   InstructionNode,
   TypeLeafNode,
   assertInstructionNode,
+  UpdateInstructionsVisitor,
 } = require("@metaplex-foundation/kinobi");
 
 // Paths.
@@ -117,6 +118,33 @@ kinobi.update(
           type: new TypeLeafNode({ kind: "publicKey" }),
         },
       ],
+    },
+  })
+);
+
+// Update Instructions.
+const holdingAccountPdaDefaults = {
+  kind: "pda",
+  pdaAccount: "fanoutNativeAccount",
+  dependency: "rootHooked",
+  seeds: { fanout: { kind: "account", name: "fanout" } },
+};
+kinobi.update(
+  new UpdateInstructionsVisitor({
+    init: {
+      internal: true,
+      bytesCreatedOnChain: {
+        kind: "number",
+        includeHeader: false,
+        value:
+          300 + // Fanout account.
+          1 + // Holding account.
+          128 * 2, // 2 account headers.
+      },
+      accounts: {
+        fanout: { defaultsTo: { kind: "pda" } },
+        holdingAccount: { defaultsTo: holdingAccountPdaDefaults },
+      },
     },
   })
 );
