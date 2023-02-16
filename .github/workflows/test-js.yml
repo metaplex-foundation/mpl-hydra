@@ -27,7 +27,7 @@ jobs:
           submodules: recursive
 
       - name: Start validator
-        uses: ./.github/actions/start-validator
+        uses: metaplex-foundation/actions/start-validator@v1
         with:
           node: ${{ matrix.node }}
           solana: ${{ inputs.solana }}
