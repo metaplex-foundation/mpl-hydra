@@ -1,5 +1,5 @@
 {
-  "name": "@lorisleiva/mpl-hydra",
+  "name": "@metaplex-foundation/mpl-hydra",
   "version": "0.1.5",
   "description": "JavaScript client for the Hydra program",
   "main": "dist/src/index.js",
