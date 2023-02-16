@@ -61,17 +61,7 @@ jobs:
 
       - name: Cache program dependencies
         if: env.CACHE == 'true'
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ./programs/**/target/
-          key: ${{ runner.os }}-programs-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-programs
+        uses: metaplex-foundation/actions/cache-programs@v1
 
       - name: Install Node.js
         uses: metaplex-foundation/actions/install-node-with-pnpm@v1
@@ -82,12 +72,7 @@ jobs:
 
       - name: Cache IDL generators
         if: env.CACHE == 'true'
-        uses: actions/cache@v3
-        with:
-          path: ./.crates/
-          key: ${{ runner.os }}-idl-generators-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-idl-generators
+        uses: metaplex-foundation/actions/cache-idl-generators@v1
 
       - name: Generate IDLs and clients
         run: pnpm generate

@@ -48,19 +48,7 @@ jobs:
 
       - name: Cache program dependencies
         if: env.CACHE == 'true'
-        uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            ./programs/target/
-            ./programs/**/target/
-          key: ${{ runner.os }}-programs-${{ hashFiles('**/Cargo.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-programs
-            ${{ runner.os }}-program
+        uses: metaplex-foundation/actions/cache-programs@v1
 
       - name: Build programs
         env:
