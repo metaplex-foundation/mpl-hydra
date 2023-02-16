@@ -7,6 +7,7 @@
  */
 
 import {
+  ACCOUNT_HEADER_SIZE,
   AccountMeta,
   Context,
   PublicKey,
@@ -18,6 +19,10 @@ import {
   publicKey,
 } from '@metaplex-foundation/umi-core';
 import {
+  findFanoutMembershipVoucherPda,
+  getFanoutMembershipVoucherSize,
+} from '../accounts';
+import {
   AddMemberArgs,
   AddMemberArgsArgs,
   getAddMemberArgsSerializer,
@@ -28,7 +33,7 @@ export type AddMemberWalletInstructionAccounts = {
   authority?: Signer;
   member: PublicKey;
   fanout: PublicKey;
-  membershipAccount: PublicKey;
+  membershipAccount?: PublicKey;
   systemProgram?: PublicKey;
   rent?: PublicKey;
   tokenProgram?: PublicKey;
@@ -56,7 +61,7 @@ export function getAddMemberWalletInstructionDataSerializer(
         ['discriminator', s.array(s.u8, 8)],
         ['args', getAddMemberArgsSerializer(context)],
       ],
-      'ProcessAddMemberWalletInstructionArgs'
+      'AddMemberWalletInstructionArgs'
     ),
     (value) =>
       ({
@@ -71,7 +76,7 @@ export function getAddMemberWalletInstructionDataSerializer(
 
 // Instruction.
 export function addMemberWallet(
-  context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
+  context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'identity'>,
   input: AddMemberWalletInstructionAccounts & AddMemberWalletInstructionArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
@@ -84,7 +89,12 @@ export function addMemberWallet(
   const authorityAccount = input.authority ?? context.identity;
   const memberAccount = input.member;
   const fanoutAccount = input.fanout;
-  const membershipAccountAccount = input.membershipAccount;
+  const membershipAccountAccount =
+    input.membershipAccount ??
+    findFanoutMembershipVoucherPda(context, {
+      fanout: publicKey(fanoutAccount),
+      member: publicKey(memberAccount),
+    });
   const systemProgramAccount = input.systemProgram ?? {
     ...context.programs.get('splSystem').publicKey,
     isWritable: false,
@@ -151,7 +161,8 @@ export function addMemberWallet(
     getAddMemberWalletInstructionDataSerializer(context).serialize(input);
 
   // Bytes Created On Chain.
-  const bytesCreatedOnChain = 0;
+  const bytesCreatedOnChain =
+    (getFanoutMembershipVoucherSize(context) ?? 0) + ACCOUNT_HEADER_SIZE;
 
   return {
     instruction: { keys, programId, data },

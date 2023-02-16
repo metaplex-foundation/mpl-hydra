@@ -9,6 +9,7 @@ const {
   TypeLeafNode,
   assertInstructionNode,
   UpdateInstructionsVisitor,
+  TypeStructNode,
 } = require("@metaplex-foundation/kinobi");
 
 // Paths.
@@ -33,10 +34,11 @@ kinobi.update(
       transformer: (node) => {
         assertInstructionNode(node);
         if (!node.name.startsWith("process")) return node;
+        const newName = node.name.replace(/^process/, "");
         return new InstructionNode(
-          { ...node.metadata, name: node.name.replace(/^process/, "") },
+          { ...node.metadata, name: newName },
           node.accounts,
-          node.args,
+          new TypeStructNode(newName + "InstructionArgs", node.args.fields),
           node.subInstructions
         );
       },
@@ -149,6 +151,14 @@ kinobi.update(
             kind: "publicKey",
             publicKey: "So11111111111111111111111111111111111111112",
           },
+        },
+      },
+    },
+    addMemberWallet: {
+      bytesCreatedOnChain: { kind: "account", name: "fanoutMembershipVoucher" },
+      accounts: {
+        membershipAccount: {
+          defaultsTo: { kind: "pda", pdaAccount: "fanoutMembershipVoucher" },
         },
       },
     },

@@ -42,7 +42,7 @@ export function getSignMetadataInstructionDataSerializer(
   >(
     s.struct<SignMetadataInstructionData>(
       [['discriminator', s.array(s.u8, 8)]],
-      'ProcessSignMetadataInstructionArgs'
+      'SignMetadataInstructionArgs'
     ),
     (value) =>
       ({

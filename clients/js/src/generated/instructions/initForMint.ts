@@ -51,7 +51,7 @@ export function getInitForMintInstructionDataSerializer(
         ['discriminator', s.array(s.u8, 8)],
         ['bumpSeed', s.u8],
       ],
-      'ProcessInitForMintInstructionArgs'
+      'InitForMintInstructionArgs'
     ),
     (value) =>
       ({

@@ -46,7 +46,7 @@ export function getUnstakeInstructionDataSerializer(
   >(
     s.struct<UnstakeInstructionData>(
       [['discriminator', s.array(s.u8, 8)]],
-      'ProcessUnstakeInstructionArgs'
+      'UnstakeInstructionArgs'
     ),
     (value) =>
       ({

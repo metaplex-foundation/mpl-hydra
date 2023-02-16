@@ -59,7 +59,7 @@ export function getDistributeWalletInstructionDataSerializer(
         ['discriminator', s.array(s.u8, 8)],
         ['distributeForMint', s.bool()],
       ],
-      'ProcessDistributeWalletInstructionArgs'
+      'DistributeWalletInstructionArgs'
     ),
     (value) =>
       ({

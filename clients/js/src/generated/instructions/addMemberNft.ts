@@ -57,7 +57,7 @@ export function getAddMemberNftInstructionDataSerializer(
         ['discriminator', s.array(s.u8, 8)],
         ['args', getAddMemberArgsSerializer(context)],
       ],
-      'ProcessAddMemberNftInstructionArgs'
+      'AddMemberNftInstructionArgs'
     ),
     (value) =>
       ({

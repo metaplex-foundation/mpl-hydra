@@ -58,7 +58,7 @@ export function getDistributeNftInstructionDataSerializer(
         ['discriminator', s.array(s.u8, 8)],
         ['distributeForMint', s.bool()],
       ],
-      'ProcessDistributeNftInstructionArgs'
+      'DistributeNftInstructionArgs'
     ),
     (value) =>
       ({

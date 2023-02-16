@@ -49,7 +49,7 @@ export function getTransferSharesInstructionDataSerializer(
         ['discriminator', s.array(s.u8, 8)],
         ['shares', s.u64],
       ],
-      'ProcessTransferSharesInstructionArgs'
+      'TransferSharesInstructionArgs'
     ),
     (value) =>
       ({

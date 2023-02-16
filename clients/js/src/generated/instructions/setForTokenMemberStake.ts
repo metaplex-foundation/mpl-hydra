@@ -55,7 +55,7 @@ export function getSetForTokenMemberStakeInstructionDataSerializer(
         ['discriminator', s.array(s.u8, 8)],
         ['shares', s.u64],
       ],
-      'ProcessSetForTokenMemberStakeInstructionArgs'
+      'SetForTokenMemberStakeInstructionArgs'
     ),
     (value) =>
       ({

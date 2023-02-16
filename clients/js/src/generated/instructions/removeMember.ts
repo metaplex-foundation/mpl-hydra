@@ -42,7 +42,7 @@ export function getRemoveMemberInstructionDataSerializer(
   >(
     s.struct<RemoveMemberInstructionData>(
       [['discriminator', s.array(s.u8, 8)]],
-      'ProcessRemoveMemberInstructionArgs'
+      'RemoveMemberInstructionArgs'
     ),
     (value) =>
       ({
