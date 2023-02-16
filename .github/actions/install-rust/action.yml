@@ -9,12 +9,10 @@ runs:
   using: "composite"
   steps:
     - name: Install Rust
-      id: rust_toolchain
-      uses: actions-rs/toolchain@v1
+      id: rust
+      uses: dtolnay/rust-toolchain@master
       with:
         toolchain: ${{ inputs.version }}
-        override: true
-        profile: minimal
         components: rustfmt, clippy
 
     - name: Add Cargo bin to Path
@@ -33,5 +31,5 @@ runs:
 
     - name: Share rustc hash
       run: |
-        echo 'RUSTC_HASH=${{ steps.rust_toolchain.outputs.rustc_hash }}' >> $GITHUB_ENV
+        echo 'RUSTC_HASH=${{ steps.rust.outputs.cachekey }}' >> $GITHUB_ENV
       shell: bash
