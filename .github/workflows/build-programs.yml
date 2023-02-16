@@ -36,9 +36,9 @@ jobs:
           submodules: recursive
 
       - name: Install Rust
-        uses: ./.github/actions/install-rust
+        uses: @metaplex-actions/install-rust@v1
         with:
-          version: ${{ inputs.rust }}
+          toolchain: ${{ inputs.rust }}
 
       - name: Install Solana
         uses: ./.github/actions/install-solana
