@@ -74,10 +74,11 @@ jobs:
             ${{ runner.os }}-programs
 
       - name: Install Node.js
-        uses: ./.github/actions/install-node
+        uses: metaplex-foundation/actions/install-node-with-pnpm@v1
         with:
           version: ${{ vars.NODE_VERSION }}
           cache: ${{ env.CACHE }}
+          dependencies: true
 
       - name: Cache IDL generators
         if: env.CACHE == 'true'

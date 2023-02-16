@@ -27,10 +27,11 @@ runs:
         cache: ${{ inputs.cache }}
 
     - name: Install Node.js
-      uses: ./.github/actions/install-node
+      uses: metaplex-foundation/actions/install-node-with-pnpm@v1
       with:
         version: ${{ inputs.node }}
         cache: ${{ inputs.cache }}
+        dependencies: true
 
     - name: Start local validator
       run: pnpm validator
