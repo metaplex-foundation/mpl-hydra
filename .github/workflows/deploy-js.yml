@@ -39,7 +39,7 @@ jobs:
   test_js:
     name: JS client
     needs: build_programs
-    uses: ./.github/reusable-workflows/test-js.yml
+    uses: ./.github/workflows/test-js.yml
     secrets: inherit
 
   deploy_js:

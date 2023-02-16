@@ -92,5 +92,5 @@ jobs:
     if: needs.generate_clients.outputs.js_changed == 'true'
     name: JS Client
     needs: generate_clients
-    uses: ./.github/reusable-workflows/test-js.yml
+    uses: ./.github/workflows/test-js.yml
     secrets: inherit
