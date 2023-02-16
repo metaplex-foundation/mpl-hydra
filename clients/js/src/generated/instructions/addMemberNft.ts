@@ -17,11 +17,6 @@ import {
   mapSerializer,
   publicKey,
 } from '@metaplex-foundation/umi-core';
-import {
-  AddMemberArgs,
-  AddMemberArgsArgs,
-  getAddMemberArgsSerializer,
-} from '../types';
 
 // Accounts.
 export type AddMemberNftInstructionAccounts = {
@@ -38,10 +33,10 @@ export type AddMemberNftInstructionAccounts = {
 // Arguments.
 export type AddMemberNftInstructionData = {
   discriminator: Array<number>;
-  args: AddMemberArgs;
+  shares: bigint;
 };
 
-export type AddMemberNftInstructionArgs = { args: AddMemberArgsArgs };
+export type AddMemberNftInstructionArgs = { shares: number | bigint };
 
 export function getAddMemberNftInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
@@ -55,7 +50,7 @@ export function getAddMemberNftInstructionDataSerializer(
     s.struct<AddMemberNftInstructionData>(
       [
         ['discriminator', s.array(s.u8, 8)],
-        ['args', getAddMemberArgsSerializer(context)],
+        ['shares', s.u64],
       ],
       'AddMemberNftInstructionArgs'
     ),

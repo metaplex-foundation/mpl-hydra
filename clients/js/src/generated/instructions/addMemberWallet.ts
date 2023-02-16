@@ -22,11 +22,6 @@ import {
   findFanoutMembershipVoucherPda,
   getFanoutMembershipVoucherSize,
 } from '../accounts';
-import {
-  AddMemberArgs,
-  AddMemberArgsArgs,
-  getAddMemberArgsSerializer,
-} from '../types';
 
 // Accounts.
 export type AddMemberWalletInstructionAccounts = {
@@ -42,10 +37,10 @@ export type AddMemberWalletInstructionAccounts = {
 // Arguments.
 export type AddMemberWalletInstructionData = {
   discriminator: Array<number>;
-  args: AddMemberArgs;
+  shares: bigint;
 };
 
-export type AddMemberWalletInstructionArgs = { args: AddMemberArgsArgs };
+export type AddMemberWalletInstructionArgs = { shares: number | bigint };
 
 export function getAddMemberWalletInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
@@ -59,7 +54,7 @@ export function getAddMemberWalletInstructionDataSerializer(
     s.struct<AddMemberWalletInstructionData>(
       [
         ['discriminator', s.array(s.u8, 8)],
-        ['args', getAddMemberArgsSerializer(context)],
+        ['shares', s.u64],
       ],
       'AddMemberWalletInstructionArgs'
     ),

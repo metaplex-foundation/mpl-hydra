@@ -10,6 +10,8 @@ const {
   assertInstructionNode,
   UpdateInstructionsVisitor,
   TypeStructNode,
+  UnwrapDefinedTypesVisitor,
+  UnwrapInstructionArgsStructVisitor,
 } = require("@metaplex-foundation/kinobi");
 
 // Paths.
@@ -164,6 +166,10 @@ kinobi.update(
     },
   })
 );
+
+// Unwrap addMemberArgs type.
+kinobi.update(new UnwrapDefinedTypesVisitor(["addMemberArgs"]));
+kinobi.update(new UnwrapInstructionArgsStructVisitor());
 
 // Render JavaScript.
 const jsDir = path.join(clientDir, "js", "src", "generated");
