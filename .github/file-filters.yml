@@ -15,7 +15,6 @@ programs: &programs
 # Clients.
 
 client_common: &client_common
-  - ".github/actions/install-js-client/**"
   - ".github/actions/start-validator/**"
   - ".github/workflows/test-js.yml"
   - ".github/workflows/main.yml"

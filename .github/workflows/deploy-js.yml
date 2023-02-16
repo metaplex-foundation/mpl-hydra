@@ -59,9 +59,11 @@ jobs:
           cache: ${{ env.CACHE }}
 
       - name: Install dependencies
-        uses: ./.github/actions/install-js-client
+        uses: metaplex-foundation/actions/install-node-dependencies@v1
         with:
+          folder: ./clients/js
           cache: ${{ env.CACHE }}
+          key: clients-js
 
       - name: Build
         working-directory: ./clients/js
