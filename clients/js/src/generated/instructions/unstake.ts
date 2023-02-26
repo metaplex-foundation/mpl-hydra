@@ -33,27 +33,27 @@ export type UnstakeInstructionAccounts = {
 // Arguments.
 export type UnstakeInstructionData = { discriminator: Array<number> };
 
-export type UnstakeInstructionArgs = {};
+export type UnstakeInstructionDataArgs = {};
 
 export function getUnstakeInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<UnstakeInstructionArgs, UnstakeInstructionData> {
+): Serializer<UnstakeInstructionDataArgs, UnstakeInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    UnstakeInstructionArgs,
+    UnstakeInstructionDataArgs,
     UnstakeInstructionData,
     UnstakeInstructionData
   >(
     s.struct<UnstakeInstructionData>(
-      [['discriminator', s.array(s.u8, 8)]],
-      'UnstakeInstructionArgs'
+      [['discriminator', s.array(s.u8(), { size: 8 })]],
+      { description: 'UnstakeInstructionArgs' }
     ),
     (value) =>
       ({
         ...value,
         discriminator: [217, 160, 136, 174, 149, 62, 79, 133],
       } as UnstakeInstructionData)
-  ) as Serializer<UnstakeInstructionArgs, UnstakeInstructionData>;
+  ) as Serializer<UnstakeInstructionDataArgs, UnstakeInstructionData>;
 }
 
 // Instruction.

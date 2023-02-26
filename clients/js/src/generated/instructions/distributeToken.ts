@@ -43,23 +43,26 @@ export type DistributeTokenInstructionData = {
   distributeForMint: boolean;
 };
 
-export type DistributeTokenInstructionArgs = { distributeForMint: boolean };
+export type DistributeTokenInstructionDataArgs = { distributeForMint: boolean };
 
 export function getDistributeTokenInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<DistributeTokenInstructionArgs, DistributeTokenInstructionData> {
+): Serializer<
+  DistributeTokenInstructionDataArgs,
+  DistributeTokenInstructionData
+> {
   const s = context.serializer;
   return mapSerializer<
-    DistributeTokenInstructionArgs,
+    DistributeTokenInstructionDataArgs,
     DistributeTokenInstructionData,
     DistributeTokenInstructionData
   >(
     s.struct<DistributeTokenInstructionData>(
       [
-        ['discriminator', s.array(s.u8, 8)],
+        ['discriminator', s.array(s.u8(), { size: 8 })],
         ['distributeForMint', s.bool()],
       ],
-      'DistributeTokenInstructionArgs'
+      { description: 'DistributeTokenInstructionArgs' }
     ),
     (value) =>
       ({
@@ -67,7 +70,7 @@ export function getDistributeTokenInstructionDataSerializer(
         discriminator: [126, 105, 46, 135, 28, 36, 117, 212],
       } as DistributeTokenInstructionData)
   ) as Serializer<
-    DistributeTokenInstructionArgs,
+    DistributeTokenInstructionDataArgs,
     DistributeTokenInstructionData
   >;
 }
@@ -75,7 +78,7 @@ export function getDistributeTokenInstructionDataSerializer(
 // Instruction.
 export function distributeToken(
   context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
-  input: DistributeTokenInstructionAccounts & DistributeTokenInstructionArgs
+  input: DistributeTokenInstructionAccounts & DistributeTokenInstructionDataArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];

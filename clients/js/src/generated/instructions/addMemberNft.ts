@@ -36,36 +36,36 @@ export type AddMemberNftInstructionData = {
   shares: bigint;
 };
 
-export type AddMemberNftInstructionArgs = { shares: number | bigint };
+export type AddMemberNftInstructionDataArgs = { shares: number | bigint };
 
 export function getAddMemberNftInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<AddMemberNftInstructionArgs, AddMemberNftInstructionData> {
+): Serializer<AddMemberNftInstructionDataArgs, AddMemberNftInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    AddMemberNftInstructionArgs,
+    AddMemberNftInstructionDataArgs,
     AddMemberNftInstructionData,
     AddMemberNftInstructionData
   >(
     s.struct<AddMemberNftInstructionData>(
       [
-        ['discriminator', s.array(s.u8, 8)],
-        ['shares', s.u64],
+        ['discriminator', s.array(s.u8(), { size: 8 })],
+        ['shares', s.u64()],
       ],
-      'AddMemberNftInstructionArgs'
+      { description: 'AddMemberNftInstructionArgs' }
     ),
     (value) =>
       ({
         ...value,
         discriminator: [92, 255, 105, 209, 25, 41, 3, 7],
       } as AddMemberNftInstructionData)
-  ) as Serializer<AddMemberNftInstructionArgs, AddMemberNftInstructionData>;
+  ) as Serializer<AddMemberNftInstructionDataArgs, AddMemberNftInstructionData>;
 }
 
 // Instruction.
 export function addMemberNft(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: AddMemberNftInstructionAccounts & AddMemberNftInstructionArgs
+  input: AddMemberNftInstructionAccounts & AddMemberNftInstructionDataArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];

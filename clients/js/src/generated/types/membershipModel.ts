@@ -14,9 +14,13 @@ export enum MembershipModel {
   NFT,
 }
 
+export type MembershipModelArgs = MembershipModel;
+
 export function getMembershipModelSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<MembershipModel> {
+): Serializer<MembershipModelArgs, MembershipModel> {
   const s = context.serializer;
-  return s.enum<MembershipModel>(MembershipModel, 'MembershipModel');
+  return s.enum<MembershipModel>(MembershipModel, {
+    description: 'MembershipModel',
+  }) as Serializer<MembershipModelArgs, MembershipModel>;
 }

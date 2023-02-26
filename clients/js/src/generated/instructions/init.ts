@@ -9,6 +9,7 @@
 import {
   AccountMeta,
   Context,
+  Pda,
   PublicKey,
   Serializer,
   Signer,
@@ -19,13 +20,17 @@ import {
 } from '@metaplex-foundation/umi-core';
 import { findFanoutNativeAccountPda } from '../../hooked';
 import { findFanoutPda } from '../accounts';
-import { MembershipModel, getMembershipModelSerializer } from '../types';
+import {
+  MembershipModel,
+  MembershipModelArgs,
+  getMembershipModelSerializer,
+} from '../types';
 
 // Accounts.
 export type InitInstructionAccounts = {
   authority?: Signer;
-  fanout?: PublicKey;
-  holdingAccount?: PublicKey;
+  fanout?: Pda;
+  holdingAccount?: Pda;
   systemProgram?: PublicKey;
   membershipMint?: PublicKey;
   rent?: PublicKey;
@@ -42,46 +47,47 @@ export type InitInstructionData = {
   model: MembershipModel;
 };
 
-export type InitInstructionArgs = {
+export type InitInstructionDataArgs = {
   bumpSeed: number;
   nativeAccountBumpSeed: number;
   name: string;
   totalShares: number | bigint;
-  model: MembershipModel;
+  model: MembershipModelArgs;
 };
 
 export function getInitInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<InitInstructionArgs, InitInstructionData> {
+): Serializer<InitInstructionDataArgs, InitInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    InitInstructionArgs,
+    InitInstructionDataArgs,
     InitInstructionData,
     InitInstructionData
   >(
     s.struct<InitInstructionData>(
       [
-        ['discriminator', s.array(s.u8, 8)],
-        ['bumpSeed', s.u8],
-        ['nativeAccountBumpSeed', s.u8],
+        ['discriminator', s.array(s.u8(), { size: 8 })],
+        ['bumpSeed', s.u8()],
+        ['nativeAccountBumpSeed', s.u8()],
         ['name', s.string()],
-        ['totalShares', s.u64],
+        ['totalShares', s.u64()],
         ['model', getMembershipModelSerializer(context)],
       ],
-      'InitInstructionArgs'
+      { description: 'InitInstructionData' }
     ),
     (value) =>
       ({
         ...value,
         discriminator: [172, 5, 165, 143, 86, 159, 50, 237],
       } as InitInstructionData)
-  ) as Serializer<InitInstructionArgs, InitInstructionData>;
+  ) as Serializer<InitInstructionDataArgs, InitInstructionData>;
 }
 
 // Instruction.
 export function init(
   context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'identity'>,
-  input: InitInstructionAccounts & InitInstructionArgs
+  input: InitInstructionAccounts &
+    Omit<InitInstructionDataArgs, 'bumpSeed' | 'nativeAccountBumpSeed'>
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
@@ -161,7 +167,11 @@ export function init(
   });
 
   // Data.
-  const data = getInitInstructionDataSerializer(context).serialize(input);
+  const data = getInitInstructionDataSerializer(context).serialize({
+    ...input,
+    bumpSeed: fanoutAccount.bump,
+    nativeAccountBumpSeed: holdingAccountAccount.bump,
+  });
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 557;

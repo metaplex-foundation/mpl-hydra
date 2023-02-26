@@ -36,26 +36,28 @@ export type SetForTokenMemberStakeInstructionData = {
   shares: bigint;
 };
 
-export type SetForTokenMemberStakeInstructionArgs = { shares: number | bigint };
+export type SetForTokenMemberStakeInstructionDataArgs = {
+  shares: number | bigint;
+};
 
 export function getSetForTokenMemberStakeInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
 ): Serializer<
-  SetForTokenMemberStakeInstructionArgs,
+  SetForTokenMemberStakeInstructionDataArgs,
   SetForTokenMemberStakeInstructionData
 > {
   const s = context.serializer;
   return mapSerializer<
-    SetForTokenMemberStakeInstructionArgs,
+    SetForTokenMemberStakeInstructionDataArgs,
     SetForTokenMemberStakeInstructionData,
     SetForTokenMemberStakeInstructionData
   >(
     s.struct<SetForTokenMemberStakeInstructionData>(
       [
-        ['discriminator', s.array(s.u8, 8)],
-        ['shares', s.u64],
+        ['discriminator', s.array(s.u8(), { size: 8 })],
+        ['shares', s.u64()],
       ],
-      'SetForTokenMemberStakeInstructionArgs'
+      { description: 'SetForTokenMemberStakeInstructionArgs' }
     ),
     (value) =>
       ({
@@ -63,7 +65,7 @@ export function getSetForTokenMemberStakeInstructionDataSerializer(
         discriminator: [210, 40, 6, 254, 2, 80, 154, 109],
       } as SetForTokenMemberStakeInstructionData)
   ) as Serializer<
-    SetForTokenMemberStakeInstructionArgs,
+    SetForTokenMemberStakeInstructionDataArgs,
     SetForTokenMemberStakeInstructionData
   >;
 }
@@ -72,7 +74,7 @@ export function getSetForTokenMemberStakeInstructionDataSerializer(
 export function setForTokenMemberStake(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
   input: SetForTokenMemberStakeInstructionAccounts &
-    SetForTokenMemberStakeInstructionArgs
+    SetForTokenMemberStakeInstructionDataArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];

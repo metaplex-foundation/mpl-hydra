@@ -29,27 +29,27 @@ export type RemoveMemberInstructionAccounts = {
 // Arguments.
 export type RemoveMemberInstructionData = { discriminator: Array<number> };
 
-export type RemoveMemberInstructionArgs = {};
+export type RemoveMemberInstructionDataArgs = {};
 
 export function getRemoveMemberInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<RemoveMemberInstructionArgs, RemoveMemberInstructionData> {
+): Serializer<RemoveMemberInstructionDataArgs, RemoveMemberInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    RemoveMemberInstructionArgs,
+    RemoveMemberInstructionDataArgs,
     RemoveMemberInstructionData,
     RemoveMemberInstructionData
   >(
     s.struct<RemoveMemberInstructionData>(
-      [['discriminator', s.array(s.u8, 8)]],
-      'RemoveMemberInstructionArgs'
+      [['discriminator', s.array(s.u8(), { size: 8 })]],
+      { description: 'RemoveMemberInstructionArgs' }
     ),
     (value) =>
       ({
         ...value,
         discriminator: [9, 45, 36, 163, 245, 40, 150, 85],
       } as RemoveMemberInstructionData)
-  ) as Serializer<RemoveMemberInstructionArgs, RemoveMemberInstructionData>;
+  ) as Serializer<RemoveMemberInstructionDataArgs, RemoveMemberInstructionData>;
 }
 
 // Instruction.

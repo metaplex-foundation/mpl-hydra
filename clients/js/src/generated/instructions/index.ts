@@ -11,6 +11,7 @@ export * from './addMemberWallet';
 export * from './distributeNft';
 export * from './distributeToken';
 export * from './distributeWallet';
+export * from './init';
 export * from './initForMint';
 export * from './removeMember';
 export * from './setForTokenMemberStake';

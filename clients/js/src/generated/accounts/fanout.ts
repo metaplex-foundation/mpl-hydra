@@ -21,7 +21,11 @@ import {
   gpaBuilder,
   mapSerializer,
 } from '@metaplex-foundation/umi-core';
-import { MembershipModel, getMembershipModelSerializer } from '../types';
+import {
+  MembershipModel,
+  MembershipModelArgs,
+  getMembershipModelSerializer,
+} from '../types';
 
 export type Fanout = Account<FanoutAccountData>;
 
@@ -42,7 +46,7 @@ export type FanoutAccountData = {
   totalStakedShares: Option<bigint>;
 };
 
-export type FanoutAccountArgs = {
+export type FanoutAccountDataArgs = {
   authority: PublicKey;
   name: string;
   accountKey: PublicKey;
@@ -53,10 +57,56 @@ export type FanoutAccountArgs = {
   bumpSeed: number;
   accountOwnerBumpSeed: number;
   totalAvailableShares: number | bigint;
-  membershipModel: MembershipModel;
+  membershipModel: MembershipModelArgs;
   membershipMint: Option<PublicKey>;
   totalStakedShares: Option<number | bigint>;
 };
+
+export function getFanoutAccountDataSerializer(
+  context: Pick<Context, 'serializer'>
+): Serializer<FanoutAccountDataArgs, FanoutAccountData> {
+  const s = context.serializer;
+  return mapSerializer<
+    FanoutAccountDataArgs,
+    FanoutAccountData,
+    FanoutAccountData
+  >(
+    s.struct<FanoutAccountData>(
+      [
+        ['discriminator', s.array(s.u8(), { size: 8 })],
+        ['authority', s.publicKey()],
+        ['name', s.string()],
+        ['accountKey', s.publicKey()],
+        ['totalShares', s.u64()],
+        ['totalMembers', s.u64()],
+        ['totalInflow', s.u64()],
+        ['lastSnapshotAmount', s.u64()],
+        ['bumpSeed', s.u8()],
+        ['accountOwnerBumpSeed', s.u8()],
+        ['totalAvailableShares', s.u64()],
+        ['membershipModel', getMembershipModelSerializer(context)],
+        ['membershipMint', s.option(s.publicKey())],
+        ['totalStakedShares', s.option(s.u64())],
+      ],
+      { description: 'Fanout' }
+    ),
+    (value) =>
+      ({
+        ...value,
+        discriminator: [198, 246, 243, 191, 206, 255, 3, 247],
+      } as FanoutAccountData)
+  ) as Serializer<FanoutAccountDataArgs, FanoutAccountData>;
+}
+
+export function deserializeFanout(
+  context: Pick<Context, 'serializer'>,
+  rawAccount: RpcAccount
+): Fanout {
+  return deserializeAccount(
+    rawAccount,
+    getFanoutAccountDataSerializer(context)
+  );
+}
 
 export async function fetchFanout(
   context: Pick<Context, 'rpc' | 'serializer'>,
@@ -120,69 +170,27 @@ export function getFanoutGpaBuilder(
       bumpSeed: number;
       accountOwnerBumpSeed: number;
       totalAvailableShares: number | bigint;
-      membershipModel: MembershipModel;
+      membershipModel: MembershipModelArgs;
       membershipMint: Option<PublicKey>;
       totalStakedShares: Option<number | bigint>;
     }>([
-      ['discriminator', s.array(s.u8, 8)],
-      ['authority', s.publicKey],
+      ['discriminator', s.array(s.u8(), { size: 8 })],
+      ['authority', s.publicKey()],
       ['name', s.string()],
-      ['accountKey', s.publicKey],
-      ['totalShares', s.u64],
-      ['totalMembers', s.u64],
-      ['totalInflow', s.u64],
-      ['lastSnapshotAmount', s.u64],
-      ['bumpSeed', s.u8],
-      ['accountOwnerBumpSeed', s.u8],
-      ['totalAvailableShares', s.u64],
+      ['accountKey', s.publicKey()],
+      ['totalShares', s.u64()],
+      ['totalMembers', s.u64()],
+      ['totalInflow', s.u64()],
+      ['lastSnapshotAmount', s.u64()],
+      ['bumpSeed', s.u8()],
+      ['accountOwnerBumpSeed', s.u8()],
+      ['totalAvailableShares', s.u64()],
       ['membershipModel', getMembershipModelSerializer(context)],
-      ['membershipMint', s.option(s.publicKey)],
-      ['totalStakedShares', s.option(s.u64)],
+      ['membershipMint', s.option(s.publicKey())],
+      ['totalStakedShares', s.option(s.u64())],
     ])
     .deserializeUsing<Fanout>((account) => deserializeFanout(context, account))
     .whereField('discriminator', [198, 246, 243, 191, 206, 255, 3, 247]);
-}
-
-export function deserializeFanout(
-  context: Pick<Context, 'serializer'>,
-  rawAccount: RpcAccount
-): Fanout {
-  return deserializeAccount(
-    rawAccount,
-    getFanoutAccountDataSerializer(context)
-  );
-}
-
-export function getFanoutAccountDataSerializer(
-  context: Pick<Context, 'serializer'>
-): Serializer<FanoutAccountArgs, FanoutAccountData> {
-  const s = context.serializer;
-  return mapSerializer<FanoutAccountArgs, FanoutAccountData, FanoutAccountData>(
-    s.struct<FanoutAccountData>(
-      [
-        ['discriminator', s.array(s.u8, 8)],
-        ['authority', s.publicKey],
-        ['name', s.string()],
-        ['accountKey', s.publicKey],
-        ['totalShares', s.u64],
-        ['totalMembers', s.u64],
-        ['totalInflow', s.u64],
-        ['lastSnapshotAmount', s.u64],
-        ['bumpSeed', s.u8],
-        ['accountOwnerBumpSeed', s.u8],
-        ['totalAvailableShares', s.u64],
-        ['membershipModel', getMembershipModelSerializer(context)],
-        ['membershipMint', s.option(s.publicKey)],
-        ['totalStakedShares', s.option(s.u64)],
-      ],
-      'Fanout'
-    ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [198, 246, 243, 191, 206, 255, 3, 247],
-      } as FanoutAccountData)
-  ) as Serializer<FanoutAccountArgs, FanoutAccountData>;
 }
 
 export function getFanoutSize(_context = {}): number {
@@ -199,7 +207,7 @@ export function findFanoutPda(
   const s = context.serializer;
   const programId: PublicKey = context.programs.get('mplHydra').publicKey;
   return context.eddsa.findPda(programId, [
-    s.variableString().serialize('fanout-config'),
-    s.variableString().serialize(seeds.name),
+    s.string({ size: 'variable' }).serialize('fanout-config'),
+    s.string({ size: 'variable' }).serialize(seeds.name),
   ]);
 }

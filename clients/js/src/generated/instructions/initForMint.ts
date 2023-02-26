@@ -35,36 +35,36 @@ export type InitForMintInstructionData = {
   bumpSeed: number;
 };
 
-export type InitForMintInstructionArgs = { bumpSeed: number };
+export type InitForMintInstructionDataArgs = { bumpSeed: number };
 
 export function getInitForMintInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<InitForMintInstructionArgs, InitForMintInstructionData> {
+): Serializer<InitForMintInstructionDataArgs, InitForMintInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    InitForMintInstructionArgs,
+    InitForMintInstructionDataArgs,
     InitForMintInstructionData,
     InitForMintInstructionData
   >(
     s.struct<InitForMintInstructionData>(
       [
-        ['discriminator', s.array(s.u8, 8)],
-        ['bumpSeed', s.u8],
+        ['discriminator', s.array(s.u8(), { size: 8 })],
+        ['bumpSeed', s.u8()],
       ],
-      'InitForMintInstructionArgs'
+      { description: 'InitForMintInstructionArgs' }
     ),
     (value) =>
       ({
         ...value,
         discriminator: [140, 150, 232, 195, 93, 219, 35, 170],
       } as InitForMintInstructionData)
-  ) as Serializer<InitForMintInstructionArgs, InitForMintInstructionData>;
+  ) as Serializer<InitForMintInstructionDataArgs, InitForMintInstructionData>;
 }
 
 // Instruction.
 export function initForMint(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: InitForMintInstructionAccounts & InitForMintInstructionArgs
+  input: InitForMintInstructionAccounts & InitForMintInstructionDataArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];

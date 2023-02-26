@@ -34,7 +34,7 @@ export type FanoutMembershipVoucherAccountData = {
   shares: bigint;
 };
 
-export type FanoutMembershipVoucherAccountArgs = {
+export type FanoutMembershipVoucherAccountDataArgs = {
   fanout: PublicKey;
   totalInflow: number | bigint;
   lastInflow: number | bigint;
@@ -42,6 +42,51 @@ export type FanoutMembershipVoucherAccountArgs = {
   membershipKey: PublicKey;
   shares: number | bigint;
 };
+
+export function getFanoutMembershipVoucherAccountDataSerializer(
+  context: Pick<Context, 'serializer'>
+): Serializer<
+  FanoutMembershipVoucherAccountDataArgs,
+  FanoutMembershipVoucherAccountData
+> {
+  const s = context.serializer;
+  return mapSerializer<
+    FanoutMembershipVoucherAccountDataArgs,
+    FanoutMembershipVoucherAccountData,
+    FanoutMembershipVoucherAccountData
+  >(
+    s.struct<FanoutMembershipVoucherAccountData>(
+      [
+        ['discriminator', s.array(s.u8(), { size: 8 })],
+        ['fanout', s.publicKey()],
+        ['totalInflow', s.u64()],
+        ['lastInflow', s.u64()],
+        ['bumpSeed', s.u8()],
+        ['membershipKey', s.publicKey()],
+        ['shares', s.u64()],
+      ],
+      { description: 'FanoutMembershipVoucher' }
+    ),
+    (value) =>
+      ({
+        ...value,
+        discriminator: [16, 229, 84, 210, 96, 22, 126, 120],
+      } as FanoutMembershipVoucherAccountData)
+  ) as Serializer<
+    FanoutMembershipVoucherAccountDataArgs,
+    FanoutMembershipVoucherAccountData
+  >;
+}
+
+export function deserializeFanoutMembershipVoucher(
+  context: Pick<Context, 'serializer'>,
+  rawAccount: RpcAccount
+): FanoutMembershipVoucher {
+  return deserializeAccount(
+    rawAccount,
+    getFanoutMembershipVoucherAccountDataSerializer(context)
+  );
+}
 
 export async function fetchFanoutMembershipVoucher(
   context: Pick<Context, 'rpc' | 'serializer'>,
@@ -104,63 +149,18 @@ export function getFanoutMembershipVoucherGpaBuilder(
       membershipKey: PublicKey;
       shares: number | bigint;
     }>([
-      ['discriminator', s.array(s.u8, 8)],
-      ['fanout', s.publicKey],
-      ['totalInflow', s.u64],
-      ['lastInflow', s.u64],
-      ['bumpSeed', s.u8],
-      ['membershipKey', s.publicKey],
-      ['shares', s.u64],
+      ['discriminator', s.array(s.u8(), { size: 8 })],
+      ['fanout', s.publicKey()],
+      ['totalInflow', s.u64()],
+      ['lastInflow', s.u64()],
+      ['bumpSeed', s.u8()],
+      ['membershipKey', s.publicKey()],
+      ['shares', s.u64()],
     ])
     .deserializeUsing<FanoutMembershipVoucher>((account) =>
       deserializeFanoutMembershipVoucher(context, account)
     )
     .whereField('discriminator', [16, 229, 84, 210, 96, 22, 126, 120]);
-}
-
-export function deserializeFanoutMembershipVoucher(
-  context: Pick<Context, 'serializer'>,
-  rawAccount: RpcAccount
-): FanoutMembershipVoucher {
-  return deserializeAccount(
-    rawAccount,
-    getFanoutMembershipVoucherAccountDataSerializer(context)
-  );
-}
-
-export function getFanoutMembershipVoucherAccountDataSerializer(
-  context: Pick<Context, 'serializer'>
-): Serializer<
-  FanoutMembershipVoucherAccountArgs,
-  FanoutMembershipVoucherAccountData
-> {
-  const s = context.serializer;
-  return mapSerializer<
-    FanoutMembershipVoucherAccountArgs,
-    FanoutMembershipVoucherAccountData,
-    FanoutMembershipVoucherAccountData
-  >(
-    s.struct<FanoutMembershipVoucherAccountData>(
-      [
-        ['discriminator', s.array(s.u8, 8)],
-        ['fanout', s.publicKey],
-        ['totalInflow', s.u64],
-        ['lastInflow', s.u64],
-        ['bumpSeed', s.u8],
-        ['membershipKey', s.publicKey],
-        ['shares', s.u64],
-      ],
-      'FanoutMembershipVoucher'
-    ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [16, 229, 84, 210, 96, 22, 126, 120],
-      } as FanoutMembershipVoucherAccountData)
-  ) as Serializer<
-    FanoutMembershipVoucherAccountArgs,
-    FanoutMembershipVoucherAccountData
-  >;
 }
 
 export function getFanoutMembershipVoucherSize(_context = {}): number {
@@ -179,8 +179,8 @@ export function findFanoutMembershipVoucherPda(
   const s = context.serializer;
   const programId: PublicKey = context.programs.get('mplHydra').publicKey;
   return context.eddsa.findPda(programId, [
-    s.variableString().serialize('fanout-membership'),
-    s.publicKey.serialize(seeds.fanout),
-    s.publicKey.serialize(seeds.member),
+    s.string({ size: 'variable' }).serialize('fanout-membership'),
+    s.publicKey().serialize(seeds.fanout),
+    s.publicKey().serialize(seeds.member),
   ]);
 }

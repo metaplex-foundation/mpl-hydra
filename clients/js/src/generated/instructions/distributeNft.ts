@@ -42,36 +42,39 @@ export type DistributeNftInstructionData = {
   distributeForMint: boolean;
 };
 
-export type DistributeNftInstructionArgs = { distributeForMint: boolean };
+export type DistributeNftInstructionDataArgs = { distributeForMint: boolean };
 
 export function getDistributeNftInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<DistributeNftInstructionArgs, DistributeNftInstructionData> {
+): Serializer<DistributeNftInstructionDataArgs, DistributeNftInstructionData> {
   const s = context.serializer;
   return mapSerializer<
-    DistributeNftInstructionArgs,
+    DistributeNftInstructionDataArgs,
     DistributeNftInstructionData,
     DistributeNftInstructionData
   >(
     s.struct<DistributeNftInstructionData>(
       [
-        ['discriminator', s.array(s.u8, 8)],
+        ['discriminator', s.array(s.u8(), { size: 8 })],
         ['distributeForMint', s.bool()],
       ],
-      'DistributeNftInstructionArgs'
+      { description: 'DistributeNftInstructionArgs' }
     ),
     (value) =>
       ({
         ...value,
         discriminator: [108, 240, 68, 81, 144, 83, 58, 153],
       } as DistributeNftInstructionData)
-  ) as Serializer<DistributeNftInstructionArgs, DistributeNftInstructionData>;
+  ) as Serializer<
+    DistributeNftInstructionDataArgs,
+    DistributeNftInstructionData
+  >;
 }
 
 // Instruction.
 export function distributeNft(
   context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
-  input: DistributeNftInstructionAccounts & DistributeNftInstructionArgs
+  input: DistributeNftInstructionAccounts & DistributeNftInstructionDataArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];

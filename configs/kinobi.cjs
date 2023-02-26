@@ -6,12 +6,13 @@ const {
   TransformNodesVisitor,
   UpdateAccountsVisitor,
   InstructionNode,
-  TypeLeafNode,
   assertInstructionNode,
   UpdateInstructionsVisitor,
   TypeStructNode,
   UnwrapDefinedTypesVisitor,
   UnwrapInstructionArgsStructVisitor,
+  TypePublicKeyNode,
+  TypeStringNode,
 } = require("@metaplex-foundation/kinobi");
 
 // Paths.
@@ -59,7 +60,7 @@ kinobi.update(
           kind: "variable",
           name: "name",
           description: "The name of the fanout account",
-          type: new TypeLeafNode({ kind: "variableString" }),
+          type: new TypeStringNode({ size: { kind: "variable" } }),
         },
       ],
     },
@@ -71,13 +72,13 @@ kinobi.update(
           kind: "variable",
           name: "fanout",
           description: "The address of the fanout account",
-          type: new TypeLeafNode({ kind: "publicKey" }),
+          type: new TypePublicKeyNode(),
         },
         {
           kind: "variable",
           name: "member",
           description: "The member's public key",
-          type: new TypeLeafNode({ kind: "publicKey" }),
+          type: new TypePublicKeyNode(),
         },
       ],
     },
@@ -89,13 +90,13 @@ kinobi.update(
           kind: "variable",
           name: "fanout",
           description: "The address of the fanout account",
-          type: new TypeLeafNode({ kind: "publicKey" }),
+          type: new TypePublicKeyNode(),
         },
         {
           kind: "variable",
           name: "mint",
           description: "The address of the mint account",
-          type: new TypeLeafNode({ kind: "publicKey" }),
+          type: new TypePublicKeyNode(),
         },
       ],
     },
@@ -107,19 +108,19 @@ kinobi.update(
           kind: "variable",
           name: "fanout",
           description: "The address of the fanout account",
-          type: new TypeLeafNode({ kind: "publicKey" }),
+          type: new TypePublicKeyNode(),
         },
         {
           kind: "variable",
           name: "membership",
           description: "The address of the membership account",
-          type: new TypeLeafNode({ kind: "publicKey" }),
+          type: new TypePublicKeyNode(),
         },
         {
           kind: "variable",
           name: "mint",
           description: "The address of the mint account",
-          type: new TypeLeafNode({ kind: "publicKey" }),
+          type: new TypePublicKeyNode(),
         },
       ],
     },
@@ -130,13 +131,12 @@ kinobi.update(
 const holdingAccountPdaDefaults = {
   kind: "pda",
   pdaAccount: "fanoutNativeAccount",
-  dependency: "rootHooked",
+  dependency: "hooked",
   seeds: { fanout: { kind: "account", name: "fanout" } },
 };
 kinobi.update(
   new UpdateInstructionsVisitor({
     init: {
-      internal: true,
       bytesCreatedOnChain: {
         kind: "number",
         includeHeader: false,
@@ -146,8 +146,14 @@ kinobi.update(
           128 * 2, // 2 account headers.
       },
       accounts: {
-        fanout: { defaultsTo: { kind: "pda" } },
-        holdingAccount: { defaultsTo: holdingAccountPdaDefaults },
+        fanout: {
+          defaultsTo: { kind: "pda" },
+          pdaBumpArg: "bumpSeed",
+        },
+        holdingAccount: {
+          defaultsTo: holdingAccountPdaDefaults,
+          pdaBumpArg: "nativeAccountBumpSeed",
+        },
         membershipMint: {
           defaultsTo: {
             kind: "publicKey",

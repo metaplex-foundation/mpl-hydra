@@ -1,4 +1,4 @@
-import { Context, Pda, PublicKey, utf8 } from '@metaplex-foundation/umi-core';
+import { Context, Pda, PublicKey } from '@metaplex-foundation/umi-core';
 
 export function findFanoutNativeAccountPda(
   context: Pick<Context, 'eddsa' | 'programs' | 'serializer'>,
@@ -10,7 +10,7 @@ export function findFanoutNativeAccountPda(
   const s = context.serializer;
   const programId: PublicKey = context.programs.get('mplHydra').publicKey;
   return context.eddsa.findPda(programId, [
-    utf8.serialize('fanout-native-account'),
-    s.publicKey.serialize(seeds.fanout),
+    s.string({ size: 'variable' }).serialize('fanout-native-account'),
+    s.publicKey().serialize(seeds.fanout),
   ]);
 }

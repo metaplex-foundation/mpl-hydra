@@ -40,23 +40,26 @@ export type AddMemberWalletInstructionData = {
   shares: bigint;
 };
 
-export type AddMemberWalletInstructionArgs = { shares: number | bigint };
+export type AddMemberWalletInstructionDataArgs = { shares: number | bigint };
 
 export function getAddMemberWalletInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<AddMemberWalletInstructionArgs, AddMemberWalletInstructionData> {
+): Serializer<
+  AddMemberWalletInstructionDataArgs,
+  AddMemberWalletInstructionData
+> {
   const s = context.serializer;
   return mapSerializer<
-    AddMemberWalletInstructionArgs,
+    AddMemberWalletInstructionDataArgs,
     AddMemberWalletInstructionData,
     AddMemberWalletInstructionData
   >(
     s.struct<AddMemberWalletInstructionData>(
       [
-        ['discriminator', s.array(s.u8, 8)],
-        ['shares', s.u64],
+        ['discriminator', s.array(s.u8(), { size: 8 })],
+        ['shares', s.u64()],
       ],
-      'AddMemberWalletInstructionArgs'
+      { description: 'AddMemberWalletInstructionData' }
     ),
     (value) =>
       ({
@@ -64,7 +67,7 @@ export function getAddMemberWalletInstructionDataSerializer(
         discriminator: [201, 9, 59, 128, 69, 117, 220, 235],
       } as AddMemberWalletInstructionData)
   ) as Serializer<
-    AddMemberWalletInstructionArgs,
+    AddMemberWalletInstructionDataArgs,
     AddMemberWalletInstructionData
   >;
 }
@@ -72,7 +75,7 @@ export function getAddMemberWalletInstructionDataSerializer(
 // Instruction.
 export function addMemberWallet(
   context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'identity'>,
-  input: AddMemberWalletInstructionAccounts & AddMemberWalletInstructionArgs
+  input: AddMemberWalletInstructionAccounts & AddMemberWalletInstructionDataArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];

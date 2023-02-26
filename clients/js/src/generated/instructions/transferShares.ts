@@ -33,36 +33,42 @@ export type TransferSharesInstructionData = {
   shares: bigint;
 };
 
-export type TransferSharesInstructionArgs = { shares: number | bigint };
+export type TransferSharesInstructionDataArgs = { shares: number | bigint };
 
 export function getTransferSharesInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
-): Serializer<TransferSharesInstructionArgs, TransferSharesInstructionData> {
+): Serializer<
+  TransferSharesInstructionDataArgs,
+  TransferSharesInstructionData
+> {
   const s = context.serializer;
   return mapSerializer<
-    TransferSharesInstructionArgs,
+    TransferSharesInstructionDataArgs,
     TransferSharesInstructionData,
     TransferSharesInstructionData
   >(
     s.struct<TransferSharesInstructionData>(
       [
-        ['discriminator', s.array(s.u8, 8)],
-        ['shares', s.u64],
+        ['discriminator', s.array(s.u8(), { size: 8 })],
+        ['shares', s.u64()],
       ],
-      'TransferSharesInstructionArgs'
+      { description: 'TransferSharesInstructionArgs' }
     ),
     (value) =>
       ({
         ...value,
         discriminator: [195, 175, 36, 50, 101, 22, 28, 87],
       } as TransferSharesInstructionData)
-  ) as Serializer<TransferSharesInstructionArgs, TransferSharesInstructionData>;
+  ) as Serializer<
+    TransferSharesInstructionDataArgs,
+    TransferSharesInstructionData
+  >;
 }
 
 // Instruction.
 export function transferShares(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: TransferSharesInstructionAccounts & TransferSharesInstructionArgs
+  input: TransferSharesInstructionAccounts & TransferSharesInstructionDataArgs
 ): WrappedInstruction {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];

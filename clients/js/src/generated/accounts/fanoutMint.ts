@@ -33,7 +33,7 @@ export type FanoutMintAccountData = {
   bumpSeed: number;
 };
 
-export type FanoutMintAccountArgs = {
+export type FanoutMintAccountDataArgs = {
   mint: PublicKey;
   fanout: PublicKey;
   tokenAccount: PublicKey;
@@ -41,6 +41,45 @@ export type FanoutMintAccountArgs = {
   lastSnapshotAmount: number | bigint;
   bumpSeed: number;
 };
+
+export function getFanoutMintAccountDataSerializer(
+  context: Pick<Context, 'serializer'>
+): Serializer<FanoutMintAccountDataArgs, FanoutMintAccountData> {
+  const s = context.serializer;
+  return mapSerializer<
+    FanoutMintAccountDataArgs,
+    FanoutMintAccountData,
+    FanoutMintAccountData
+  >(
+    s.struct<FanoutMintAccountData>(
+      [
+        ['discriminator', s.array(s.u8(), { size: 8 })],
+        ['mint', s.publicKey()],
+        ['fanout', s.publicKey()],
+        ['tokenAccount', s.publicKey()],
+        ['totalInflow', s.u64()],
+        ['lastSnapshotAmount', s.u64()],
+        ['bumpSeed', s.u8()],
+      ],
+      { description: 'FanoutMint' }
+    ),
+    (value) =>
+      ({
+        ...value,
+        discriminator: [117, 125, 188, 123, 180, 213, 133, 164],
+      } as FanoutMintAccountData)
+  ) as Serializer<FanoutMintAccountDataArgs, FanoutMintAccountData>;
+}
+
+export function deserializeFanoutMint(
+  context: Pick<Context, 'serializer'>,
+  rawAccount: RpcAccount
+): FanoutMint {
+  return deserializeAccount(
+    rawAccount,
+    getFanoutMintAccountDataSerializer(context)
+  );
+}
 
 export async function fetchFanoutMint(
   context: Pick<Context, 'rpc' | 'serializer'>,
@@ -103,57 +142,18 @@ export function getFanoutMintGpaBuilder(
       lastSnapshotAmount: number | bigint;
       bumpSeed: number;
     }>([
-      ['discriminator', s.array(s.u8, 8)],
-      ['mint', s.publicKey],
-      ['fanout', s.publicKey],
-      ['tokenAccount', s.publicKey],
-      ['totalInflow', s.u64],
-      ['lastSnapshotAmount', s.u64],
-      ['bumpSeed', s.u8],
+      ['discriminator', s.array(s.u8(), { size: 8 })],
+      ['mint', s.publicKey()],
+      ['fanout', s.publicKey()],
+      ['tokenAccount', s.publicKey()],
+      ['totalInflow', s.u64()],
+      ['lastSnapshotAmount', s.u64()],
+      ['bumpSeed', s.u8()],
     ])
     .deserializeUsing<FanoutMint>((account) =>
       deserializeFanoutMint(context, account)
     )
     .whereField('discriminator', [117, 125, 188, 123, 180, 213, 133, 164]);
-}
-
-export function deserializeFanoutMint(
-  context: Pick<Context, 'serializer'>,
-  rawAccount: RpcAccount
-): FanoutMint {
-  return deserializeAccount(
-    rawAccount,
-    getFanoutMintAccountDataSerializer(context)
-  );
-}
-
-export function getFanoutMintAccountDataSerializer(
-  context: Pick<Context, 'serializer'>
-): Serializer<FanoutMintAccountArgs, FanoutMintAccountData> {
-  const s = context.serializer;
-  return mapSerializer<
-    FanoutMintAccountArgs,
-    FanoutMintAccountData,
-    FanoutMintAccountData
-  >(
-    s.struct<FanoutMintAccountData>(
-      [
-        ['discriminator', s.array(s.u8, 8)],
-        ['mint', s.publicKey],
-        ['fanout', s.publicKey],
-        ['tokenAccount', s.publicKey],
-        ['totalInflow', s.u64],
-        ['lastSnapshotAmount', s.u64],
-        ['bumpSeed', s.u8],
-      ],
-      'FanoutMint'
-    ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [117, 125, 188, 123, 180, 213, 133, 164],
-      } as FanoutMintAccountData)
-  ) as Serializer<FanoutMintAccountArgs, FanoutMintAccountData>;
 }
 
 export function getFanoutMintSize(_context = {}): number {
@@ -172,8 +172,8 @@ export function findFanoutMintPda(
   const s = context.serializer;
   const programId: PublicKey = context.programs.get('mplHydra').publicKey;
   return context.eddsa.findPda(programId, [
-    s.variableString().serialize('fanout-config'),
-    s.publicKey.serialize(seeds.fanout),
-    s.publicKey.serialize(seeds.mint),
+    s.string({ size: 'variable' }).serialize('fanout-config'),
+    s.publicKey().serialize(seeds.fanout),
+    s.publicKey().serialize(seeds.mint),
   ]);
 }
