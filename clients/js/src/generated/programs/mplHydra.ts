@@ -6,7 +6,7 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Program, publicKey } from '@metaplex-foundation/umi-core';
+import { Program, publicKey } from '@metaplex-foundation/umi';
 import { getMplHydraErrorFromCode, getMplHydraErrorFromName } from '../errors';
 
 export function getMplHydraProgram(): Program {

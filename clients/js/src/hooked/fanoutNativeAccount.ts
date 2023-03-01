@@ -1,4 +1,4 @@
-import { Context, Pda, PublicKey } from '@metaplex-foundation/umi-core';
+import { Context, Pda, PublicKey } from '@metaplex-foundation/umi';
 
 export function findFanoutNativeAccountPda(
   context: Pick<Context, 'eddsa' | 'programs' | 'serializer'>,
