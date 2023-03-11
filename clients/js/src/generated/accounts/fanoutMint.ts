@@ -131,7 +131,10 @@ export function getFanoutMintGpaBuilder(
   context: Pick<Context, 'rpc' | 'serializer' | 'programs'>
 ) {
   const s = context.serializer;
-  const programId = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
   return gpaBuilder(context, programId)
     .registerFields<{
       discriminator: Array<number>;
@@ -141,22 +144,22 @@ export function getFanoutMintGpaBuilder(
       totalInflow: number | bigint;
       lastSnapshotAmount: number | bigint;
       bumpSeed: number;
-    }>([
-      ['discriminator', s.array(s.u8(), { size: 8 })],
-      ['mint', s.publicKey()],
-      ['fanout', s.publicKey()],
-      ['tokenAccount', s.publicKey()],
-      ['totalInflow', s.u64()],
-      ['lastSnapshotAmount', s.u64()],
-      ['bumpSeed', s.u8()],
-    ])
+    }>({
+      discriminator: [0, s.array(s.u8(), { size: 8 })],
+      mint: [8, s.publicKey()],
+      fanout: [40, s.publicKey()],
+      tokenAccount: [72, s.publicKey()],
+      totalInflow: [104, s.u64()],
+      lastSnapshotAmount: [112, s.u64()],
+      bumpSeed: [120, s.u8()],
+    })
     .deserializeUsing<FanoutMint>((account) =>
       deserializeFanoutMint(context, account)
     )
     .whereField('discriminator', [117, 125, 188, 123, 180, 213, 133, 164]);
 }
 
-export function getFanoutMintSize(_context = {}): number {
+export function getFanoutMintSize(): number {
   return 200;
 }
 
@@ -170,7 +173,10 @@ export function findFanoutMintPda(
   }
 ): Pda {
   const s = context.serializer;
-  const programId: PublicKey = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
   return context.eddsa.findPda(programId, [
     s.string({ size: 'variable' }).serialize('fanout-config'),
     s.publicKey().serialize(seeds.fanout),

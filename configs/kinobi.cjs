@@ -10,7 +10,7 @@ const {
   UpdateInstructionsVisitor,
   TypeStructNode,
   UnwrapDefinedTypesVisitor,
-  UnwrapInstructionArgsStructVisitor,
+  FlattenInstructionArgsStructVisitor,
   TypePublicKeyNode,
   TypeStringNode,
 } = require("@metaplex-foundation/kinobi");
@@ -33,7 +33,7 @@ kinobi.update(
 kinobi.update(
   new TransformNodesVisitor([
     {
-      selector: { type: "instruction" },
+      selector: { type: "InstructionNode" },
       transformer: (node) => {
         assertInstructionNode(node);
         if (!node.name.startsWith("process")) return node;
@@ -175,7 +175,7 @@ kinobi.update(
 
 // Unwrap addMemberArgs type.
 kinobi.update(new UnwrapDefinedTypesVisitor(["addMemberArgs"]));
-kinobi.update(new UnwrapInstructionArgsStructVisitor());
+kinobi.update(new FlattenInstructionArgsStructVisitor());
 
 // Render JavaScript.
 const jsDir = path.join(clientDir, "js", "src", "generated");

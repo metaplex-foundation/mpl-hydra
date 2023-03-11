@@ -70,7 +70,10 @@ export function initForMint(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId: PublicKey = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
 
   // Resolved accounts.
   const authorityAccount = input.authority ?? context.identity;
@@ -79,7 +82,10 @@ export function initForMint(
   const mintHoldingAccountAccount = input.mintHoldingAccount;
   const mintAccount = input.mint;
   const systemProgramAccount = input.systemProgram ?? {
-    ...context.programs.get('splSystem').publicKey,
+    ...context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    ),
     isWritable: false,
   };
   const rentAccount =

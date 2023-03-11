@@ -156,7 +156,10 @@ export function getFanoutGpaBuilder(
   context: Pick<Context, 'rpc' | 'serializer' | 'programs'>
 ) {
   const s = context.serializer;
-  const programId = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
   return gpaBuilder(context, programId)
     .registerFields<{
       discriminator: Array<number>;
@@ -173,27 +176,27 @@ export function getFanoutGpaBuilder(
       membershipModel: MembershipModelArgs;
       membershipMint: Option<PublicKey>;
       totalStakedShares: Option<number | bigint>;
-    }>([
-      ['discriminator', s.array(s.u8(), { size: 8 })],
-      ['authority', s.publicKey()],
-      ['name', s.string()],
-      ['accountKey', s.publicKey()],
-      ['totalShares', s.u64()],
-      ['totalMembers', s.u64()],
-      ['totalInflow', s.u64()],
-      ['lastSnapshotAmount', s.u64()],
-      ['bumpSeed', s.u8()],
-      ['accountOwnerBumpSeed', s.u8()],
-      ['totalAvailableShares', s.u64()],
-      ['membershipModel', getMembershipModelSerializer(context)],
-      ['membershipMint', s.option(s.publicKey())],
-      ['totalStakedShares', s.option(s.u64())],
-    ])
+    }>({
+      discriminator: [0, s.array(s.u8(), { size: 8 })],
+      authority: [8, s.publicKey()],
+      name: [40, s.string()],
+      accountKey: [null, s.publicKey()],
+      totalShares: [null, s.u64()],
+      totalMembers: [null, s.u64()],
+      totalInflow: [null, s.u64()],
+      lastSnapshotAmount: [null, s.u64()],
+      bumpSeed: [null, s.u8()],
+      accountOwnerBumpSeed: [null, s.u8()],
+      totalAvailableShares: [null, s.u64()],
+      membershipModel: [null, getMembershipModelSerializer(context)],
+      membershipMint: [null, s.option(s.publicKey())],
+      totalStakedShares: [null, s.option(s.u64())],
+    })
     .deserializeUsing<Fanout>((account) => deserializeFanout(context, account))
     .whereField('discriminator', [198, 246, 243, 191, 206, 255, 3, 247]);
 }
 
-export function getFanoutSize(_context = {}): number {
+export function getFanoutSize(): number {
   return 300;
 }
 
@@ -205,7 +208,10 @@ export function findFanoutPda(
   }
 ): Pda {
   const s = context.serializer;
-  const programId: PublicKey = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
   return context.eddsa.findPda(programId, [
     s.string({ size: 'variable' }).serialize('fanout-config'),
     s.string({ size: 'variable' }).serialize(seeds.name),

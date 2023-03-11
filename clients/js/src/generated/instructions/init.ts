@@ -93,7 +93,10 @@ export function init(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId: PublicKey = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
 
   // Resolved accounts.
   const authorityAccount = input.authority ?? context.identity;
@@ -103,7 +106,10 @@ export function init(
     input.holdingAccount ??
     findFanoutNativeAccountPda(context, { fanout: publicKey(fanoutAccount) });
   const systemProgramAccount = input.systemProgram ?? {
-    ...context.programs.get('splSystem').publicKey,
+    ...context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    ),
     isWritable: false,
   };
   const membershipMintAccount =
@@ -112,7 +118,10 @@ export function init(
   const rentAccount =
     input.rent ?? publicKey('SysvarRent111111111111111111111111111111111');
   const tokenProgramAccount = input.tokenProgram ?? {
-    ...context.programs.get('splToken').publicKey,
+    ...context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    ),
     isWritable: false,
   };
 

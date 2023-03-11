@@ -135,7 +135,10 @@ export function getFanoutMembershipMintVoucherGpaBuilder(
   context: Pick<Context, 'rpc' | 'serializer' | 'programs'>
 ) {
   const s = context.serializer;
-  const programId = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
   return gpaBuilder(context, programId)
     .registerFields<{
       discriminator: Array<number>;
@@ -143,20 +146,20 @@ export function getFanoutMembershipMintVoucherGpaBuilder(
       fanoutMint: PublicKey;
       lastInflow: number | bigint;
       bumpSeed: number;
-    }>([
-      ['discriminator', s.array(s.u8(), { size: 8 })],
-      ['fanout', s.publicKey()],
-      ['fanoutMint', s.publicKey()],
-      ['lastInflow', s.u64()],
-      ['bumpSeed', s.u8()],
-    ])
+    }>({
+      discriminator: [0, s.array(s.u8(), { size: 8 })],
+      fanout: [8, s.publicKey()],
+      fanoutMint: [40, s.publicKey()],
+      lastInflow: [72, s.u64()],
+      bumpSeed: [80, s.u8()],
+    })
     .deserializeUsing<FanoutMembershipMintVoucher>((account) =>
       deserializeFanoutMembershipMintVoucher(context, account)
     )
     .whereField('discriminator', [155, 252, 106, 122, 161, 221, 155, 120]);
 }
 
-export function getFanoutMembershipMintVoucherSize(_context = {}): number {
+export function getFanoutMembershipMintVoucherSize(): number {
   return 105;
 }
 
@@ -172,7 +175,10 @@ export function findFanoutMembershipMintVoucherPda(
   }
 ): Pda {
   const s = context.serializer;
-  const programId: PublicKey = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
   return context.eddsa.findPda(programId, [
     s.string({ size: 'variable' }).serialize('fanout-membership'),
     s.publicKey().serialize(seeds.fanout),

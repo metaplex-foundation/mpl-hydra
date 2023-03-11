@@ -23,7 +23,7 @@ export type SignMetadataInstructionAccounts = {
   fanout: PublicKey;
   holdingAccount: PublicKey;
   metadata: PublicKey;
-  tokenMetadataProgram: PublicKey;
+  tokenMetadataProgram?: PublicKey;
 };
 
 // Arguments.
@@ -61,14 +61,23 @@ export function signMetadata(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId: PublicKey = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
 
   // Resolved accounts.
   const authorityAccount = input.authority ?? context.identity;
   const fanoutAccount = input.fanout;
   const holdingAccountAccount = input.holdingAccount;
   const metadataAccount = input.metadata;
-  const tokenMetadataProgramAccount = input.tokenMetadataProgram;
+  const tokenMetadataProgramAccount = input.tokenMetadataProgram ?? {
+    ...context.programs.getPublicKey(
+      'mplTokenMetadata',
+      'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+    ),
+    isWritable: false,
+  };
 
   // Authority.
   signers.push(authorityAccount);

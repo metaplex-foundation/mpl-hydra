@@ -138,7 +138,10 @@ export function getFanoutMembershipVoucherGpaBuilder(
   context: Pick<Context, 'rpc' | 'serializer' | 'programs'>
 ) {
   const s = context.serializer;
-  const programId = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
   return gpaBuilder(context, programId)
     .registerFields<{
       discriminator: Array<number>;
@@ -148,22 +151,22 @@ export function getFanoutMembershipVoucherGpaBuilder(
       bumpSeed: number;
       membershipKey: PublicKey;
       shares: number | bigint;
-    }>([
-      ['discriminator', s.array(s.u8(), { size: 8 })],
-      ['fanout', s.publicKey()],
-      ['totalInflow', s.u64()],
-      ['lastInflow', s.u64()],
-      ['bumpSeed', s.u8()],
-      ['membershipKey', s.publicKey()],
-      ['shares', s.u64()],
-    ])
+    }>({
+      discriminator: [0, s.array(s.u8(), { size: 8 })],
+      fanout: [8, s.publicKey()],
+      totalInflow: [40, s.u64()],
+      lastInflow: [48, s.u64()],
+      bumpSeed: [56, s.u8()],
+      membershipKey: [57, s.publicKey()],
+      shares: [89, s.u64()],
+    })
     .deserializeUsing<FanoutMembershipVoucher>((account) =>
       deserializeFanoutMembershipVoucher(context, account)
     )
     .whereField('discriminator', [16, 229, 84, 210, 96, 22, 126, 120]);
 }
 
-export function getFanoutMembershipVoucherSize(_context = {}): number {
+export function getFanoutMembershipVoucherSize(): number {
   return 153;
 }
 
@@ -177,7 +180,10 @@ export function findFanoutMembershipVoucherPda(
   }
 ): Pda {
   const s = context.serializer;
-  const programId: PublicKey = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
   return context.eddsa.findPda(programId, [
     s.string({ size: 'variable' }).serialize('fanout-membership'),
     s.publicKey().serialize(seeds.fanout),

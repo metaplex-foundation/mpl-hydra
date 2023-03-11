@@ -79,7 +79,10 @@ export function setTokenMemberStake(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId: PublicKey = context.programs.get('mplHydra').publicKey;
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
 
   // Resolved accounts.
   const memberAccount = input.member;
@@ -89,11 +92,17 @@ export function setTokenMemberStake(
   const membershipMintTokenAccountAccount = input.membershipMintTokenAccount;
   const memberStakeAccountAccount = input.memberStakeAccount;
   const systemProgramAccount = input.systemProgram ?? {
-    ...context.programs.get('splSystem').publicKey,
+    ...context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    ),
     isWritable: false,
   };
   const tokenProgramAccount = input.tokenProgram ?? {
-    ...context.programs.get('splToken').publicKey,
+    ...context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    ),
     isWritable: false,
   };
 
