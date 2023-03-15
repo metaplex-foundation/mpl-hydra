@@ -12,9 +12,10 @@ import {
   PublicKey,
   Serializer,
   Signer,
-  WrappedInstruction,
+  TransactionBuilder,
   checkForIsWritableOverride as isWritable,
   mapSerializer,
+  transactionBuilder,
 } from '@metaplex-foundation/umi';
 
 // Accounts.
@@ -74,7 +75,7 @@ export function setTokenMemberStake(
   context: Pick<Context, 'serializer' | 'programs'>,
   input: SetTokenMemberStakeInstructionAccounts &
     SetTokenMemberStakeInstructionDataArgs
-): WrappedInstruction {
+): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
 
@@ -170,9 +171,7 @@ export function setTokenMemberStake(
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;
 
-  return {
-    instruction: { keys, programId, data },
-    signers,
-    bytesCreatedOnChain,
-  };
+  return transactionBuilder([
+    { instruction: { keys, programId, data }, signers, bytesCreatedOnChain },
+  ]);
 }

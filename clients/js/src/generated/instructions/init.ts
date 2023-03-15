@@ -13,10 +13,11 @@ import {
   PublicKey,
   Serializer,
   Signer,
-  WrappedInstruction,
+  TransactionBuilder,
   checkForIsWritableOverride as isWritable,
   mapSerializer,
   publicKey,
+  transactionBuilder,
 } from '@metaplex-foundation/umi';
 import { findFanoutNativeAccountPda } from '../../hooked';
 import { findFanoutPda } from '../accounts';
@@ -88,7 +89,7 @@ export function init(
   context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'identity'>,
   input: InitInstructionAccounts &
     Omit<InitInstructionDataArgs, 'bumpSeed' | 'nativeAccountBumpSeed'>
-): WrappedInstruction {
+): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
 
@@ -185,9 +186,7 @@ export function init(
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 557;
 
-  return {
-    instruction: { keys, programId, data },
-    signers,
-    bytesCreatedOnChain,
-  };
+  return transactionBuilder([
+    { instruction: { keys, programId, data }, signers, bytesCreatedOnChain },
+  ]);
 }

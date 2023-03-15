@@ -2,7 +2,6 @@ import {
   generateRandomString,
   none,
   publicKey,
-  transactionBuilder,
 } from '@metaplex-foundation/umi';
 import test from 'ava';
 import {
@@ -21,15 +20,11 @@ test('it can create a fanout account', async (t) => {
   const name = generateRandomString();
 
   // When we create a new fanout account from it.
-  await transactionBuilder(umi)
-    .add(
-      init(umi, {
-        name,
-        model: MembershipModel.Wallet,
-        totalShares: 100,
-      })
-    )
-    .sendAndConfirm();
+  await init(umi, {
+    name,
+    model: MembershipModel.Wallet,
+    totalShares: 100,
+  }).sendAndConfirm(umi);
 
   // Then a new fanout account was created with the right data.
   const fanout = findFanoutPda(umi, { name });

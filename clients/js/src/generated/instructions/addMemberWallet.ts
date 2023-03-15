@@ -13,10 +13,11 @@ import {
   PublicKey,
   Serializer,
   Signer,
-  WrappedInstruction,
+  TransactionBuilder,
   checkForIsWritableOverride as isWritable,
   mapSerializer,
   publicKey,
+  transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
   findFanoutMembershipVoucherPda,
@@ -76,7 +77,7 @@ export function getAddMemberWalletInstructionDataSerializer(
 export function addMemberWallet(
   context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'identity'>,
   input: AddMemberWalletInstructionAccounts & AddMemberWalletInstructionDataArgs
-): WrappedInstruction {
+): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
 
@@ -171,9 +172,7 @@ export function addMemberWallet(
   const bytesCreatedOnChain =
     getFanoutMembershipVoucherSize() + ACCOUNT_HEADER_SIZE;
 
-  return {
-    instruction: { keys, programId, data },
-    signers,
-    bytesCreatedOnChain,
-  };
+  return transactionBuilder([
+    { instruction: { keys, programId, data }, signers, bytesCreatedOnChain },
+  ]);
 }

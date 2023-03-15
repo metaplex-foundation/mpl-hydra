@@ -12,10 +12,11 @@ import {
   PublicKey,
   Serializer,
   Signer,
-  WrappedInstruction,
+  TransactionBuilder,
   checkForIsWritableOverride as isWritable,
   mapSerializer,
   publicKey,
+  transactionBuilder,
 } from '@metaplex-foundation/umi';
 
 // Accounts.
@@ -79,7 +80,7 @@ export function getDistributeTokenInstructionDataSerializer(
 export function distributeToken(
   context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
   input: DistributeTokenInstructionAccounts & DistributeTokenInstructionDataArgs
-): WrappedInstruction {
+): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
 
@@ -234,9 +235,7 @@ export function distributeToken(
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;
 
-  return {
-    instruction: { keys, programId, data },
-    signers,
-    bytesCreatedOnChain,
-  };
+  return transactionBuilder([
+    { instruction: { keys, programId, data }, signers, bytesCreatedOnChain },
+  ]);
 }

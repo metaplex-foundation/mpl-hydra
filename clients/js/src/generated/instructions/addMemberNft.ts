@@ -12,10 +12,11 @@ import {
   PublicKey,
   Serializer,
   Signer,
-  WrappedInstruction,
+  TransactionBuilder,
   checkForIsWritableOverride as isWritable,
   mapSerializer,
   publicKey,
+  transactionBuilder,
 } from '@metaplex-foundation/umi';
 
 // Accounts.
@@ -66,7 +67,7 @@ export function getAddMemberNftInstructionDataSerializer(
 export function addMemberNft(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
   input: AddMemberNftInstructionAccounts & AddMemberNftInstructionDataArgs
-): WrappedInstruction {
+): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
 
@@ -163,9 +164,7 @@ export function addMemberNft(
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;
 
-  return {
-    instruction: { keys, programId, data },
-    signers,
-    bytesCreatedOnChain,
-  };
+  return transactionBuilder([
+    { instruction: { keys, programId, data }, signers, bytesCreatedOnChain },
+  ]);
 }
