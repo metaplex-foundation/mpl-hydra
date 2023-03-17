@@ -6,13 +6,23 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
-import { Program, publicKey } from '@metaplex-foundation/umi';
+import {
+  ClusterFilter,
+  Context,
+  Program,
+  PublicKey,
+  publicKey,
+} from '@metaplex-foundation/umi';
 import { getMplHydraErrorFromCode, getMplHydraErrorFromName } from '../errors';
 
-export function getMplHydraProgram(): Program {
+export const MPL_HYDRA_PROGRAM_ID = publicKey(
+  'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+);
+
+export function createMplHydraProgram(): Program {
   return {
     name: 'mplHydra',
-    publicKey: publicKey('hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'),
+    publicKey: MPL_HYDRA_PROGRAM_ID,
     getErrorFromCode(code: number, cause?: Error) {
       return getMplHydraErrorFromCode(code, this, cause);
     },
@@ -23,4 +33,22 @@ export function getMplHydraProgram(): Program {
       return true;
     },
   };
+}
+
+export function getMplHydraProgram<T extends Program = Program>(
+  context: Pick<Context, 'programs'>,
+  clusterFilter?: ClusterFilter
+): T {
+  return context.programs.get<T>('mplHydra', clusterFilter);
+}
+
+export function getMplHydraProgramId(
+  context: Pick<Context, 'programs'>,
+  clusterFilter?: ClusterFilter
+): PublicKey {
+  return context.programs.getPublicKey(
+    'mplHydra',
+    MPL_HYDRA_PROGRAM_ID,
+    clusterFilter
+  );
 }
