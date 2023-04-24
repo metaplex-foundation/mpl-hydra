@@ -65,7 +65,7 @@ export function getFanoutMembershipVoucherAccountDataSerializer(
         ['membershipKey', s.publicKey()],
         ['shares', s.u64()],
       ],
-      { description: 'FanoutMembershipVoucher' }
+      { description: 'FanoutMembershipVoucherAccountData' }
     ),
     (value) =>
       ({

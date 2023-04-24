@@ -162,7 +162,7 @@ export class HoldingAccountMustBeAnATAError extends ProgramError {
 codeToErrorMap.set(0x177a, HoldingAccountMustBeAnATAError);
 nameToErrorMap.set('HoldingAccountMustBeAnATA', HoldingAccountMustBeAnATAError);
 
-/** DerivedKeyInvalid: '' */
+/** DerivedKeyInvalid: 'undefined' */
 export class DerivedKeyInvalidError extends ProgramError {
   readonly name: string = 'DerivedKeyInvalid';
 
@@ -175,7 +175,7 @@ export class DerivedKeyInvalidError extends ProgramError {
 codeToErrorMap.set(0x177b, DerivedKeyInvalidError);
 nameToErrorMap.set('DerivedKeyInvalid', DerivedKeyInvalidError);
 
-/** IncorrectOwner: '' */
+/** IncorrectOwner: 'undefined' */
 export class IncorrectOwnerError extends ProgramError {
   readonly name: string = 'IncorrectOwner';
 
@@ -217,7 +217,7 @@ export class InvalidMetadataError extends ProgramError {
 codeToErrorMap.set(0x177e, InvalidMetadataError);
 nameToErrorMap.set('InvalidMetadata', InvalidMetadataError);
 
-/** NumericalOverflow: '' */
+/** NumericalOverflow: 'undefined' */
 export class NumericalOverflowError extends ProgramError {
   readonly name: string = 'NumericalOverflow';
 
@@ -246,7 +246,7 @@ nameToErrorMap.set(
   InsufficientBalanceToDistributeError
 );
 
-/** InvalidFanoutForMint: '' */
+/** InvalidFanoutForMint: 'undefined' */
 export class InvalidFanoutForMintError extends ProgramError {
   readonly name: string = 'InvalidFanoutForMint';
 
@@ -276,7 +276,7 @@ export class MustDistributeError extends ProgramError {
 codeToErrorMap.set(0x1782, MustDistributeError);
 nameToErrorMap.set('MustDistribute', MustDistributeError);
 
-/** InvalidStakeAta: '' */
+/** InvalidStakeAta: 'undefined' */
 export class InvalidStakeAtaError extends ProgramError {
   readonly name: string = 'InvalidStakeAta';
 
@@ -289,7 +289,7 @@ export class InvalidStakeAtaError extends ProgramError {
 codeToErrorMap.set(0x1783, InvalidStakeAtaError);
 nameToErrorMap.set('InvalidStakeAta', InvalidStakeAtaError);
 
-/** CannotTransferToSelf: '' */
+/** CannotTransferToSelf: 'undefined' */
 export class CannotTransferToSelfError extends ProgramError {
   readonly name: string = 'CannotTransferToSelf';
 

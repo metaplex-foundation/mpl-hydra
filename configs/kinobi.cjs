@@ -1,49 +1,41 @@
 const path = require("path");
-const {
-  Kinobi,
-  RenderJavaScriptVisitor,
-  UpdateProgramsVisitor,
-  TransformNodesVisitor,
-  UpdateAccountsVisitor,
-  InstructionNode,
-  assertInstructionNode,
-  UpdateInstructionsVisitor,
-  TypeStructNode,
-  UnwrapDefinedTypesVisitor,
-  FlattenInstructionArgsStructVisitor,
-  TypePublicKeyNode,
-  TypeStringNode,
-} = require("@metaplex-foundation/kinobi");
+const k = require("@metaplex-foundation/kinobi");
 
 // Paths.
 const clientDir = path.join(__dirname, "..", "clients");
 const idlDir = path.join(__dirname, "..", "idls");
 
 // Instanciate Kinobi.
-const kinobi = new Kinobi([path.join(idlDir, "hydra.json")]);
+const kinobi = k.createFromIdls([path.join(idlDir, "hydra.json")]);
 
 // Update Programs.
 kinobi.update(
-  new UpdateProgramsVisitor({
+  new k.UpdateProgramsVisitor({
     hydra: { name: "mplHydra" },
   })
 );
 
 // Remove "process" prefix from instructions.
 kinobi.update(
-  new TransformNodesVisitor([
+  new k.TransformNodesVisitor([
     {
-      selector: { type: "InstructionNode" },
+      selector: { kind: "instructionNode" },
       transformer: (node) => {
-        assertInstructionNode(node);
+        k.assertInstructionNode(node);
         if (!node.name.startsWith("process")) return node;
         const newName = node.name.replace(/^process/, "");
-        return new InstructionNode(
-          { ...node.metadata, name: newName },
-          node.accounts,
-          new TypeStructNode(newName + "InstructionArgs", node.args.fields),
-          node.subInstructions
-        );
+        return k.instructionNode({
+          ...node,
+          name: newName,
+          dataArgs: k.instructionDataArgsNode({
+            ...node.dataArgs,
+            name: newName + "InstructionData",
+          }),
+          extraArgs: k.instructionExtraArgsNode({
+            ...node.extraArgs,
+            name: newName + "InstructionExtra",
+          }),
+        });
       },
     },
   ])
@@ -51,122 +43,86 @@ kinobi.update(
 
 // Update Accounts.
 kinobi.update(
-  new UpdateAccountsVisitor({
+  new k.UpdateAccountsVisitor({
     fanout: {
       size: 300,
       seeds: [
-        { kind: "literal", value: "fanout-config" },
-        {
-          kind: "variable",
-          name: "name",
-          description: "The name of the fanout account",
-          type: new TypeStringNode({ size: { kind: "variable" } }),
-        },
+        k.literalSeed("fanout-config"),
+        k.variableSeed(
+          "name",
+          k.stringTypeNode({ size: k.remainderSize() }),
+          "The name of the fanout account"
+        ),
       ],
     },
     fanoutMembershipVoucher: {
       size: 153,
       seeds: [
-        { kind: "literal", value: "fanout-membership" },
-        {
-          kind: "variable",
-          name: "fanout",
-          description: "The address of the fanout account",
-          type: new TypePublicKeyNode(),
-        },
-        {
-          kind: "variable",
-          name: "member",
-          description: "The member's public key",
-          type: new TypePublicKeyNode(),
-        },
+        k.literalSeed("fanout-membership"),
+        k.publicKeySeed("fanout", "The address of the fanout account"),
+        k.publicKeySeed("member", "The member's public key"),
       ],
     },
     fanoutMint: {
       size: 200,
       seeds: [
-        { kind: "literal", value: "fanout-config" },
-        {
-          kind: "variable",
-          name: "fanout",
-          description: "The address of the fanout account",
-          type: new TypePublicKeyNode(),
-        },
-        {
-          kind: "variable",
-          name: "mint",
-          description: "The address of the mint account",
-          type: new TypePublicKeyNode(),
-        },
+        k.literalSeed("fanout-config"),
+        k.publicKeySeed("fanout", "The address of the fanout account"),
+        k.publicKeySeed("mint", "The address of the mint account"),
       ],
     },
     fanoutMembershipMintVoucher: {
       size: 105,
       seeds: [
-        { kind: "literal", value: "fanout-membership" },
-        {
-          kind: "variable",
-          name: "fanout",
-          description: "The address of the fanout account",
-          type: new TypePublicKeyNode(),
-        },
-        {
-          kind: "variable",
-          name: "membership",
-          description: "The address of the membership account",
-          type: new TypePublicKeyNode(),
-        },
-        {
-          kind: "variable",
-          name: "mint",
-          description: "The address of the mint account",
-          type: new TypePublicKeyNode(),
-        },
+        k.literalSeed("fanout-membership"),
+        k.publicKeySeed("fanout", "The address of the fanout account"),
+        k.publicKeySeed("membership", "The address of the membership account"),
+        k.publicKeySeed("mint", "The address of the mint account"),
       ],
     },
   })
 );
 
 // Update Instructions.
-const holdingAccountPdaDefaults = {
-  kind: "pda",
-  pdaAccount: "fanoutNativeAccount",
-  dependency: "hooked",
-  seeds: { fanout: { kind: "account", name: "fanout" } },
-};
 kinobi.update(
-  new UpdateInstructionsVisitor({
+  new k.UpdateInstructionsVisitor({
     init: {
-      bytesCreatedOnChain: {
-        kind: "number",
-        includeHeader: false,
-        value:
-          300 + // Fanout account.
+      bytesCreatedOnChain: k.bytesFromNumber(
+        300 + // Fanout account.
           1 + // Holding account.
           128 * 2, // 2 account headers.
-      },
+        false
+      ),
       accounts: {
         fanout: {
-          defaultsTo: { kind: "pda" },
-          pdaBumpArg: "bumpSeed",
+          defaultsTo: k.pdaDefault("fanout"),
         },
         holdingAccount: {
-          defaultsTo: holdingAccountPdaDefaults,
-          pdaBumpArg: "nativeAccountBumpSeed",
+          defaultsTo: k.pdaDefault("fanoutNativeAccount", {
+            importFrom: "hooked",
+            seeds: { fanout: k.accountDefault("fanout") },
+          }),
         },
         membershipMint: {
-          defaultsTo: {
-            kind: "publicKey",
-            publicKey: "So11111111111111111111111111111111111111112",
-          },
+          defaultsTo: k.publicKeyDefault(
+            "So11111111111111111111111111111111111111112"
+          ),
+        },
+      },
+      args: {
+        bumpSeed: {
+          defaultsTo: k.accountBumpDefault("fanout"),
+        },
+        nativeAccountBumpSeed: {
+          defaultsTo: k.accountBumpDefault("holdingAccount"),
         },
       },
     },
     addMemberWallet: {
-      bytesCreatedOnChain: { kind: "account", name: "fanoutMembershipVoucher" },
+      bytesCreatedOnChain: k.bytesFromAccount("fanoutMembershipVoucher"),
       accounts: {
         membershipAccount: {
-          defaultsTo: { kind: "pda", pdaAccount: "fanoutMembershipVoucher" },
+          defaultsTo: k.pdaDefault("fanoutMembershipVoucher"),
         },
       },
     },
@@ -174,10 +130,10 @@ kinobi.update(
 );
 
 // Unwrap addMemberArgs type.
-kinobi.update(new UnwrapDefinedTypesVisitor(["addMemberArgs"]));
-kinobi.update(new FlattenInstructionArgsStructVisitor());
+kinobi.update(new k.UnwrapDefinedTypesVisitor(["addMemberArgs"]));
+kinobi.update(new k.FlattenInstructionArgsStructVisitor());
 
 // Render JavaScript.
 const jsDir = path.join(clientDir, "js", "src", "generated");
 const prettier = require(path.join(clientDir, "js", ".prettierrc.json"));
-kinobi.accept(new RenderJavaScriptVisitor(jsDir, { prettier }));
+kinobi.accept(new k.RenderJavaScriptVisitor(jsDir, { prettier }));

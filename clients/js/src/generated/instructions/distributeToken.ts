@@ -13,11 +13,11 @@ import {
   Serializer,
   Signer,
   TransactionBuilder,
-  checkForIsWritableOverride as isWritable,
   mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { addObjectProperty, isWritable } from '../shared';
 
 // Accounts.
 export type DistributeTokenInstructionAccounts = {
@@ -38,7 +38,7 @@ export type DistributeTokenInstructionAccounts = {
   memberStakeAccount: PublicKey;
 };
 
-// Arguments.
+// Data.
 export type DistributeTokenInstructionData = {
   discriminator: Array<number>;
   distributeForMint: boolean;
@@ -63,7 +63,7 @@ export function getDistributeTokenInstructionDataSerializer(
         ['discriminator', s.array(s.u8(), { size: 8 })],
         ['distributeForMint', s.bool()],
       ],
-      { description: 'DistributeTokenInstructionArgs' }
+      { description: 'DistributeTokenInstructionData' }
     ),
     (value) =>
       ({
@@ -76,161 +76,174 @@ export function getDistributeTokenInstructionDataSerializer(
   >;
 }
 
+// Args.
+export type DistributeTokenInstructionArgs = DistributeTokenInstructionDataArgs;
+
 // Instruction.
 export function distributeToken(
   context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
-  input: DistributeTokenInstructionAccounts & DistributeTokenInstructionDataArgs
+  input: DistributeTokenInstructionAccounts & DistributeTokenInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = context.programs.getPublicKey(
-    'mplHydra',
-    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-  );
+  const programId = {
+    ...context.programs.getPublicKey(
+      'mplHydra',
+      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+    ),
+    isWritable: false,
+  };
 
-  // Resolved accounts.
-  const payerAccount = input.payer ?? context.payer;
-  const memberAccount = input.member;
-  const membershipMintTokenAccountAccount = input.membershipMintTokenAccount;
-  const membershipVoucherAccount = input.membershipVoucher;
-  const fanoutAccount = input.fanout;
-  const holdingAccountAccount = input.holdingAccount;
-  const fanoutForMintAccount = input.fanoutForMint;
-  const fanoutForMintMembershipVoucherAccount =
-    input.fanoutForMintMembershipVoucher;
-  const fanoutMintAccount = input.fanoutMint;
-  const fanoutMintMemberTokenAccountAccount =
-    input.fanoutMintMemberTokenAccount;
-  const systemProgramAccount = input.systemProgram ?? {
-    ...context.programs.getPublicKey(
-      'splSystem',
-      '11111111111111111111111111111111'
-    ),
-    isWritable: false,
-  };
-  const rentAccount =
-    input.rent ?? publicKey('SysvarRent111111111111111111111111111111111');
-  const tokenProgramAccount = input.tokenProgram ?? {
-    ...context.programs.getPublicKey(
-      'splToken',
-      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-    ),
-    isWritable: false,
-  };
-  const membershipMintAccount = input.membershipMint;
-  const memberStakeAccountAccount = input.memberStakeAccount;
+  // Resolved inputs.
+  const resolvingAccounts = {};
+  const resolvingArgs = {};
+  addObjectProperty(resolvingAccounts, 'payer', input.payer ?? context.payer);
+  addObjectProperty(
+    resolvingAccounts,
+    'systemProgram',
+    input.systemProgram ?? {
+      ...context.programs.getPublicKey(
+        'splSystem',
+        '11111111111111111111111111111111'
+      ),
+      isWritable: false,
+    }
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'rent',
+    input.rent ?? publicKey('SysvarRent111111111111111111111111111111111')
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'tokenProgram',
+    input.tokenProgram ?? {
+      ...context.programs.getPublicKey(
+        'splToken',
+        'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+      ),
+      isWritable: false,
+    }
+  );
+  const resolvedAccounts = { ...input, ...resolvingAccounts };
+  const resolvedArgs = { ...input, ...resolvingArgs };
 
   // Payer.
-  signers.push(payerAccount);
+  signers.push(resolvedAccounts.payer);
   keys.push({
-    pubkey: payerAccount.publicKey,
+    pubkey: resolvedAccounts.payer.publicKey,
     isSigner: true,
-    isWritable: isWritable(payerAccount, false),
+    isWritable: isWritable(resolvedAccounts.payer, false),
   });
 
   // Member.
   keys.push({
-    pubkey: memberAccount,
+    pubkey: resolvedAccounts.member,
     isSigner: false,
-    isWritable: isWritable(memberAccount, true),
+    isWritable: isWritable(resolvedAccounts.member, true),
   });
 
   // Membership Mint Token Account.
   keys.push({
-    pubkey: membershipMintTokenAccountAccount,
+    pubkey: resolvedAccounts.membershipMintTokenAccount,
     isSigner: false,
-    isWritable: isWritable(membershipMintTokenAccountAccount, true),
+    isWritable: isWritable(resolvedAccounts.membershipMintTokenAccount, true),
   });
 
   // Membership Voucher.
   keys.push({
-    pubkey: membershipVoucherAccount,
+    pubkey: resolvedAccounts.membershipVoucher,
     isSigner: false,
-    isWritable: isWritable(membershipVoucherAccount, true),
+    isWritable: isWritable(resolvedAccounts.membershipVoucher, true),
   });
 
   // Fanout.
   keys.push({
-    pubkey: fanoutAccount,
+    pubkey: resolvedAccounts.fanout,
     isSigner: false,
-    isWritable: isWritable(fanoutAccount, true),
+    isWritable: isWritable(resolvedAccounts.fanout, true),
   });
 
   // Holding Account.
   keys.push({
-    pubkey: holdingAccountAccount,
+    pubkey: resolvedAccounts.holdingAccount,
     isSigner: false,
-    isWritable: isWritable(holdingAccountAccount, true),
+    isWritable: isWritable(resolvedAccounts.holdingAccount, true),
   });
 
   // Fanout For Mint.
   keys.push({
-    pubkey: fanoutForMintAccount,
+    pubkey: resolvedAccounts.fanoutForMint,
     isSigner: false,
-    isWritable: isWritable(fanoutForMintAccount, true),
+    isWritable: isWritable(resolvedAccounts.fanoutForMint, true),
   });
 
   // Fanout For Mint Membership Voucher.
   keys.push({
-    pubkey: fanoutForMintMembershipVoucherAccount,
+    pubkey: resolvedAccounts.fanoutForMintMembershipVoucher,
     isSigner: false,
-    isWritable: isWritable(fanoutForMintMembershipVoucherAccount, true),
+    isWritable: isWritable(
+      resolvedAccounts.fanoutForMintMembershipVoucher,
+      true
+    ),
   });
 
   // Fanout Mint.
   keys.push({
-    pubkey: fanoutMintAccount,
+    pubkey: resolvedAccounts.fanoutMint,
     isSigner: false,
-    isWritable: isWritable(fanoutMintAccount, false),
+    isWritable: isWritable(resolvedAccounts.fanoutMint, false),
   });
 
   // Fanout Mint Member Token Account.
   keys.push({
-    pubkey: fanoutMintMemberTokenAccountAccount,
+    pubkey: resolvedAccounts.fanoutMintMemberTokenAccount,
     isSigner: false,
-    isWritable: isWritable(fanoutMintMemberTokenAccountAccount, true),
+    isWritable: isWritable(resolvedAccounts.fanoutMintMemberTokenAccount, true),
   });
 
   // System Program.
   keys.push({
-    pubkey: systemProgramAccount,
+    pubkey: resolvedAccounts.systemProgram,
     isSigner: false,
-    isWritable: isWritable(systemProgramAccount, false),
+    isWritable: isWritable(resolvedAccounts.systemProgram, false),
   });
 
   // Rent.
   keys.push({
-    pubkey: rentAccount,
+    pubkey: resolvedAccounts.rent,
     isSigner: false,
-    isWritable: isWritable(rentAccount, false),
+    isWritable: isWritable(resolvedAccounts.rent, false),
   });
 
   // Token Program.
   keys.push({
-    pubkey: tokenProgramAccount,
+    pubkey: resolvedAccounts.tokenProgram,
     isSigner: false,
-    isWritable: isWritable(tokenProgramAccount, false),
+    isWritable: isWritable(resolvedAccounts.tokenProgram, false),
   });
 
   // Membership Mint.
   keys.push({
-    pubkey: membershipMintAccount,
+    pubkey: resolvedAccounts.membershipMint,
     isSigner: false,
-    isWritable: isWritable(membershipMintAccount, true),
+    isWritable: isWritable(resolvedAccounts.membershipMint, true),
   });
 
   // Member Stake Account.
   keys.push({
-    pubkey: memberStakeAccountAccount,
+    pubkey: resolvedAccounts.memberStakeAccount,
     isSigner: false,
-    isWritable: isWritable(memberStakeAccountAccount, true),
+    isWritable: isWritable(resolvedAccounts.memberStakeAccount, true),
   });
 
   // Data.
   const data =
-    getDistributeTokenInstructionDataSerializer(context).serialize(input);
+    getDistributeTokenInstructionDataSerializer(context).serialize(
+      resolvedArgs
+    );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

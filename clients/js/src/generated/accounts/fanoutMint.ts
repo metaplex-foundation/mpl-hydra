@@ -61,7 +61,7 @@ export function getFanoutMintAccountDataSerializer(
         ['lastSnapshotAmount', s.u64()],
         ['bumpSeed', s.u8()],
       ],
-      { description: 'FanoutMint' }
+      { description: 'FanoutMintAccountData' }
     ),
     (value) =>
       ({

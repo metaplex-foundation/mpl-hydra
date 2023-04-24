@@ -14,13 +14,13 @@ import {
   Serializer,
   Signer,
   TransactionBuilder,
-  checkForIsWritableOverride as isWritable,
   mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import { findFanoutNativeAccountPda } from '../../hooked';
 import { findFanoutPda } from '../accounts';
+import { PickPartial, addObjectProperty, isWritable } from '../shared';
 import {
   MembershipModel,
   MembershipModelArgs,
@@ -38,7 +38,7 @@ export type InitInstructionAccounts = {
   tokenProgram?: PublicKey;
 };
 
-// Arguments.
+// Data.
 export type InitInstructionData = {
   discriminator: Array<number>;
   bumpSeed: number;
@@ -84,104 +84,149 @@ export function getInitInstructionDataSerializer(
   ) as Serializer<InitInstructionDataArgs, InitInstructionData>;
 }
 
+// Args.
+export type InitInstructionArgs = PickPartial<
+  InitInstructionDataArgs,
+  'bumpSeed' | 'nativeAccountBumpSeed'
+>;
+
 // Instruction.
 export function init(
   context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'identity'>,
-  input: InitInstructionAccounts &
-    Omit<InitInstructionDataArgs, 'bumpSeed' | 'nativeAccountBumpSeed'>
+  input: InitInstructionAccounts & InitInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = context.programs.getPublicKey(
-    'mplHydra',
-    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-  );
+  const programId = {
+    ...context.programs.getPublicKey(
+      'mplHydra',
+      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+    ),
+    isWritable: false,
+  };
 
-  // Resolved accounts.
-  const authorityAccount = input.authority ?? context.identity;
-  const fanoutAccount =
-    input.fanout ?? findFanoutPda(context, { name: input.name });
-  const holdingAccountAccount =
+  // Resolved inputs.
+  const resolvingAccounts = {};
+  const resolvingArgs = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'authority',
+    input.authority ?? context.identity
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'fanout',
+    input.fanout ?? findFanoutPda(context, { name: input.name })
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'holdingAccount',
     input.holdingAccount ??
-    findFanoutNativeAccountPda(context, { fanout: publicKey(fanoutAccount) });
-  const systemProgramAccount = input.systemProgram ?? {
-    ...context.programs.getPublicKey(
-      'splSystem',
-      '11111111111111111111111111111111'
-    ),
-    isWritable: false,
-  };
-  const membershipMintAccount =
+      findFanoutNativeAccountPda(context, {
+        fanout: publicKey(resolvingAccounts.fanout),
+      })
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'systemProgram',
+    input.systemProgram ?? {
+      ...context.programs.getPublicKey(
+        'splSystem',
+        '11111111111111111111111111111111'
+      ),
+      isWritable: false,
+    }
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'membershipMint',
     input.membershipMint ??
-    publicKey('So11111111111111111111111111111111111111112');
-  const rentAccount =
-    input.rent ?? publicKey('SysvarRent111111111111111111111111111111111');
-  const tokenProgramAccount = input.tokenProgram ?? {
-    ...context.programs.getPublicKey(
-      'splToken',
-      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-    ),
-    isWritable: false,
-  };
+      publicKey('So11111111111111111111111111111111111111112')
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'rent',
+    input.rent ?? publicKey('SysvarRent111111111111111111111111111111111')
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'tokenProgram',
+    input.tokenProgram ?? {
+      ...context.programs.getPublicKey(
+        'splToken',
+        'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+      ),
+      isWritable: false,
+    }
+  );
+  addObjectProperty(
+    resolvingArgs,
+    'bumpSeed',
+    input.bumpSeed ?? resolvingAccounts.fanout.bump
+  );
+  addObjectProperty(
+    resolvingArgs,
+    'nativeAccountBumpSeed',
+    input.nativeAccountBumpSeed ?? resolvingAccounts.holdingAccount.bump
+  );
+  const resolvedAccounts = { ...input, ...resolvingAccounts };
+  const resolvedArgs = { ...input, ...resolvingArgs };
 
   // Authority.
-  signers.push(authorityAccount);
+  signers.push(resolvedAccounts.authority);
   keys.push({
-    pubkey: authorityAccount.publicKey,
+    pubkey: resolvedAccounts.authority.publicKey,
     isSigner: true,
-    isWritable: isWritable(authorityAccount, true),
+    isWritable: isWritable(resolvedAccounts.authority, true),
   });
 
   // Fanout.
   keys.push({
-    pubkey: fanoutAccount,
+    pubkey: resolvedAccounts.fanout,
     isSigner: false,
-    isWritable: isWritable(fanoutAccount, true),
+    isWritable: isWritable(resolvedAccounts.fanout, true),
   });
 
   // Holding Account.
   keys.push({
-    pubkey: holdingAccountAccount,
+    pubkey: resolvedAccounts.holdingAccount,
     isSigner: false,
-    isWritable: isWritable(holdingAccountAccount, true),
+    isWritable: isWritable(resolvedAccounts.holdingAccount, true),
   });
 
   // System Program.
   keys.push({
-    pubkey: systemProgramAccount,
+    pubkey: resolvedAccounts.systemProgram,
     isSigner: false,
-    isWritable: isWritable(systemProgramAccount, false),
+    isWritable: isWritable(resolvedAccounts.systemProgram, false),
   });
 
   // Membership Mint.
   keys.push({
-    pubkey: membershipMintAccount,
+    pubkey: resolvedAccounts.membershipMint,
     isSigner: false,
-    isWritable: isWritable(membershipMintAccount, true),
+    isWritable: isWritable(resolvedAccounts.membershipMint, true),
   });
 
   // Rent.
   keys.push({
-    pubkey: rentAccount,
+    pubkey: resolvedAccounts.rent,
     isSigner: false,
-    isWritable: isWritable(rentAccount, false),
+    isWritable: isWritable(resolvedAccounts.rent, false),
   });
 
   // Token Program.
   keys.push({
-    pubkey: tokenProgramAccount,
+    pubkey: resolvedAccounts.tokenProgram,
     isSigner: false,
-    isWritable: isWritable(tokenProgramAccount, false),
+    isWritable: isWritable(resolvedAccounts.tokenProgram, false),
   });
 
   // Data.
-  const data = getInitInstructionDataSerializer(context).serialize({
-    ...input,
-    bumpSeed: fanoutAccount.bump,
-    nativeAccountBumpSeed: holdingAccountAccount.bump,
-  });
+  const data =
+    getInitInstructionDataSerializer(context).serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 557;

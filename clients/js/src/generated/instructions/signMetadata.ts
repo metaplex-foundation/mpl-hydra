@@ -13,10 +13,10 @@ import {
   Serializer,
   Signer,
   TransactionBuilder,
-  checkForIsWritableOverride as isWritable,
   mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { addObjectProperty, isWritable } from '../shared';
 
 // Accounts.
 export type SignMetadataInstructionAccounts = {
@@ -27,7 +27,7 @@ export type SignMetadataInstructionAccounts = {
   tokenMetadataProgram?: PublicKey;
 };
 
-// Arguments.
+// Data.
 export type SignMetadataInstructionData = { discriminator: Array<number> };
 
 export type SignMetadataInstructionDataArgs = {};
@@ -43,7 +43,7 @@ export function getSignMetadataInstructionDataSerializer(
   >(
     s.struct<SignMetadataInstructionData>(
       [['discriminator', s.array(s.u8(), { size: 8 })]],
-      { description: 'SignMetadataInstructionArgs' }
+      { description: 'SignMetadataInstructionData' }
     ),
     (value) =>
       ({
@@ -62,58 +62,68 @@ export function signMetadata(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = context.programs.getPublicKey(
-    'mplHydra',
-    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-  );
-
-  // Resolved accounts.
-  const authorityAccount = input.authority ?? context.identity;
-  const fanoutAccount = input.fanout;
-  const holdingAccountAccount = input.holdingAccount;
-  const metadataAccount = input.metadata;
-  const tokenMetadataProgramAccount = input.tokenMetadataProgram ?? {
+  const programId = {
     ...context.programs.getPublicKey(
-      'mplTokenMetadata',
-      'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+      'mplHydra',
+      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
     ),
     isWritable: false,
   };
 
+  // Resolved inputs.
+  const resolvingAccounts = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'authority',
+    input.authority ?? context.identity
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'tokenMetadataProgram',
+    input.tokenMetadataProgram ?? {
+      ...context.programs.getPublicKey(
+        'mplTokenMetadata',
+        'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+      ),
+      isWritable: false,
+    }
+  );
+  const resolvedAccounts = { ...input, ...resolvingAccounts };
+
   // Authority.
-  signers.push(authorityAccount);
+  signers.push(resolvedAccounts.authority);
   keys.push({
-    pubkey: authorityAccount.publicKey,
+    pubkey: resolvedAccounts.authority.publicKey,
     isSigner: true,
-    isWritable: isWritable(authorityAccount, true),
+    isWritable: isWritable(resolvedAccounts.authority, true),
   });
 
   // Fanout.
   keys.push({
-    pubkey: fanoutAccount,
+    pubkey: resolvedAccounts.fanout,
     isSigner: false,
-    isWritable: isWritable(fanoutAccount, false),
+    isWritable: isWritable(resolvedAccounts.fanout, false),
   });
 
   // Holding Account.
   keys.push({
-    pubkey: holdingAccountAccount,
+    pubkey: resolvedAccounts.holdingAccount,
     isSigner: false,
-    isWritable: isWritable(holdingAccountAccount, false),
+    isWritable: isWritable(resolvedAccounts.holdingAccount, false),
   });
 
   // Metadata.
   keys.push({
-    pubkey: metadataAccount,
+    pubkey: resolvedAccounts.metadata,
     isSigner: false,
-    isWritable: isWritable(metadataAccount, true),
+    isWritable: isWritable(resolvedAccounts.metadata, true),
   });
 
   // Token Metadata Program.
   keys.push({
-    pubkey: tokenMetadataProgramAccount,
+    pubkey: resolvedAccounts.tokenMetadataProgram,
     isSigner: false,
-    isWritable: isWritable(tokenMetadataProgramAccount, false),
+    isWritable: isWritable(resolvedAccounts.tokenMetadataProgram, false),
   });
 
   // Data.

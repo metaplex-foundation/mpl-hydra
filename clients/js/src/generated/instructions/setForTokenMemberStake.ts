@@ -13,10 +13,10 @@ import {
   Serializer,
   Signer,
   TransactionBuilder,
-  checkForIsWritableOverride as isWritable,
   mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { addObjectProperty, isWritable } from '../shared';
 
 // Accounts.
 export type SetForTokenMemberStakeInstructionAccounts = {
@@ -31,7 +31,7 @@ export type SetForTokenMemberStakeInstructionAccounts = {
   tokenProgram?: PublicKey;
 };
 
-// Arguments.
+// Data.
 export type SetForTokenMemberStakeInstructionData = {
   discriminator: Array<number>;
   shares: bigint;
@@ -58,7 +58,7 @@ export function getSetForTokenMemberStakeInstructionDataSerializer(
         ['discriminator', s.array(s.u8(), { size: 8 })],
         ['shares', s.u64()],
       ],
-      { description: 'SetForTokenMemberStakeInstructionArgs' }
+      { description: 'SetForTokenMemberStakeInstructionData' }
     ),
     (value) =>
       ({
@@ -71,112 +71,129 @@ export function getSetForTokenMemberStakeInstructionDataSerializer(
   >;
 }
 
+// Args.
+export type SetForTokenMemberStakeInstructionArgs =
+  SetForTokenMemberStakeInstructionDataArgs;
+
 // Instruction.
 export function setForTokenMemberStake(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
   input: SetForTokenMemberStakeInstructionAccounts &
-    SetForTokenMemberStakeInstructionDataArgs
+    SetForTokenMemberStakeInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = context.programs.getPublicKey(
-    'mplHydra',
-    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-  );
+  const programId = {
+    ...context.programs.getPublicKey(
+      'mplHydra',
+      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+    ),
+    isWritable: false,
+  };
 
-  // Resolved accounts.
-  const authorityAccount = input.authority ?? context.identity;
-  const memberAccount = input.member;
-  const fanoutAccount = input.fanout;
-  const membershipVoucherAccount = input.membershipVoucher;
-  const membershipMintAccount = input.membershipMint;
-  const membershipMintTokenAccountAccount = input.membershipMintTokenAccount;
-  const memberStakeAccountAccount = input.memberStakeAccount;
-  const systemProgramAccount = input.systemProgram ?? {
-    ...context.programs.getPublicKey(
-      'splSystem',
-      '11111111111111111111111111111111'
-    ),
-    isWritable: false,
-  };
-  const tokenProgramAccount = input.tokenProgram ?? {
-    ...context.programs.getPublicKey(
-      'splToken',
-      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-    ),
-    isWritable: false,
-  };
+  // Resolved inputs.
+  const resolvingAccounts = {};
+  const resolvingArgs = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'authority',
+    input.authority ?? context.identity
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'systemProgram',
+    input.systemProgram ?? {
+      ...context.programs.getPublicKey(
+        'splSystem',
+        '11111111111111111111111111111111'
+      ),
+      isWritable: false,
+    }
+  );
+  addObjectProperty(
+    resolvingAccounts,
+    'tokenProgram',
+    input.tokenProgram ?? {
+      ...context.programs.getPublicKey(
+        'splToken',
+        'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+      ),
+      isWritable: false,
+    }
+  );
+  const resolvedAccounts = { ...input, ...resolvingAccounts };
+  const resolvedArgs = { ...input, ...resolvingArgs };
 
   // Authority.
-  signers.push(authorityAccount);
+  signers.push(resolvedAccounts.authority);
   keys.push({
-    pubkey: authorityAccount.publicKey,
+    pubkey: resolvedAccounts.authority.publicKey,
     isSigner: true,
-    isWritable: isWritable(authorityAccount, true),
+    isWritable: isWritable(resolvedAccounts.authority, true),
   });
 
   // Member.
   keys.push({
-    pubkey: memberAccount,
+    pubkey: resolvedAccounts.member,
     isSigner: false,
-    isWritable: isWritable(memberAccount, false),
+    isWritable: isWritable(resolvedAccounts.member, false),
   });
 
   // Fanout.
   keys.push({
-    pubkey: fanoutAccount,
+    pubkey: resolvedAccounts.fanout,
     isSigner: false,
-    isWritable: isWritable(fanoutAccount, true),
+    isWritable: isWritable(resolvedAccounts.fanout, true),
   });
 
   // Membership Voucher.
   keys.push({
-    pubkey: membershipVoucherAccount,
+    pubkey: resolvedAccounts.membershipVoucher,
     isSigner: false,
-    isWritable: isWritable(membershipVoucherAccount, true),
+    isWritable: isWritable(resolvedAccounts.membershipVoucher, true),
   });
 
   // Membership Mint.
   keys.push({
-    pubkey: membershipMintAccount,
+    pubkey: resolvedAccounts.membershipMint,
     isSigner: false,
-    isWritable: isWritable(membershipMintAccount, true),
+    isWritable: isWritable(resolvedAccounts.membershipMint, true),
   });
 
   // Membership Mint Token Account.
   keys.push({
-    pubkey: membershipMintTokenAccountAccount,
+    pubkey: resolvedAccounts.membershipMintTokenAccount,
     isSigner: false,
-    isWritable: isWritable(membershipMintTokenAccountAccount, true),
+    isWritable: isWritable(resolvedAccounts.membershipMintTokenAccount, true),
   });
 
   // Member Stake Account.
   keys.push({
-    pubkey: memberStakeAccountAccount,
+    pubkey: resolvedAccounts.memberStakeAccount,
     isSigner: false,
-    isWritable: isWritable(memberStakeAccountAccount, true),
+    isWritable: isWritable(resolvedAccounts.memberStakeAccount, true),
   });
 
   // System Program.
   keys.push({
-    pubkey: systemProgramAccount,
+    pubkey: resolvedAccounts.systemProgram,
     isSigner: false,
-    isWritable: isWritable(systemProgramAccount, false),
+    isWritable: isWritable(resolvedAccounts.systemProgram, false),
   });
 
   // Token Program.
   keys.push({
-    pubkey: tokenProgramAccount,
+    pubkey: resolvedAccounts.tokenProgram,
     isSigner: false,
-    isWritable: isWritable(tokenProgramAccount, false),
+    isWritable: isWritable(resolvedAccounts.tokenProgram, false),
   });
 
   // Data.
   const data =
     getSetForTokenMemberStakeInstructionDataSerializer(context).serialize(
-      input
+      resolvedArgs
     );
 
   // Bytes Created On Chain.

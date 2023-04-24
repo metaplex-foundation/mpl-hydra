@@ -13,10 +13,10 @@ import {
   Serializer,
   Signer,
   TransactionBuilder,
-  checkForIsWritableOverride as isWritable,
   mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { addObjectProperty, isWritable } from '../shared';
 
 // Accounts.
 export type RemoveMemberInstructionAccounts = {
@@ -27,7 +27,7 @@ export type RemoveMemberInstructionAccounts = {
   destination: PublicKey;
 };
 
-// Arguments.
+// Data.
 export type RemoveMemberInstructionData = { discriminator: Array<number> };
 
 export type RemoveMemberInstructionDataArgs = {};
@@ -43,7 +43,7 @@ export function getRemoveMemberInstructionDataSerializer(
   >(
     s.struct<RemoveMemberInstructionData>(
       [['discriminator', s.array(s.u8(), { size: 8 })]],
-      { description: 'RemoveMemberInstructionArgs' }
+      { description: 'RemoveMemberInstructionData' }
     ),
     (value) =>
       ({
@@ -62,52 +62,57 @@ export function removeMember(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = context.programs.getPublicKey(
-    'mplHydra',
-    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-  );
+  const programId = {
+    ...context.programs.getPublicKey(
+      'mplHydra',
+      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+    ),
+    isWritable: false,
+  };
 
-  // Resolved accounts.
-  const authorityAccount = input.authority ?? context.identity;
-  const memberAccount = input.member;
-  const fanoutAccount = input.fanout;
-  const membershipAccountAccount = input.membershipAccount;
-  const destinationAccount = input.destination;
+  // Resolved inputs.
+  const resolvingAccounts = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'authority',
+    input.authority ?? context.identity
+  );
+  const resolvedAccounts = { ...input, ...resolvingAccounts };
 
   // Authority.
-  signers.push(authorityAccount);
+  signers.push(resolvedAccounts.authority);
   keys.push({
-    pubkey: authorityAccount.publicKey,
+    pubkey: resolvedAccounts.authority.publicKey,
     isSigner: true,
-    isWritable: isWritable(authorityAccount, true),
+    isWritable: isWritable(resolvedAccounts.authority, true),
   });
 
   // Member.
   keys.push({
-    pubkey: memberAccount,
+    pubkey: resolvedAccounts.member,
     isSigner: false,
-    isWritable: isWritable(memberAccount, false),
+    isWritable: isWritable(resolvedAccounts.member, false),
   });
 
   // Fanout.
   keys.push({
-    pubkey: fanoutAccount,
+    pubkey: resolvedAccounts.fanout,
     isSigner: false,
-    isWritable: isWritable(fanoutAccount, true),
+    isWritable: isWritable(resolvedAccounts.fanout, true),
   });
 
   // Membership Account.
   keys.push({
-    pubkey: membershipAccountAccount,
+    pubkey: resolvedAccounts.membershipAccount,
     isSigner: false,
-    isWritable: isWritable(membershipAccountAccount, true),
+    isWritable: isWritable(resolvedAccounts.membershipAccount, true),
   });
 
   // Destination.
   keys.push({
-    pubkey: destinationAccount,
+    pubkey: resolvedAccounts.destination,
     isSigner: false,
-    isWritable: isWritable(destinationAccount, true),
+    isWritable: isWritable(resolvedAccounts.destination, true),
   });
 
   // Data.

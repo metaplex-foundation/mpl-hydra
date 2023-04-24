@@ -13,10 +13,10 @@ import {
   Serializer,
   Signer,
   TransactionBuilder,
-  checkForIsWritableOverride as isWritable,
   mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import { addObjectProperty, isWritable } from '../shared';
 
 // Accounts.
 export type TransferSharesInstructionAccounts = {
@@ -28,7 +28,7 @@ export type TransferSharesInstructionAccounts = {
   toMembershipAccount: PublicKey;
 };
 
-// Arguments.
+// Data.
 export type TransferSharesInstructionData = {
   discriminator: Array<number>;
   shares: bigint;
@@ -53,7 +53,7 @@ export function getTransferSharesInstructionDataSerializer(
         ['discriminator', s.array(s.u8(), { size: 8 })],
         ['shares', s.u64()],
       ],
-      { description: 'TransferSharesInstructionArgs' }
+      { description: 'TransferSharesInstructionData' }
     ),
     (value) =>
       ({
@@ -66,74 +66,83 @@ export function getTransferSharesInstructionDataSerializer(
   >;
 }
 
+// Args.
+export type TransferSharesInstructionArgs = TransferSharesInstructionDataArgs;
+
 // Instruction.
 export function transferShares(
   context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
-  input: TransferSharesInstructionAccounts & TransferSharesInstructionDataArgs
+  input: TransferSharesInstructionAccounts & TransferSharesInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = context.programs.getPublicKey(
-    'mplHydra',
-    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-  );
+  const programId = {
+    ...context.programs.getPublicKey(
+      'mplHydra',
+      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+    ),
+    isWritable: false,
+  };
 
-  // Resolved accounts.
-  const authorityAccount = input.authority ?? context.identity;
-  const fromMemberAccount = input.fromMember;
-  const toMemberAccount = input.toMember;
-  const fanoutAccount = input.fanout;
-  const fromMembershipAccountAccount = input.fromMembershipAccount;
-  const toMembershipAccountAccount = input.toMembershipAccount;
+  // Resolved inputs.
+  const resolvingAccounts = {};
+  const resolvingArgs = {};
+  addObjectProperty(
+    resolvingAccounts,
+    'authority',
+    input.authority ?? context.identity
+  );
+  const resolvedAccounts = { ...input, ...resolvingAccounts };
+  const resolvedArgs = { ...input, ...resolvingArgs };
 
   // Authority.
-  signers.push(authorityAccount);
+  signers.push(resolvedAccounts.authority);
   keys.push({
-    pubkey: authorityAccount.publicKey,
+    pubkey: resolvedAccounts.authority.publicKey,
     isSigner: true,
-    isWritable: isWritable(authorityAccount, false),
+    isWritable: isWritable(resolvedAccounts.authority, false),
   });
 
   // From Member.
   keys.push({
-    pubkey: fromMemberAccount,
+    pubkey: resolvedAccounts.fromMember,
     isSigner: false,
-    isWritable: isWritable(fromMemberAccount, false),
+    isWritable: isWritable(resolvedAccounts.fromMember, false),
   });
 
   // To Member.
   keys.push({
-    pubkey: toMemberAccount,
+    pubkey: resolvedAccounts.toMember,
     isSigner: false,
-    isWritable: isWritable(toMemberAccount, false),
+    isWritable: isWritable(resolvedAccounts.toMember, false),
   });
 
   // Fanout.
   keys.push({
-    pubkey: fanoutAccount,
+    pubkey: resolvedAccounts.fanout,
     isSigner: false,
-    isWritable: isWritable(fanoutAccount, true),
+    isWritable: isWritable(resolvedAccounts.fanout, true),
   });
 
   // From Membership Account.
   keys.push({
-    pubkey: fromMembershipAccountAccount,
+    pubkey: resolvedAccounts.fromMembershipAccount,
     isSigner: false,
-    isWritable: isWritable(fromMembershipAccountAccount, true),
+    isWritable: isWritable(resolvedAccounts.fromMembershipAccount, true),
   });
 
   // To Membership Account.
   keys.push({
-    pubkey: toMembershipAccountAccount,
+    pubkey: resolvedAccounts.toMembershipAccount,
     isSigner: false,
-    isWritable: isWritable(toMembershipAccountAccount, true),
+    isWritable: isWritable(resolvedAccounts.toMembershipAccount, true),
   });
 
   // Data.
   const data =
-    getTransferSharesInstructionDataSerializer(context).serialize(input);
+    getTransferSharesInstructionDataSerializer(context).serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

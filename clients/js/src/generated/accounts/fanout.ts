@@ -88,7 +88,7 @@ export function getFanoutAccountDataSerializer(
         ['membershipMint', s.option(s.publicKey())],
         ['totalStakedShares', s.option(s.u64())],
       ],
-      { description: 'Fanout' }
+      { description: 'FanoutAccountData' }
     ),
     (value) =>
       ({

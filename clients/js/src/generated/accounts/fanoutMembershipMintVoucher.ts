@@ -59,7 +59,7 @@ export function getFanoutMembershipMintVoucherAccountDataSerializer(
         ['lastInflow', s.u64()],
         ['bumpSeed', s.u8()],
       ],
-      { description: 'FanoutMembershipMintVoucher' }
+      { description: 'FanoutMembershipMintVoucherAccountData' }
     ),
     (value) =>
       ({
