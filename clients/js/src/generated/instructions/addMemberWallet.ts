@@ -52,7 +52,7 @@ export function getAddMemberWalletInstructionDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     AddMemberWalletInstructionDataArgs,
-    AddMemberWalletInstructionData,
+    any,
     AddMemberWalletInstructionData
   >(
     s.struct<AddMemberWalletInstructionData>(
@@ -62,11 +62,10 @@ export function getAddMemberWalletInstructionDataSerializer(
       ],
       { description: 'AddMemberWalletInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [201, 9, 59, 128, 69, 117, 220, 235],
-      } as AddMemberWalletInstructionData)
+    (value) => ({
+      ...value,
+      discriminator: [201, 9, 59, 128, 69, 117, 220, 235],
+    })
   ) as Serializer<
     AddMemberWalletInstructionDataArgs,
     AddMemberWalletInstructionData

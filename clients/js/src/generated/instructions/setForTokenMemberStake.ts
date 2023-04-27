@@ -50,7 +50,7 @@ export function getSetForTokenMemberStakeInstructionDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     SetForTokenMemberStakeInstructionDataArgs,
-    SetForTokenMemberStakeInstructionData,
+    any,
     SetForTokenMemberStakeInstructionData
   >(
     s.struct<SetForTokenMemberStakeInstructionData>(
@@ -60,11 +60,7 @@ export function getSetForTokenMemberStakeInstructionDataSerializer(
       ],
       { description: 'SetForTokenMemberStakeInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [210, 40, 6, 254, 2, 80, 154, 109],
-      } as SetForTokenMemberStakeInstructionData)
+    (value) => ({ ...value, discriminator: [210, 40, 6, 254, 2, 80, 154, 109] })
   ) as Serializer<
     SetForTokenMemberStakeInstructionDataArgs,
     SetForTokenMemberStakeInstructionData

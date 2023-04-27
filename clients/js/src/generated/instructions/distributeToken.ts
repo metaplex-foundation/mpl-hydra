@@ -55,7 +55,7 @@ export function getDistributeTokenInstructionDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     DistributeTokenInstructionDataArgs,
-    DistributeTokenInstructionData,
+    any,
     DistributeTokenInstructionData
   >(
     s.struct<DistributeTokenInstructionData>(
@@ -65,11 +65,10 @@ export function getDistributeTokenInstructionDataSerializer(
       ],
       { description: 'DistributeTokenInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [126, 105, 46, 135, 28, 36, 117, 212],
-      } as DistributeTokenInstructionData)
+    (value) => ({
+      ...value,
+      discriminator: [126, 105, 46, 135, 28, 36, 117, 212],
+    })
   ) as Serializer<
     DistributeTokenInstructionDataArgs,
     DistributeTokenInstructionData

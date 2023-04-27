@@ -38,18 +38,14 @@ export function getSignMetadataInstructionDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     SignMetadataInstructionDataArgs,
-    SignMetadataInstructionData,
+    any,
     SignMetadataInstructionData
   >(
     s.struct<SignMetadataInstructionData>(
       [['discriminator', s.array(s.u8(), { size: 8 })]],
       { description: 'SignMetadataInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [188, 67, 163, 49, 0, 150, 63, 89],
-      } as SignMetadataInstructionData)
+    (value) => ({ ...value, discriminator: [188, 67, 163, 49, 0, 150, 63, 89] })
   ) as Serializer<SignMetadataInstructionDataArgs, SignMetadataInstructionData>;
 }
 

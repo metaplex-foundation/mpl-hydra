@@ -15,7 +15,7 @@ type ProgramErrorConstructor = new (
 const codeToErrorMap: Map<number, ProgramErrorConstructor> = new Map();
 const nameToErrorMap: Map<string, ProgramErrorConstructor> = new Map();
 
-/** BadArtithmetic: 'Encountered an arithmetic error' */
+/** BadArtithmetic: Encountered an arithmetic error */
 export class BadArtithmeticError extends ProgramError {
   readonly name: string = 'BadArtithmetic';
 
@@ -28,7 +28,7 @@ export class BadArtithmeticError extends ProgramError {
 codeToErrorMap.set(0x1770, BadArtithmeticError);
 nameToErrorMap.set('BadArtithmetic', BadArtithmeticError);
 
-/** InvalidAuthority: 'Invalid authority' */
+/** InvalidAuthority: Invalid authority */
 export class InvalidAuthorityError extends ProgramError {
   readonly name: string = 'InvalidAuthority';
 
@@ -41,7 +41,7 @@ export class InvalidAuthorityError extends ProgramError {
 codeToErrorMap.set(0x1771, InvalidAuthorityError);
 nameToErrorMap.set('InvalidAuthority', InvalidAuthorityError);
 
-/** InsufficientShares: 'Not Enough Available Shares' */
+/** InsufficientShares: Not Enough Available Shares */
 export class InsufficientSharesError extends ProgramError {
   readonly name: string = 'InsufficientShares';
 
@@ -54,7 +54,7 @@ export class InsufficientSharesError extends ProgramError {
 codeToErrorMap.set(0x1772, InsufficientSharesError);
 nameToErrorMap.set('InsufficientShares', InsufficientSharesError);
 
-/** SharesArentAtMax: 'All available shares must be assigned to a member' */
+/** SharesArentAtMax: All available shares must be assigned to a member */
 export class SharesArentAtMaxError extends ProgramError {
   readonly name: string = 'SharesArentAtMax';
 
@@ -67,7 +67,7 @@ export class SharesArentAtMaxError extends ProgramError {
 codeToErrorMap.set(0x1773, SharesArentAtMaxError);
 nameToErrorMap.set('SharesArentAtMax', SharesArentAtMaxError);
 
-/** NewMintAccountRequired: 'A New mint account must be provided' */
+/** NewMintAccountRequired: A New mint account must be provided */
 export class NewMintAccountRequiredError extends ProgramError {
   readonly name: string = 'NewMintAccountRequired';
 
@@ -80,7 +80,7 @@ export class NewMintAccountRequiredError extends ProgramError {
 codeToErrorMap.set(0x1774, NewMintAccountRequiredError);
 nameToErrorMap.set('NewMintAccountRequired', NewMintAccountRequiredError);
 
-/** MintAccountRequired: 'A Token type Fanout requires a Membership Mint' */
+/** MintAccountRequired: A Token type Fanout requires a Membership Mint */
 export class MintAccountRequiredError extends ProgramError {
   readonly name: string = 'MintAccountRequired';
 
@@ -93,7 +93,7 @@ export class MintAccountRequiredError extends ProgramError {
 codeToErrorMap.set(0x1775, MintAccountRequiredError);
 nameToErrorMap.set('MintAccountRequired', MintAccountRequiredError);
 
-/** InvalidMembershipModel: 'Invalid Membership Model' */
+/** InvalidMembershipModel: Invalid Membership Model */
 export class InvalidMembershipModelError extends ProgramError {
   readonly name: string = 'InvalidMembershipModel';
 
@@ -106,7 +106,7 @@ export class InvalidMembershipModelError extends ProgramError {
 codeToErrorMap.set(0x1776, InvalidMembershipModelError);
 nameToErrorMap.set('InvalidMembershipModel', InvalidMembershipModelError);
 
-/** InvalidMembershipVoucher: 'Invalid Membership Voucher' */
+/** InvalidMembershipVoucher: Invalid Membership Voucher */
 export class InvalidMembershipVoucherError extends ProgramError {
   readonly name: string = 'InvalidMembershipVoucher';
 
@@ -119,7 +119,7 @@ export class InvalidMembershipVoucherError extends ProgramError {
 codeToErrorMap.set(0x1777, InvalidMembershipVoucherError);
 nameToErrorMap.set('InvalidMembershipVoucher', InvalidMembershipVoucherError);
 
-/** MintDoesNotMatch: 'Invalid Mint for the config' */
+/** MintDoesNotMatch: Invalid Mint for the config */
 export class MintDoesNotMatchError extends ProgramError {
   readonly name: string = 'MintDoesNotMatch';
 
@@ -132,7 +132,7 @@ export class MintDoesNotMatchError extends ProgramError {
 codeToErrorMap.set(0x1778, MintDoesNotMatchError);
 nameToErrorMap.set('MintDoesNotMatch', MintDoesNotMatchError);
 
-/** InvalidHoldingAccount: 'Holding account does not match the config' */
+/** InvalidHoldingAccount: Holding account does not match the config */
 export class InvalidHoldingAccountError extends ProgramError {
   readonly name: string = 'InvalidHoldingAccount';
 
@@ -145,7 +145,7 @@ export class InvalidHoldingAccountError extends ProgramError {
 codeToErrorMap.set(0x1779, InvalidHoldingAccountError);
 nameToErrorMap.set('InvalidHoldingAccount', InvalidHoldingAccountError);
 
-/** HoldingAccountMustBeAnATA: 'A Mint holding account must be an ata for the mint owned by the config' */
+/** HoldingAccountMustBeAnATA: A Mint holding account must be an ata for the mint owned by the config */
 export class HoldingAccountMustBeAnATAError extends ProgramError {
   readonly name: string = 'HoldingAccountMustBeAnATA';
 
@@ -162,7 +162,7 @@ export class HoldingAccountMustBeAnATAError extends ProgramError {
 codeToErrorMap.set(0x177a, HoldingAccountMustBeAnATAError);
 nameToErrorMap.set('HoldingAccountMustBeAnATA', HoldingAccountMustBeAnATAError);
 
-/** DerivedKeyInvalid: 'undefined' */
+/** DerivedKeyInvalid */
 export class DerivedKeyInvalidError extends ProgramError {
   readonly name: string = 'DerivedKeyInvalid';
 
@@ -175,7 +175,7 @@ export class DerivedKeyInvalidError extends ProgramError {
 codeToErrorMap.set(0x177b, DerivedKeyInvalidError);
 nameToErrorMap.set('DerivedKeyInvalid', DerivedKeyInvalidError);
 
-/** IncorrectOwner: 'undefined' */
+/** IncorrectOwner */
 export class IncorrectOwnerError extends ProgramError {
   readonly name: string = 'IncorrectOwner';
 
@@ -188,7 +188,7 @@ export class IncorrectOwnerError extends ProgramError {
 codeToErrorMap.set(0x177c, IncorrectOwnerError);
 nameToErrorMap.set('IncorrectOwner', IncorrectOwnerError);
 
-/** WalletDoesNotOwnMembershipToken: 'Wallet Does not Own Membership Token' */
+/** WalletDoesNotOwnMembershipToken: Wallet Does not Own Membership Token */
 export class WalletDoesNotOwnMembershipTokenError extends ProgramError {
   readonly name: string = 'WalletDoesNotOwnMembershipToken';
 
@@ -204,7 +204,7 @@ nameToErrorMap.set(
   WalletDoesNotOwnMembershipTokenError
 );
 
-/** InvalidMetadata: 'The Metadata specified is not valid Token Metadata' */
+/** InvalidMetadata: The Metadata specified is not valid Token Metadata */
 export class InvalidMetadataError extends ProgramError {
   readonly name: string = 'InvalidMetadata';
 
@@ -217,7 +217,7 @@ export class InvalidMetadataError extends ProgramError {
 codeToErrorMap.set(0x177e, InvalidMetadataError);
 nameToErrorMap.set('InvalidMetadata', InvalidMetadataError);
 
-/** NumericalOverflow: 'undefined' */
+/** NumericalOverflow */
 export class NumericalOverflowError extends ProgramError {
   readonly name: string = 'NumericalOverflow';
 
@@ -230,7 +230,7 @@ export class NumericalOverflowError extends ProgramError {
 codeToErrorMap.set(0x177f, NumericalOverflowError);
 nameToErrorMap.set('NumericalOverflow', NumericalOverflowError);
 
-/** InsufficientBalanceToDistribute: 'Not enough new balance to distribute' */
+/** InsufficientBalanceToDistribute: Not enough new balance to distribute */
 export class InsufficientBalanceToDistributeError extends ProgramError {
   readonly name: string = 'InsufficientBalanceToDistribute';
 
@@ -246,7 +246,7 @@ nameToErrorMap.set(
   InsufficientBalanceToDistributeError
 );
 
-/** InvalidFanoutForMint: 'undefined' */
+/** InvalidFanoutForMint */
 export class InvalidFanoutForMintError extends ProgramError {
   readonly name: string = 'InvalidFanoutForMint';
 
@@ -259,7 +259,7 @@ export class InvalidFanoutForMintError extends ProgramError {
 codeToErrorMap.set(0x1781, InvalidFanoutForMintError);
 nameToErrorMap.set('InvalidFanoutForMint', InvalidFanoutForMintError);
 
-/** MustDistribute: 'This operation must be the instruction right after a distrobution on the same accounts.' */
+/** MustDistribute: This operation must be the instruction right after a distrobution on the same accounts. */
 export class MustDistributeError extends ProgramError {
   readonly name: string = 'MustDistribute';
 
@@ -276,7 +276,7 @@ export class MustDistributeError extends ProgramError {
 codeToErrorMap.set(0x1782, MustDistributeError);
 nameToErrorMap.set('MustDistribute', MustDistributeError);
 
-/** InvalidStakeAta: 'undefined' */
+/** InvalidStakeAta */
 export class InvalidStakeAtaError extends ProgramError {
   readonly name: string = 'InvalidStakeAta';
 
@@ -289,7 +289,7 @@ export class InvalidStakeAtaError extends ProgramError {
 codeToErrorMap.set(0x1783, InvalidStakeAtaError);
 nameToErrorMap.set('InvalidStakeAta', InvalidStakeAtaError);
 
-/** CannotTransferToSelf: 'undefined' */
+/** CannotTransferToSelf */
 export class CannotTransferToSelfError extends ProgramError {
   readonly name: string = 'CannotTransferToSelf';
 
@@ -302,7 +302,7 @@ export class CannotTransferToSelfError extends ProgramError {
 codeToErrorMap.set(0x1784, CannotTransferToSelfError);
 nameToErrorMap.set('CannotTransferToSelf', CannotTransferToSelfError);
 
-/** TransferNotSupported: 'Transfer is not supported on this membership model' */
+/** TransferNotSupported: Transfer is not supported on this membership model */
 export class TransferNotSupportedError extends ProgramError {
   readonly name: string = 'TransferNotSupported';
 
@@ -315,7 +315,7 @@ export class TransferNotSupportedError extends ProgramError {
 codeToErrorMap.set(0x1785, TransferNotSupportedError);
 nameToErrorMap.set('TransferNotSupported', TransferNotSupportedError);
 
-/** RemoveNotSupported: 'Remove is not supported on this membership model' */
+/** RemoveNotSupported: Remove is not supported on this membership model */
 export class RemoveNotSupportedError extends ProgramError {
   readonly name: string = 'RemoveNotSupported';
 
@@ -328,7 +328,7 @@ export class RemoveNotSupportedError extends ProgramError {
 codeToErrorMap.set(0x1786, RemoveNotSupportedError);
 nameToErrorMap.set('RemoveNotSupported', RemoveNotSupportedError);
 
-/** RemoveSharesMustBeZero: 'Before you remove a wallet or NFT member please transfer the shares to another member' */
+/** RemoveSharesMustBeZero: Before you remove a wallet or NFT member please transfer the shares to another member */
 export class RemoveSharesMustBeZeroError extends ProgramError {
   readonly name: string = 'RemoveSharesMustBeZero';
 
@@ -345,7 +345,7 @@ export class RemoveSharesMustBeZeroError extends ProgramError {
 codeToErrorMap.set(0x1787, RemoveSharesMustBeZeroError);
 nameToErrorMap.set('RemoveSharesMustBeZero', RemoveSharesMustBeZeroError);
 
-/** InvalidCloseAccountDestination: 'Sending Sol to a SPL token destination will render the sol unusable' */
+/** InvalidCloseAccountDestination: Sending Sol to a SPL token destination will render the sol unusable */
 export class InvalidCloseAccountDestinationError extends ProgramError {
   readonly name: string = 'InvalidCloseAccountDestination';
 

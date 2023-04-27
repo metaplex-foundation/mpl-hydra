@@ -40,20 +40,15 @@ export function getUnstakeInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
 ): Serializer<UnstakeInstructionDataArgs, UnstakeInstructionData> {
   const s = context.serializer;
-  return mapSerializer<
-    UnstakeInstructionDataArgs,
-    UnstakeInstructionData,
-    UnstakeInstructionData
-  >(
+  return mapSerializer<UnstakeInstructionDataArgs, any, UnstakeInstructionData>(
     s.struct<UnstakeInstructionData>(
       [['discriminator', s.array(s.u8(), { size: 8 })]],
       { description: 'UnstakeInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [217, 160, 136, 174, 149, 62, 79, 133],
-      } as UnstakeInstructionData)
+    (value) => ({
+      ...value,
+      discriminator: [217, 160, 136, 174, 149, 62, 79, 133],
+    })
   ) as Serializer<UnstakeInstructionDataArgs, UnstakeInstructionData>;
 }
 

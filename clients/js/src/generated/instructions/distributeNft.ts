@@ -51,7 +51,7 @@ export function getDistributeNftInstructionDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     DistributeNftInstructionDataArgs,
-    DistributeNftInstructionData,
+    any,
     DistributeNftInstructionData
   >(
     s.struct<DistributeNftInstructionData>(
@@ -61,11 +61,10 @@ export function getDistributeNftInstructionDataSerializer(
       ],
       { description: 'DistributeNftInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [108, 240, 68, 81, 144, 83, 58, 153],
-      } as DistributeNftInstructionData)
+    (value) => ({
+      ...value,
+      discriminator: [108, 240, 68, 81, 144, 83, 58, 153],
+    })
   ) as Serializer<
     DistributeNftInstructionDataArgs,
     DistributeNftInstructionData

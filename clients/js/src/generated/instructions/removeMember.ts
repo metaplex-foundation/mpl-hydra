@@ -38,18 +38,14 @@ export function getRemoveMemberInstructionDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     RemoveMemberInstructionDataArgs,
-    RemoveMemberInstructionData,
+    any,
     RemoveMemberInstructionData
   >(
     s.struct<RemoveMemberInstructionData>(
       [['discriminator', s.array(s.u8(), { size: 8 })]],
       { description: 'RemoveMemberInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [9, 45, 36, 163, 245, 40, 150, 85],
-      } as RemoveMemberInstructionData)
+    (value) => ({ ...value, discriminator: [9, 45, 36, 163, 245, 40, 150, 85] })
   ) as Serializer<RemoveMemberInstructionDataArgs, RemoveMemberInstructionData>;
 }
 

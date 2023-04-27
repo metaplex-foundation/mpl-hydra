@@ -54,7 +54,7 @@ export function getDistributeWalletInstructionDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     DistributeWalletInstructionDataArgs,
-    DistributeWalletInstructionData,
+    any,
     DistributeWalletInstructionData
   >(
     s.struct<DistributeWalletInstructionData>(
@@ -64,11 +64,10 @@ export function getDistributeWalletInstructionDataSerializer(
       ],
       { description: 'DistributeWalletInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [252, 168, 167, 66, 40, 201, 182, 163],
-      } as DistributeWalletInstructionData)
+    (value) => ({
+      ...value,
+      discriminator: [252, 168, 167, 66, 40, 201, 182, 163],
+    })
   ) as Serializer<
     DistributeWalletInstructionDataArgs,
     DistributeWalletInstructionData

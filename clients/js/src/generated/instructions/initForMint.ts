@@ -44,7 +44,7 @@ export function getInitForMintInstructionDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     InitForMintInstructionDataArgs,
-    InitForMintInstructionData,
+    any,
     InitForMintInstructionData
   >(
     s.struct<InitForMintInstructionData>(
@@ -54,11 +54,10 @@ export function getInitForMintInstructionDataSerializer(
       ],
       { description: 'InitForMintInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [140, 150, 232, 195, 93, 219, 35, 170],
-      } as InitForMintInstructionData)
+    (value) => ({
+      ...value,
+      discriminator: [140, 150, 232, 195, 93, 219, 35, 170],
+    })
   ) as Serializer<InitForMintInstructionDataArgs, InitForMintInstructionData>;
 }
 

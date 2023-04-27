@@ -45,7 +45,7 @@ export function getTransferSharesInstructionDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     TransferSharesInstructionDataArgs,
-    TransferSharesInstructionData,
+    any,
     TransferSharesInstructionData
   >(
     s.struct<TransferSharesInstructionData>(
@@ -55,11 +55,10 @@ export function getTransferSharesInstructionDataSerializer(
       ],
       { description: 'TransferSharesInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [195, 175, 36, 50, 101, 22, 28, 87],
-      } as TransferSharesInstructionData)
+    (value) => ({
+      ...value,
+      discriminator: [195, 175, 36, 50, 101, 22, 28, 87],
+    })
   ) as Serializer<
     TransferSharesInstructionDataArgs,
     TransferSharesInstructionData

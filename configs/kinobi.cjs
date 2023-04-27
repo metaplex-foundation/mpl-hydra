@@ -47,7 +47,7 @@ kinobi.update(
     fanout: {
       size: 300,
       seeds: [
-        k.literalSeed("fanout-config"),
+        k.stringConstantSeed("fanout-config"),
         k.variableSeed(
           "name",
           k.stringTypeNode({ size: k.remainderSize() }),
@@ -58,7 +58,7 @@ kinobi.update(
     fanoutMembershipVoucher: {
       size: 153,
       seeds: [
-        k.literalSeed("fanout-membership"),
+        k.stringConstantSeed("fanout-membership"),
         k.publicKeySeed("fanout", "The address of the fanout account"),
         k.publicKeySeed("member", "The member's public key"),
       ],
@@ -66,7 +66,7 @@ kinobi.update(
     fanoutMint: {
       size: 200,
       seeds: [
-        k.literalSeed("fanout-config"),
+        k.stringConstantSeed("fanout-config"),
         k.publicKeySeed("fanout", "The address of the fanout account"),
         k.publicKeySeed("mint", "The address of the mint account"),
       ],
@@ -74,7 +74,7 @@ kinobi.update(
     fanoutMembershipMintVoucher: {
       size: 105,
       seeds: [
-        k.literalSeed("fanout-membership"),
+        k.stringConstantSeed("fanout-membership"),
         k.publicKeySeed("fanout", "The address of the fanout account"),
         k.publicKeySeed("membership", "The address of the membership account"),
         k.publicKeySeed("mint", "The address of the mint account"),

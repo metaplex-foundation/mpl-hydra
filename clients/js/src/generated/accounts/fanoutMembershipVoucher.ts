@@ -52,7 +52,7 @@ export function getFanoutMembershipVoucherAccountDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     FanoutMembershipVoucherAccountDataArgs,
-    FanoutMembershipVoucherAccountData,
+    any,
     FanoutMembershipVoucherAccountData
   >(
     s.struct<FanoutMembershipVoucherAccountData>(
@@ -67,11 +67,10 @@ export function getFanoutMembershipVoucherAccountDataSerializer(
       ],
       { description: 'FanoutMembershipVoucherAccountData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [16, 229, 84, 210, 96, 22, 126, 120],
-      } as FanoutMembershipVoucherAccountData)
+    (value) => ({
+      ...value,
+      discriminator: [16, 229, 84, 210, 96, 22, 126, 120],
+    })
   ) as Serializer<
     FanoutMembershipVoucherAccountDataArgs,
     FanoutMembershipVoucherAccountData
@@ -189,4 +188,28 @@ export function findFanoutMembershipVoucherPda(
     s.publicKey().serialize(seeds.fanout),
     s.publicKey().serialize(seeds.member),
   ]);
+}
+
+export async function fetchFanoutMembershipVoucherFromSeeds(
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc' | 'serializer'>,
+  seeds: Parameters<typeof findFanoutMembershipVoucherPda>[1],
+  options?: RpcGetAccountOptions
+): Promise<FanoutMembershipVoucher> {
+  return fetchFanoutMembershipVoucher(
+    context,
+    findFanoutMembershipVoucherPda(context, seeds),
+    options
+  );
+}
+
+export async function safeFetchFanoutMembershipVoucherFromSeeds(
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc' | 'serializer'>,
+  seeds: Parameters<typeof findFanoutMembershipVoucherPda>[1],
+  options?: RpcGetAccountOptions
+): Promise<FanoutMembershipVoucher | null> {
+  return safeFetchFanoutMembershipVoucher(
+    context,
+    findFanoutMembershipVoucherPda(context, seeds),
+    options
+  );
 }

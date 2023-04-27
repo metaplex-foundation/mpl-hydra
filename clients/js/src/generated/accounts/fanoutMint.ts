@@ -46,11 +46,7 @@ export function getFanoutMintAccountDataSerializer(
   context: Pick<Context, 'serializer'>
 ): Serializer<FanoutMintAccountDataArgs, FanoutMintAccountData> {
   const s = context.serializer;
-  return mapSerializer<
-    FanoutMintAccountDataArgs,
-    FanoutMintAccountData,
-    FanoutMintAccountData
-  >(
+  return mapSerializer<FanoutMintAccountDataArgs, any, FanoutMintAccountData>(
     s.struct<FanoutMintAccountData>(
       [
         ['discriminator', s.array(s.u8(), { size: 8 })],
@@ -63,11 +59,10 @@ export function getFanoutMintAccountDataSerializer(
       ],
       { description: 'FanoutMintAccountData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [117, 125, 188, 123, 180, 213, 133, 164],
-      } as FanoutMintAccountData)
+    (value) => ({
+      ...value,
+      discriminator: [117, 125, 188, 123, 180, 213, 133, 164],
+    })
   ) as Serializer<FanoutMintAccountDataArgs, FanoutMintAccountData>;
 }
 
@@ -182,4 +177,24 @@ export function findFanoutMintPda(
     s.publicKey().serialize(seeds.fanout),
     s.publicKey().serialize(seeds.mint),
   ]);
+}
+
+export async function fetchFanoutMintFromSeeds(
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc' | 'serializer'>,
+  seeds: Parameters<typeof findFanoutMintPda>[1],
+  options?: RpcGetAccountOptions
+): Promise<FanoutMint> {
+  return fetchFanoutMint(context, findFanoutMintPda(context, seeds), options);
+}
+
+export async function safeFetchFanoutMintFromSeeds(
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc' | 'serializer'>,
+  seeds: Parameters<typeof findFanoutMintPda>[1],
+  options?: RpcGetAccountOptions
+): Promise<FanoutMint | null> {
+  return safeFetchFanoutMint(
+    context,
+    findFanoutMintPda(context, seeds),
+    options
+  );
 }

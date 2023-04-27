@@ -45,7 +45,7 @@ export function getAddMemberNftInstructionDataSerializer(
   const s = context.serializer;
   return mapSerializer<
     AddMemberNftInstructionDataArgs,
-    AddMemberNftInstructionData,
+    any,
     AddMemberNftInstructionData
   >(
     s.struct<AddMemberNftInstructionData>(
@@ -55,11 +55,7 @@ export function getAddMemberNftInstructionDataSerializer(
       ],
       { description: 'AddMemberNftInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [92, 255, 105, 209, 25, 41, 3, 7],
-      } as AddMemberNftInstructionData)
+    (value) => ({ ...value, discriminator: [92, 255, 105, 209, 25, 41, 3, 7] })
   ) as Serializer<AddMemberNftInstructionDataArgs, AddMemberNftInstructionData>;
 }
 

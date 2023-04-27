@@ -60,11 +60,7 @@ export function getInitInstructionDataSerializer(
   context: Pick<Context, 'serializer'>
 ): Serializer<InitInstructionDataArgs, InitInstructionData> {
   const s = context.serializer;
-  return mapSerializer<
-    InitInstructionDataArgs,
-    InitInstructionData,
-    InitInstructionData
-  >(
+  return mapSerializer<InitInstructionDataArgs, any, InitInstructionData>(
     s.struct<InitInstructionData>(
       [
         ['discriminator', s.array(s.u8(), { size: 8 })],
@@ -76,11 +72,10 @@ export function getInitInstructionDataSerializer(
       ],
       { description: 'InitInstructionData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [172, 5, 165, 143, 86, 159, 50, 237],
-      } as InitInstructionData)
+    (value) => ({
+      ...value,
+      discriminator: [172, 5, 165, 143, 86, 159, 50, 237],
+    })
   ) as Serializer<InitInstructionDataArgs, InitInstructionData>;
 }
 

@@ -66,11 +66,7 @@ export function getFanoutAccountDataSerializer(
   context: Pick<Context, 'serializer'>
 ): Serializer<FanoutAccountDataArgs, FanoutAccountData> {
   const s = context.serializer;
-  return mapSerializer<
-    FanoutAccountDataArgs,
-    FanoutAccountData,
-    FanoutAccountData
-  >(
+  return mapSerializer<FanoutAccountDataArgs, any, FanoutAccountData>(
     s.struct<FanoutAccountData>(
       [
         ['discriminator', s.array(s.u8(), { size: 8 })],
@@ -90,11 +86,10 @@ export function getFanoutAccountDataSerializer(
       ],
       { description: 'FanoutAccountData' }
     ),
-    (value) =>
-      ({
-        ...value,
-        discriminator: [198, 246, 243, 191, 206, 255, 3, 247],
-      } as FanoutAccountData)
+    (value) => ({
+      ...value,
+      discriminator: [198, 246, 243, 191, 206, 255, 3, 247],
+    })
   ) as Serializer<FanoutAccountDataArgs, FanoutAccountData>;
 }
 
@@ -216,4 +211,20 @@ export function findFanoutPda(
     s.string({ size: 'variable' }).serialize('fanout-config'),
     s.string({ size: 'variable' }).serialize(seeds.name),
   ]);
+}
+
+export async function fetchFanoutFromSeeds(
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc' | 'serializer'>,
+  seeds: Parameters<typeof findFanoutPda>[1],
+  options?: RpcGetAccountOptions
+): Promise<Fanout> {
+  return fetchFanout(context, findFanoutPda(context, seeds), options);
+}
+
+export async function safeFetchFanoutFromSeeds(
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc' | 'serializer'>,
+  seeds: Parameters<typeof findFanoutPda>[1],
+  options?: RpcGetAccountOptions
+): Promise<Fanout | null> {
+  return safeFetchFanout(context, findFanoutPda(context, seeds), options);
 }
