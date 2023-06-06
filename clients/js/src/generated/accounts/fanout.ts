@@ -88,7 +88,7 @@ export function getFanoutAccountDataSerializer(
     ),
     (value) => ({
       ...value,
-      discriminator: [198, 246, 243, 191, 206, 255, 3, 247],
+      discriminator: [164, 101, 210, 92, 222, 14, 75, 156],
     })
   ) as Serializer<FanoutAccountDataArgs, FanoutAccountData>;
 }
@@ -188,7 +188,7 @@ export function getFanoutGpaBuilder(
       totalStakedShares: [null, s.option(s.u64())],
     })
     .deserializeUsing<Fanout>((account) => deserializeFanout(context, account))
-    .whereField('discriminator', [198, 246, 243, 191, 206, 255, 3, 247]);
+    .whereField('discriminator', [164, 101, 210, 92, 222, 14, 75, 156]);
 }
 
 export function getFanoutSize(): number {

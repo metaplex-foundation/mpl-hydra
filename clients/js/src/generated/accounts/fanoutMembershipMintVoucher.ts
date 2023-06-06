@@ -63,7 +63,7 @@ export function getFanoutMembershipMintVoucherAccountDataSerializer(
     ),
     (value) => ({
       ...value,
-      discriminator: [155, 252, 106, 122, 161, 221, 155, 120],
+      discriminator: [185, 33, 118, 173, 147, 114, 126, 181],
     })
   ) as Serializer<
     FanoutMembershipMintVoucherAccountDataArgs,
@@ -155,7 +155,7 @@ export function getFanoutMembershipMintVoucherGpaBuilder(
     .deserializeUsing<FanoutMembershipMintVoucher>((account) =>
       deserializeFanoutMembershipMintVoucher(context, account)
     )
-    .whereField('discriminator', [155, 252, 106, 122, 161, 221, 155, 120]);
+    .whereField('discriminator', [185, 33, 118, 173, 147, 114, 126, 181]);
 }
 
 export function getFanoutMembershipMintVoucherSize(): number {

@@ -61,7 +61,7 @@ export function getFanoutMintAccountDataSerializer(
     ),
     (value) => ({
       ...value,
-      discriminator: [117, 125, 188, 123, 180, 213, 133, 164],
+      discriminator: [50, 164, 42, 108, 90, 201, 250, 216],
     })
   ) as Serializer<FanoutMintAccountDataArgs, FanoutMintAccountData>;
 }
@@ -151,7 +151,7 @@ export function getFanoutMintGpaBuilder(
     .deserializeUsing<FanoutMint>((account) =>
       deserializeFanoutMint(context, account)
     )
-    .whereField('discriminator', [117, 125, 188, 123, 180, 213, 133, 164]);
+    .whereField('discriminator', [50, 164, 42, 108, 90, 201, 250, 216]);
 }
 
 export function getFanoutMintSize(): number {
