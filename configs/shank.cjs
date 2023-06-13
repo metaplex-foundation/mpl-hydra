@@ -12,4 +12,5 @@ generateIdl({
   idlDir,
   binaryInstallDir,
   programDir: path.join(programDir, "hydra"),
+  rustbin: { locked: true },
 });
