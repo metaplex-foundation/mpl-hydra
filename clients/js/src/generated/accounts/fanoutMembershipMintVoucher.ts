@@ -19,6 +19,7 @@ import {
   deserializeAccount,
   gpaBuilder,
   mapSerializer,
+  publicKey as toPublicKey,
 } from '@metaplex-foundation/umi';
 
 export type FanoutMembershipMintVoucher =
@@ -83,20 +84,26 @@ export function deserializeFanoutMembershipMintVoucher(
 
 export async function fetchFanoutMembershipMintVoucher(
   context: Pick<Context, 'rpc' | 'serializer'>,
-  publicKey: PublicKey,
+  publicKey: PublicKey | Pda,
   options?: RpcGetAccountOptions
 ): Promise<FanoutMembershipMintVoucher> {
-  const maybeAccount = await context.rpc.getAccount(publicKey, options);
+  const maybeAccount = await context.rpc.getAccount(
+    toPublicKey(publicKey, false),
+    options
+  );
   assertAccountExists(maybeAccount, 'FanoutMembershipMintVoucher');
   return deserializeFanoutMembershipMintVoucher(context, maybeAccount);
 }
 
 export async function safeFetchFanoutMembershipMintVoucher(
   context: Pick<Context, 'rpc' | 'serializer'>,
-  publicKey: PublicKey,
+  publicKey: PublicKey | Pda,
   options?: RpcGetAccountOptions
 ): Promise<FanoutMembershipMintVoucher | null> {
-  const maybeAccount = await context.rpc.getAccount(publicKey, options);
+  const maybeAccount = await context.rpc.getAccount(
+    toPublicKey(publicKey, false),
+    options
+  );
   return maybeAccount.exists
     ? deserializeFanoutMembershipMintVoucher(context, maybeAccount)
     : null;
@@ -104,10 +111,13 @@ export async function safeFetchFanoutMembershipMintVoucher(
 
 export async function fetchAllFanoutMembershipMintVoucher(
   context: Pick<Context, 'rpc' | 'serializer'>,
-  publicKeys: PublicKey[],
+  publicKeys: Array<PublicKey | Pda>,
   options?: RpcGetAccountsOptions
 ): Promise<FanoutMembershipMintVoucher[]> {
-  const maybeAccounts = await context.rpc.getAccounts(publicKeys, options);
+  const maybeAccounts = await context.rpc.getAccounts(
+    publicKeys.map((key) => toPublicKey(key, false)),
+    options
+  );
   return maybeAccounts.map((maybeAccount) => {
     assertAccountExists(maybeAccount, 'FanoutMembershipMintVoucher');
     return deserializeFanoutMembershipMintVoucher(context, maybeAccount);
@@ -116,10 +126,13 @@ export async function fetchAllFanoutMembershipMintVoucher(
 
 export async function safeFetchAllFanoutMembershipMintVoucher(
   context: Pick<Context, 'rpc' | 'serializer'>,
-  publicKeys: PublicKey[],
+  publicKeys: Array<PublicKey | Pda>,
   options?: RpcGetAccountsOptions
 ): Promise<FanoutMembershipMintVoucher[]> {
-  const maybeAccounts = await context.rpc.getAccounts(publicKeys, options);
+  const maybeAccounts = await context.rpc.getAccounts(
+    publicKeys.map((key) => toPublicKey(key, false)),
+    options
+  );
   return maybeAccounts
     .filter((maybeAccount) => maybeAccount.exists)
     .map((maybeAccount) =>

@@ -9,6 +9,7 @@
 import {
   AccountMeta,
   Context,
+  Pda,
   PublicKey,
   Serializer,
   Signer,
@@ -16,15 +17,15 @@ import {
   mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
-import { addObjectProperty, isWritable } from '../shared';
+import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type SignMetadataInstructionAccounts = {
   authority?: Signer;
-  fanout: PublicKey;
-  holdingAccount: PublicKey;
-  metadata: PublicKey;
-  tokenMetadataProgram?: PublicKey;
+  fanout: PublicKey | Pda;
+  holdingAccount: PublicKey | Pda;
+  metadata: PublicKey | Pda;
+  tokenMetadataProgram?: PublicKey | Pda;
 };
 
 // Data.
@@ -58,69 +59,43 @@ export function signMetadata(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = {
-    ...context.programs.getPublicKey(
-      'mplHydra',
-      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-    ),
-    isWritable: false,
-  };
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
 
   // Resolved inputs.
-  const resolvingAccounts = {};
+  const resolvedAccounts = {
+    fanout: [input.fanout, false] as const,
+    holdingAccount: [input.holdingAccount, false] as const,
+    metadata: [input.metadata, true] as const,
+  };
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'authority',
-    input.authority ?? context.identity
+    input.authority
+      ? ([input.authority, true] as const)
+      : ([context.identity, true] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'tokenMetadataProgram',
-    input.tokenMetadataProgram ?? {
-      ...context.programs.getPublicKey(
-        'mplTokenMetadata',
-        'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
-      ),
-      isWritable: false,
-    }
+    input.tokenMetadataProgram
+      ? ([input.tokenMetadataProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'mplTokenMetadata',
+            'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+          ),
+          false,
+        ] as const)
   );
-  const resolvedAccounts = { ...input, ...resolvingAccounts };
 
-  // Authority.
-  signers.push(resolvedAccounts.authority);
-  keys.push({
-    pubkey: resolvedAccounts.authority.publicKey,
-    isSigner: true,
-    isWritable: isWritable(resolvedAccounts.authority, true),
-  });
-
-  // Fanout.
-  keys.push({
-    pubkey: resolvedAccounts.fanout,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.fanout, false),
-  });
-
-  // Holding Account.
-  keys.push({
-    pubkey: resolvedAccounts.holdingAccount,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.holdingAccount, false),
-  });
-
-  // Metadata.
-  keys.push({
-    pubkey: resolvedAccounts.metadata,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.metadata, true),
-  });
-
-  // Token Metadata Program.
-  keys.push({
-    pubkey: resolvedAccounts.tokenMetadataProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.tokenMetadataProgram, false),
-  });
+  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
+  addAccountMeta(keys, signers, resolvedAccounts.holdingAccount, false);
+  addAccountMeta(keys, signers, resolvedAccounts.metadata, false);
+  addAccountMeta(keys, signers, resolvedAccounts.tokenMetadataProgram, false);
 
   // Data.
   const data = getSignMetadataInstructionDataSerializer(context).serialize({});

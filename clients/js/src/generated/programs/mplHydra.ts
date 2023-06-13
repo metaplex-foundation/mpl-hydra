@@ -11,13 +11,11 @@ import {
   Context,
   Program,
   PublicKey,
-  publicKey,
 } from '@metaplex-foundation/umi';
 import { getMplHydraErrorFromCode, getMplHydraErrorFromName } from '../errors';
 
-export const MPL_HYDRA_PROGRAM_ID = publicKey(
-  'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-);
+export const MPL_HYDRA_PROGRAM_ID =
+  'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg' as PublicKey<'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'>;
 
 export function createMplHydraProgram(): Program {
   return {

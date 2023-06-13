@@ -27,7 +27,7 @@ test('it can create a fanout account', async (t) => {
   }).sendAndConfirm(umi);
 
   // Then a new fanout account was created with the right data.
-  const fanout = findFanoutPda(umi, { name });
+  const [fanout, fanoutBump] = findFanoutPda(umi, { name });
   const nativeAccount = findFanoutNativeAccountPda(umi, { fanout });
   const fanoutAccount = await fetchFanout(umi, fanout);
   t.like(fanoutAccount, <Fanout>{
@@ -39,7 +39,7 @@ test('it can create a fanout account', async (t) => {
     totalMembers: 0n,
     totalInflow: 0n,
     lastSnapshotAmount: 0n,
-    bumpSeed: fanout.bump,
+    bumpSeed: fanoutBump,
     totalAvailableShares: 100n,
     membershipModel: MembershipModel.Wallet,
     membershipMint: none(),

@@ -9,6 +9,7 @@
 import {
   AccountMeta,
   Context,
+  Pda,
   PublicKey,
   Serializer,
   Signer,
@@ -16,15 +17,15 @@ import {
   mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
-import { addObjectProperty, isWritable } from '../shared';
+import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type RemoveMemberInstructionAccounts = {
   authority?: Signer;
-  member: PublicKey;
-  fanout: PublicKey;
-  membershipAccount: PublicKey;
-  destination: PublicKey;
+  member: PublicKey | Pda;
+  fanout: PublicKey | Pda;
+  membershipAccount: PublicKey | Pda;
+  destination: PublicKey | Pda;
 };
 
 // Data.
@@ -58,58 +59,31 @@ export function removeMember(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = {
-    ...context.programs.getPublicKey(
-      'mplHydra',
-      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-    ),
-    isWritable: false,
-  };
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
 
   // Resolved inputs.
-  const resolvingAccounts = {};
+  const resolvedAccounts = {
+    member: [input.member, false] as const,
+    fanout: [input.fanout, true] as const,
+    membershipAccount: [input.membershipAccount, true] as const,
+    destination: [input.destination, true] as const,
+  };
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'authority',
-    input.authority ?? context.identity
+    input.authority
+      ? ([input.authority, true] as const)
+      : ([context.identity, true] as const)
   );
-  const resolvedAccounts = { ...input, ...resolvingAccounts };
 
-  // Authority.
-  signers.push(resolvedAccounts.authority);
-  keys.push({
-    pubkey: resolvedAccounts.authority.publicKey,
-    isSigner: true,
-    isWritable: isWritable(resolvedAccounts.authority, true),
-  });
-
-  // Member.
-  keys.push({
-    pubkey: resolvedAccounts.member,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.member, false),
-  });
-
-  // Fanout.
-  keys.push({
-    pubkey: resolvedAccounts.fanout,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.fanout, true),
-  });
-
-  // Membership Account.
-  keys.push({
-    pubkey: resolvedAccounts.membershipAccount,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.membershipAccount, true),
-  });
-
-  // Destination.
-  keys.push({
-    pubkey: resolvedAccounts.destination,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.destination, true),
-  });
+  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.member, false);
+  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
+  addAccountMeta(keys, signers, resolvedAccounts.membershipAccount, false);
+  addAccountMeta(keys, signers, resolvedAccounts.destination, false);
 
   // Data.
   const data = getRemoveMemberInstructionDataSerializer(context).serialize({});

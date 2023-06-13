@@ -9,6 +9,7 @@
 import {
   AccountMeta,
   Context,
+  Pda,
   PublicKey,
   Serializer,
   Signer,
@@ -17,17 +18,17 @@ import {
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
-import { addObjectProperty, isWritable } from '../shared';
+import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type InitForMintInstructionAccounts = {
   authority?: Signer;
-  fanout: PublicKey;
-  fanoutForMint: PublicKey;
-  mintHoldingAccount: PublicKey;
-  mint: PublicKey;
-  systemProgram?: PublicKey;
-  rent?: PublicKey;
+  fanout: PublicKey | Pda;
+  fanoutForMint: PublicKey | Pda;
+  mintHoldingAccount: PublicKey | Pda;
+  mint: PublicKey | Pda;
+  systemProgram?: PublicKey | Pda;
+  rent?: PublicKey | Pda;
 };
 
 // Data.
@@ -73,90 +74,58 @@ export function initForMint(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = {
-    ...context.programs.getPublicKey(
-      'mplHydra',
-      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-    ),
-    isWritable: false,
-  };
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
 
   // Resolved inputs.
-  const resolvingAccounts = {};
+  const resolvedAccounts = {
+    fanout: [input.fanout, true] as const,
+    fanoutForMint: [input.fanoutForMint, true] as const,
+    mintHoldingAccount: [input.mintHoldingAccount, true] as const,
+    mint: [input.mint, false] as const,
+  };
   const resolvingArgs = {};
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'authority',
-    input.authority ?? context.identity
+    input.authority
+      ? ([input.authority, true] as const)
+      : ([context.identity, true] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'systemProgram',
-    input.systemProgram ?? {
-      ...context.programs.getPublicKey(
-        'splSystem',
-        '11111111111111111111111111111111'
-      ),
-      isWritable: false,
-    }
+    input.systemProgram
+      ? ([input.systemProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splSystem',
+            '11111111111111111111111111111111'
+          ),
+          false,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'rent',
-    input.rent ?? publicKey('SysvarRent111111111111111111111111111111111')
+    input.rent
+      ? ([input.rent, false] as const)
+      : ([
+          publicKey('SysvarRent111111111111111111111111111111111'),
+          false,
+        ] as const)
   );
-  const resolvedAccounts = { ...input, ...resolvingAccounts };
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  // Authority.
-  signers.push(resolvedAccounts.authority);
-  keys.push({
-    pubkey: resolvedAccounts.authority.publicKey,
-    isSigner: true,
-    isWritable: isWritable(resolvedAccounts.authority, true),
-  });
-
-  // Fanout.
-  keys.push({
-    pubkey: resolvedAccounts.fanout,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.fanout, true),
-  });
-
-  // Fanout For Mint.
-  keys.push({
-    pubkey: resolvedAccounts.fanoutForMint,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.fanoutForMint, true),
-  });
-
-  // Mint Holding Account.
-  keys.push({
-    pubkey: resolvedAccounts.mintHoldingAccount,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.mintHoldingAccount, true),
-  });
-
-  // Mint.
-  keys.push({
-    pubkey: resolvedAccounts.mint,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.mint, false),
-  });
-
-  // System Program.
-  keys.push({
-    pubkey: resolvedAccounts.systemProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.systemProgram, false),
-  });
-
-  // Rent.
-  keys.push({
-    pubkey: resolvedAccounts.rent,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.rent, false),
-  });
+  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
+  addAccountMeta(keys, signers, resolvedAccounts.fanoutForMint, false);
+  addAccountMeta(keys, signers, resolvedAccounts.mintHoldingAccount, false);
+  addAccountMeta(keys, signers, resolvedAccounts.mint, false);
+  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+  addAccountMeta(keys, signers, resolvedAccounts.rent, false);
 
   // Data.
   const data =

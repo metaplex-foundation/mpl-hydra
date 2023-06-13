@@ -10,6 +10,7 @@ import {
   ACCOUNT_HEADER_SIZE,
   AccountMeta,
   Context,
+  Pda,
   PublicKey,
   Serializer,
   Signer,
@@ -22,17 +23,17 @@ import {
   findFanoutMembershipVoucherPda,
   getFanoutMembershipVoucherSize,
 } from '../accounts';
-import { addObjectProperty, isWritable } from '../shared';
+import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type AddMemberWalletInstructionAccounts = {
   authority?: Signer;
-  member: PublicKey;
-  fanout: PublicKey;
-  membershipAccount?: PublicKey;
-  systemProgram?: PublicKey;
-  rent?: PublicKey;
-  tokenProgram?: PublicKey;
+  member: PublicKey | Pda;
+  fanout: PublicKey | Pda;
+  membershipAccount?: PublicKey | Pda;
+  systemProgram?: PublicKey | Pda;
+  rent?: PublicKey | Pda;
+  tokenProgram?: PublicKey | Pda;
 };
 
 // Data.
@@ -84,110 +85,82 @@ export function addMemberWallet(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = {
-    ...context.programs.getPublicKey(
-      'mplHydra',
-      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-    ),
-    isWritable: false,
-  };
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
 
   // Resolved inputs.
-  const resolvingAccounts = {};
+  const resolvedAccounts = {
+    member: [input.member, false] as const,
+    fanout: [input.fanout, true] as const,
+  };
   const resolvingArgs = {};
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'authority',
-    input.authority ?? context.identity
+    input.authority
+      ? ([input.authority, true] as const)
+      : ([context.identity, true] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'membershipAccount',
-    input.membershipAccount ??
-      findFanoutMembershipVoucherPda(context, {
-        fanout: publicKey(input.fanout),
-        member: publicKey(input.member),
-      })
+    input.membershipAccount
+      ? ([input.membershipAccount, true] as const)
+      : ([
+          findFanoutMembershipVoucherPda(context, {
+            fanout: publicKey(input.fanout, false),
+            member: publicKey(input.member, false),
+          }),
+          true,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'systemProgram',
-    input.systemProgram ?? {
-      ...context.programs.getPublicKey(
-        'splSystem',
-        '11111111111111111111111111111111'
-      ),
-      isWritable: false,
-    }
+    input.systemProgram
+      ? ([input.systemProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splSystem',
+            '11111111111111111111111111111111'
+          ),
+          false,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'rent',
-    input.rent ?? publicKey('SysvarRent111111111111111111111111111111111')
+    input.rent
+      ? ([input.rent, false] as const)
+      : ([
+          publicKey('SysvarRent111111111111111111111111111111111'),
+          false,
+        ] as const)
   );
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'tokenProgram',
-    input.tokenProgram ?? {
-      ...context.programs.getPublicKey(
-        'splToken',
-        'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-      ),
-      isWritable: false,
-    }
+    input.tokenProgram
+      ? ([input.tokenProgram, false] as const)
+      : ([
+          context.programs.getPublicKey(
+            'splToken',
+            'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+          ),
+          false,
+        ] as const)
   );
-  const resolvedAccounts = { ...input, ...resolvingAccounts };
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  // Authority.
-  signers.push(resolvedAccounts.authority);
-  keys.push({
-    pubkey: resolvedAccounts.authority.publicKey,
-    isSigner: true,
-    isWritable: isWritable(resolvedAccounts.authority, true),
-  });
-
-  // Member.
-  keys.push({
-    pubkey: resolvedAccounts.member,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.member, false),
-  });
-
-  // Fanout.
-  keys.push({
-    pubkey: resolvedAccounts.fanout,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.fanout, true),
-  });
-
-  // Membership Account.
-  keys.push({
-    pubkey: resolvedAccounts.membershipAccount,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.membershipAccount, true),
-  });
-
-  // System Program.
-  keys.push({
-    pubkey: resolvedAccounts.systemProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.systemProgram, false),
-  });
-
-  // Rent.
-  keys.push({
-    pubkey: resolvedAccounts.rent,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.rent, false),
-  });
-
-  // Token Program.
-  keys.push({
-    pubkey: resolvedAccounts.tokenProgram,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.tokenProgram, false),
-  });
+  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.member, false);
+  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
+  addAccountMeta(keys, signers, resolvedAccounts.membershipAccount, false);
+  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
+  addAccountMeta(keys, signers, resolvedAccounts.rent, false);
+  addAccountMeta(keys, signers, resolvedAccounts.tokenProgram, false);
 
   // Data.
   const data =

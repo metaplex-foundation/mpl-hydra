@@ -9,6 +9,7 @@
 import {
   AccountMeta,
   Context,
+  Pda,
   PublicKey,
   Serializer,
   Signer,
@@ -16,16 +17,16 @@ import {
   mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
-import { addObjectProperty, isWritable } from '../shared';
+import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
 export type TransferSharesInstructionAccounts = {
   authority?: Signer;
-  fromMember: PublicKey;
-  toMember: PublicKey;
-  fanout: PublicKey;
-  fromMembershipAccount: PublicKey;
-  toMembershipAccount: PublicKey;
+  fromMember: PublicKey | Pda;
+  toMember: PublicKey | Pda;
+  fanout: PublicKey | Pda;
+  fromMembershipAccount: PublicKey | Pda;
+  toMembershipAccount: PublicKey | Pda;
 };
 
 // Data.
@@ -77,67 +78,35 @@ export function transferShares(
   const keys: AccountMeta[] = [];
 
   // Program ID.
-  const programId = {
-    ...context.programs.getPublicKey(
-      'mplHydra',
-      'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
-    ),
-    isWritable: false,
-  };
+  const programId = context.programs.getPublicKey(
+    'mplHydra',
+    'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
+  );
 
   // Resolved inputs.
-  const resolvingAccounts = {};
+  const resolvedAccounts = {
+    fromMember: [input.fromMember, false] as const,
+    toMember: [input.toMember, false] as const,
+    fanout: [input.fanout, true] as const,
+    fromMembershipAccount: [input.fromMembershipAccount, true] as const,
+    toMembershipAccount: [input.toMembershipAccount, true] as const,
+  };
   const resolvingArgs = {};
   addObjectProperty(
-    resolvingAccounts,
+    resolvedAccounts,
     'authority',
-    input.authority ?? context.identity
+    input.authority
+      ? ([input.authority, false] as const)
+      : ([context.identity, false] as const)
   );
-  const resolvedAccounts = { ...input, ...resolvingAccounts };
   const resolvedArgs = { ...input, ...resolvingArgs };
 
-  // Authority.
-  signers.push(resolvedAccounts.authority);
-  keys.push({
-    pubkey: resolvedAccounts.authority.publicKey,
-    isSigner: true,
-    isWritable: isWritable(resolvedAccounts.authority, false),
-  });
-
-  // From Member.
-  keys.push({
-    pubkey: resolvedAccounts.fromMember,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.fromMember, false),
-  });
-
-  // To Member.
-  keys.push({
-    pubkey: resolvedAccounts.toMember,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.toMember, false),
-  });
-
-  // Fanout.
-  keys.push({
-    pubkey: resolvedAccounts.fanout,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.fanout, true),
-  });
-
-  // From Membership Account.
-  keys.push({
-    pubkey: resolvedAccounts.fromMembershipAccount,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.fromMembershipAccount, true),
-  });
-
-  // To Membership Account.
-  keys.push({
-    pubkey: resolvedAccounts.toMembershipAccount,
-    isSigner: false,
-    isWritable: isWritable(resolvedAccounts.toMembershipAccount, true),
-  });
+  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
+  addAccountMeta(keys, signers, resolvedAccounts.fromMember, false);
+  addAccountMeta(keys, signers, resolvedAccounts.toMember, false);
+  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
+  addAccountMeta(keys, signers, resolvedAccounts.fromMembershipAccount, false);
+  addAccountMeta(keys, signers, resolvedAccounts.toMembershipAccount, false);
 
   // Data.
   const data =
