@@ -12,13 +12,19 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import {
   findFanoutMembershipVoucherPda,
   getFanoutMembershipVoucherSize,
@@ -44,22 +50,32 @@ export type AddMemberWalletInstructionData = {
 
 export type AddMemberWalletInstructionDataArgs = { shares: number | bigint };
 
+/** @deprecated Use `getAddMemberWalletInstructionDataSerializer()` without any argument instead. */
 export function getAddMemberWalletInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<
+  AddMemberWalletInstructionDataArgs,
+  AddMemberWalletInstructionData
+>;
+export function getAddMemberWalletInstructionDataSerializer(): Serializer<
+  AddMemberWalletInstructionDataArgs,
+  AddMemberWalletInstructionData
+>;
+export function getAddMemberWalletInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<
   AddMemberWalletInstructionDataArgs,
   AddMemberWalletInstructionData
 > {
-  const s = context.serializer;
   return mapSerializer<
     AddMemberWalletInstructionDataArgs,
     any,
     AddMemberWalletInstructionData
   >(
-    s.struct<AddMemberWalletInstructionData>(
+    struct<AddMemberWalletInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['shares', s.u64()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['shares', u64()],
       ],
       { description: 'AddMemberWalletInstructionData' }
     ),
@@ -78,7 +94,7 @@ export type AddMemberWalletInstructionArgs = AddMemberWalletInstructionDataArgs;
 
 // Instruction.
 export function addMemberWallet(
-  context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'identity'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'identity'>,
   input: AddMemberWalletInstructionAccounts & AddMemberWalletInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -164,9 +180,7 @@ export function addMemberWallet(
 
   // Data.
   const data =
-    getAddMemberWalletInstructionDataSerializer(context).serialize(
-      resolvedArgs
-    );
+    getAddMemberWalletInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain =

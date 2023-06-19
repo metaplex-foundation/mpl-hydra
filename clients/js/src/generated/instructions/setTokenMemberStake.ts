@@ -11,12 +11,18 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -41,22 +47,32 @@ export type SetTokenMemberStakeInstructionDataArgs = {
   shares: number | bigint;
 };
 
+/** @deprecated Use `getSetTokenMemberStakeInstructionDataSerializer()` without any argument instead. */
 export function getSetTokenMemberStakeInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<
+  SetTokenMemberStakeInstructionDataArgs,
+  SetTokenMemberStakeInstructionData
+>;
+export function getSetTokenMemberStakeInstructionDataSerializer(): Serializer<
+  SetTokenMemberStakeInstructionDataArgs,
+  SetTokenMemberStakeInstructionData
+>;
+export function getSetTokenMemberStakeInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<
   SetTokenMemberStakeInstructionDataArgs,
   SetTokenMemberStakeInstructionData
 > {
-  const s = context.serializer;
   return mapSerializer<
     SetTokenMemberStakeInstructionDataArgs,
     any,
     SetTokenMemberStakeInstructionData
   >(
-    s.struct<SetTokenMemberStakeInstructionData>(
+    struct<SetTokenMemberStakeInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['shares', s.u64()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['shares', u64()],
       ],
       { description: 'SetTokenMemberStakeInstructionData' }
     ),
@@ -76,7 +92,7 @@ export type SetTokenMemberStakeInstructionArgs =
 
 // Instruction.
 export function setTokenMemberStake(
-  context: Pick<Context, 'serializer' | 'programs'>,
+  context: Pick<Context, 'programs'>,
   input: SetTokenMemberStakeInstructionAccounts &
     SetTokenMemberStakeInstructionArgs
 ): TransactionBuilder {
@@ -146,9 +162,7 @@ export function setTokenMemberStake(
 
   // Data.
   const data =
-    getSetTokenMemberStakeInstructionDataSerializer(context).serialize(
-      resolvedArgs
-    );
+    getSetTokenMemberStakeInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

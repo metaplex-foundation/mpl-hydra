@@ -11,13 +11,20 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  string,
+  struct,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { findFanoutNativeAccountPda } from '../../hooked';
 import { findFanoutPda } from '../accounts';
 import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
@@ -56,19 +63,26 @@ export type InitInstructionDataArgs = {
   model: MembershipModelArgs;
 };
 
+/** @deprecated Use `getInitInstructionDataSerializer()` without any argument instead. */
 export function getInitInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<InitInstructionDataArgs, InitInstructionData>;
+export function getInitInstructionDataSerializer(): Serializer<
+  InitInstructionDataArgs,
+  InitInstructionData
+>;
+export function getInitInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<InitInstructionDataArgs, InitInstructionData> {
-  const s = context.serializer;
   return mapSerializer<InitInstructionDataArgs, any, InitInstructionData>(
-    s.struct<InitInstructionData>(
+    struct<InitInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['bumpSeed', s.u8()],
-        ['nativeAccountBumpSeed', s.u8()],
-        ['name', s.string()],
-        ['totalShares', s.u64()],
-        ['model', getMembershipModelSerializer(context)],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['bumpSeed', u8()],
+        ['nativeAccountBumpSeed', u8()],
+        ['name', string()],
+        ['totalShares', u64()],
+        ['model', getMembershipModelSerializer()],
       ],
       { description: 'InitInstructionData' }
     ),
@@ -87,7 +101,7 @@ export type InitInstructionArgs = PickPartial<
 
 // Instruction.
 export function init(
-  context: Pick<Context, 'serializer' | 'programs' | 'eddsa' | 'identity'>,
+  context: Pick<Context, 'programs' | 'eddsa' | 'identity'>,
   input: InitInstructionAccounts & InitInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -195,8 +209,7 @@ export function init(
   addAccountMeta(keys, signers, resolvedAccounts.tokenProgram, false);
 
   // Data.
-  const data =
-    getInitInstructionDataSerializer(context).serialize(resolvedArgs);
+  const data = getInitInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 557;

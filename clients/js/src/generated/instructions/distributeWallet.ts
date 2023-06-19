@@ -11,13 +11,19 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  bool,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -46,22 +52,32 @@ export type DistributeWalletInstructionDataArgs = {
   distributeForMint: boolean;
 };
 
+/** @deprecated Use `getDistributeWalletInstructionDataSerializer()` without any argument instead. */
 export function getDistributeWalletInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<
+  DistributeWalletInstructionDataArgs,
+  DistributeWalletInstructionData
+>;
+export function getDistributeWalletInstructionDataSerializer(): Serializer<
+  DistributeWalletInstructionDataArgs,
+  DistributeWalletInstructionData
+>;
+export function getDistributeWalletInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<
   DistributeWalletInstructionDataArgs,
   DistributeWalletInstructionData
 > {
-  const s = context.serializer;
   return mapSerializer<
     DistributeWalletInstructionDataArgs,
     any,
     DistributeWalletInstructionData
   >(
-    s.struct<DistributeWalletInstructionData>(
+    struct<DistributeWalletInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['distributeForMint', s.bool()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['distributeForMint', bool()],
       ],
       { description: 'DistributeWalletInstructionData' }
     ),
@@ -81,7 +97,7 @@ export type DistributeWalletInstructionArgs =
 
 // Instruction.
 export function distributeWallet(
-  context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
+  context: Pick<Context, 'programs' | 'payer'>,
   input: DistributeWalletInstructionAccounts & DistributeWalletInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -181,9 +197,7 @@ export function distributeWallet(
 
   // Data.
   const data =
-    getDistributeWalletInstructionDataSerializer(context).serialize(
-      resolvedArgs
-    );
+    getDistributeWalletInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

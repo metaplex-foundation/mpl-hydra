@@ -11,13 +11,18 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -39,19 +44,26 @@ export type InitForMintInstructionData = {
 
 export type InitForMintInstructionDataArgs = { bumpSeed: number };
 
+/** @deprecated Use `getInitForMintInstructionDataSerializer()` without any argument instead. */
 export function getInitForMintInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<InitForMintInstructionDataArgs, InitForMintInstructionData>;
+export function getInitForMintInstructionDataSerializer(): Serializer<
+  InitForMintInstructionDataArgs,
+  InitForMintInstructionData
+>;
+export function getInitForMintInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<InitForMintInstructionDataArgs, InitForMintInstructionData> {
-  const s = context.serializer;
   return mapSerializer<
     InitForMintInstructionDataArgs,
     any,
     InitForMintInstructionData
   >(
-    s.struct<InitForMintInstructionData>(
+    struct<InitForMintInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['bumpSeed', s.u8()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['bumpSeed', u8()],
       ],
       { description: 'InitForMintInstructionData' }
     ),
@@ -67,7 +79,7 @@ export type InitForMintInstructionArgs = InitForMintInstructionDataArgs;
 
 // Instruction.
 export function initForMint(
-  context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
+  context: Pick<Context, 'programs' | 'identity'>,
   input: InitForMintInstructionAccounts & InitForMintInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -129,7 +141,7 @@ export function initForMint(
 
   // Data.
   const data =
-    getInitForMintInstructionDataSerializer(context).serialize(resolvedArgs);
+    getInitForMintInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

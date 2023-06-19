@@ -11,12 +11,17 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -33,17 +38,24 @@ export type RemoveMemberInstructionData = { discriminator: Array<number> };
 
 export type RemoveMemberInstructionDataArgs = {};
 
+/** @deprecated Use `getRemoveMemberInstructionDataSerializer()` without any argument instead. */
 export function getRemoveMemberInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<RemoveMemberInstructionDataArgs, RemoveMemberInstructionData>;
+export function getRemoveMemberInstructionDataSerializer(): Serializer<
+  RemoveMemberInstructionDataArgs,
+  RemoveMemberInstructionData
+>;
+export function getRemoveMemberInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<RemoveMemberInstructionDataArgs, RemoveMemberInstructionData> {
-  const s = context.serializer;
   return mapSerializer<
     RemoveMemberInstructionDataArgs,
     any,
     RemoveMemberInstructionData
   >(
-    s.struct<RemoveMemberInstructionData>(
-      [['discriminator', s.array(s.u8(), { size: 8 })]],
+    struct<RemoveMemberInstructionData>(
+      [['discriminator', array(u8(), { size: 8 })]],
       { description: 'RemoveMemberInstructionData' }
     ),
     (value) => ({ ...value, discriminator: [9, 45, 36, 163, 245, 40, 150, 85] })
@@ -52,7 +64,7 @@ export function getRemoveMemberInstructionDataSerializer(
 
 // Instruction.
 export function removeMember(
-  context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
+  context: Pick<Context, 'programs' | 'identity'>,
   input: RemoveMemberInstructionAccounts
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -86,7 +98,7 @@ export function removeMember(
   addAccountMeta(keys, signers, resolvedAccounts.destination, false);
 
   // Data.
-  const data = getRemoveMemberInstructionDataSerializer(context).serialize({});
+  const data = getRemoveMemberInstructionDataSerializer().serialize({});
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

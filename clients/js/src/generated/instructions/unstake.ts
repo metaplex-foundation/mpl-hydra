@@ -11,12 +11,17 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -37,13 +42,20 @@ export type UnstakeInstructionData = { discriminator: Array<number> };
 
 export type UnstakeInstructionDataArgs = {};
 
+/** @deprecated Use `getUnstakeInstructionDataSerializer()` without any argument instead. */
 export function getUnstakeInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<UnstakeInstructionDataArgs, UnstakeInstructionData>;
+export function getUnstakeInstructionDataSerializer(): Serializer<
+  UnstakeInstructionDataArgs,
+  UnstakeInstructionData
+>;
+export function getUnstakeInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<UnstakeInstructionDataArgs, UnstakeInstructionData> {
-  const s = context.serializer;
   return mapSerializer<UnstakeInstructionDataArgs, any, UnstakeInstructionData>(
-    s.struct<UnstakeInstructionData>(
-      [['discriminator', s.array(s.u8(), { size: 8 })]],
+    struct<UnstakeInstructionData>(
+      [['discriminator', array(u8(), { size: 8 })]],
       { description: 'UnstakeInstructionData' }
     ),
     (value) => ({
@@ -55,7 +67,7 @@ export function getUnstakeInstructionDataSerializer(
 
 // Instruction.
 export function unstake(
-  context: Pick<Context, 'serializer' | 'programs'>,
+  context: Pick<Context, 'programs'>,
   input: UnstakeInstructionAccounts
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -123,7 +135,7 @@ export function unstake(
   addAccountMeta(keys, signers, resolvedAccounts.instructions, false);
 
   // Data.
-  const data = getUnstakeInstructionDataSerializer(context).serialize({});
+  const data = getUnstakeInstructionDataSerializer().serialize({});
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

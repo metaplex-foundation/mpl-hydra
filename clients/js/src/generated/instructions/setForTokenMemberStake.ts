@@ -11,12 +11,18 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -42,22 +48,32 @@ export type SetForTokenMemberStakeInstructionDataArgs = {
   shares: number | bigint;
 };
 
+/** @deprecated Use `getSetForTokenMemberStakeInstructionDataSerializer()` without any argument instead. */
 export function getSetForTokenMemberStakeInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<
+  SetForTokenMemberStakeInstructionDataArgs,
+  SetForTokenMemberStakeInstructionData
+>;
+export function getSetForTokenMemberStakeInstructionDataSerializer(): Serializer<
+  SetForTokenMemberStakeInstructionDataArgs,
+  SetForTokenMemberStakeInstructionData
+>;
+export function getSetForTokenMemberStakeInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<
   SetForTokenMemberStakeInstructionDataArgs,
   SetForTokenMemberStakeInstructionData
 > {
-  const s = context.serializer;
   return mapSerializer<
     SetForTokenMemberStakeInstructionDataArgs,
     any,
     SetForTokenMemberStakeInstructionData
   >(
-    s.struct<SetForTokenMemberStakeInstructionData>(
+    struct<SetForTokenMemberStakeInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['shares', s.u64()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['shares', u64()],
       ],
       { description: 'SetForTokenMemberStakeInstructionData' }
     ),
@@ -74,7 +90,7 @@ export type SetForTokenMemberStakeInstructionArgs =
 
 // Instruction.
 export function setForTokenMemberStake(
-  context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
+  context: Pick<Context, 'programs' | 'identity'>,
   input: SetForTokenMemberStakeInstructionAccounts &
     SetForTokenMemberStakeInstructionArgs
 ): TransactionBuilder {
@@ -152,7 +168,7 @@ export function setForTokenMemberStake(
 
   // Data.
   const data =
-    getSetForTokenMemberStakeInstructionDataSerializer(context).serialize(
+    getSetForTokenMemberStakeInstructionDataSerializer().serialize(
       resolvedArgs
     );
 

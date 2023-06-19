@@ -11,13 +11,19 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -40,19 +46,26 @@ export type AddMemberNftInstructionData = {
 
 export type AddMemberNftInstructionDataArgs = { shares: number | bigint };
 
+/** @deprecated Use `getAddMemberNftInstructionDataSerializer()` without any argument instead. */
 export function getAddMemberNftInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<AddMemberNftInstructionDataArgs, AddMemberNftInstructionData>;
+export function getAddMemberNftInstructionDataSerializer(): Serializer<
+  AddMemberNftInstructionDataArgs,
+  AddMemberNftInstructionData
+>;
+export function getAddMemberNftInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<AddMemberNftInstructionDataArgs, AddMemberNftInstructionData> {
-  const s = context.serializer;
   return mapSerializer<
     AddMemberNftInstructionDataArgs,
     any,
     AddMemberNftInstructionData
   >(
-    s.struct<AddMemberNftInstructionData>(
+    struct<AddMemberNftInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['shares', s.u64()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['shares', u64()],
       ],
       { description: 'AddMemberNftInstructionData' }
     ),
@@ -65,7 +78,7 @@ export type AddMemberNftInstructionArgs = AddMemberNftInstructionDataArgs;
 
 // Instruction.
 export function addMemberNft(
-  context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
+  context: Pick<Context, 'programs' | 'identity'>,
   input: AddMemberNftInstructionAccounts & AddMemberNftInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -141,7 +154,7 @@ export function addMemberNft(
 
   // Data.
   const data =
-    getAddMemberNftInstructionDataSerializer(context).serialize(resolvedArgs);
+    getAddMemberNftInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

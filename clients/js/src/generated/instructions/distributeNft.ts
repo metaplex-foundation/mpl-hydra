@@ -11,13 +11,19 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  bool,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -46,19 +52,26 @@ export type DistributeNftInstructionData = {
 
 export type DistributeNftInstructionDataArgs = { distributeForMint: boolean };
 
+/** @deprecated Use `getDistributeNftInstructionDataSerializer()` without any argument instead. */
 export function getDistributeNftInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<DistributeNftInstructionDataArgs, DistributeNftInstructionData>;
+export function getDistributeNftInstructionDataSerializer(): Serializer<
+  DistributeNftInstructionDataArgs,
+  DistributeNftInstructionData
+>;
+export function getDistributeNftInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<DistributeNftInstructionDataArgs, DistributeNftInstructionData> {
-  const s = context.serializer;
   return mapSerializer<
     DistributeNftInstructionDataArgs,
     any,
     DistributeNftInstructionData
   >(
-    s.struct<DistributeNftInstructionData>(
+    struct<DistributeNftInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['distributeForMint', s.bool()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['distributeForMint', bool()],
       ],
       { description: 'DistributeNftInstructionData' }
     ),
@@ -77,7 +90,7 @@ export type DistributeNftInstructionArgs = DistributeNftInstructionDataArgs;
 
 // Instruction.
 export function distributeNft(
-  context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
+  context: Pick<Context, 'programs' | 'payer'>,
   input: DistributeNftInstructionAccounts & DistributeNftInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -189,7 +202,7 @@ export function distributeNft(
 
   // Data.
   const data =
-    getDistributeNftInstructionDataSerializer(context).serialize(resolvedArgs);
+    getDistributeNftInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

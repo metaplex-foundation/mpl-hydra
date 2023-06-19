@@ -14,13 +14,21 @@ import {
   RpcAccount,
   RpcGetAccountOptions,
   RpcGetAccountsOptions,
-  Serializer,
   assertAccountExists,
   deserializeAccount,
   gpaBuilder,
-  mapSerializer,
   publicKey as toPublicKey,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  publicKey as publicKeySerializer,
+  string,
+  struct,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 
 export type FanoutMembershipVoucher =
   Account<FanoutMembershipVoucherAccountData>;
@@ -44,27 +52,37 @@ export type FanoutMembershipVoucherAccountDataArgs = {
   shares: number | bigint;
 };
 
+/** @deprecated Use `getFanoutMembershipVoucherAccountDataSerializer()` without any argument instead. */
 export function getFanoutMembershipVoucherAccountDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<
+  FanoutMembershipVoucherAccountDataArgs,
+  FanoutMembershipVoucherAccountData
+>;
+export function getFanoutMembershipVoucherAccountDataSerializer(): Serializer<
+  FanoutMembershipVoucherAccountDataArgs,
+  FanoutMembershipVoucherAccountData
+>;
+export function getFanoutMembershipVoucherAccountDataSerializer(
+  _context: object = {}
 ): Serializer<
   FanoutMembershipVoucherAccountDataArgs,
   FanoutMembershipVoucherAccountData
 > {
-  const s = context.serializer;
   return mapSerializer<
     FanoutMembershipVoucherAccountDataArgs,
     any,
     FanoutMembershipVoucherAccountData
   >(
-    s.struct<FanoutMembershipVoucherAccountData>(
+    struct<FanoutMembershipVoucherAccountData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['fanout', s.publicKey()],
-        ['totalInflow', s.u64()],
-        ['lastInflow', s.u64()],
-        ['bumpSeed', s.u8()],
-        ['membershipKey', s.publicKey()],
-        ['shares', s.u64()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['fanout', publicKeySerializer()],
+        ['totalInflow', u64()],
+        ['lastInflow', u64()],
+        ['bumpSeed', u8()],
+        ['membershipKey', publicKeySerializer()],
+        ['shares', u64()],
       ],
       { description: 'FanoutMembershipVoucherAccountData' }
     ),
@@ -78,18 +96,26 @@ export function getFanoutMembershipVoucherAccountDataSerializer(
   >;
 }
 
+/** @deprecated Use `deserializeFanoutMembershipVoucher(rawAccount)` without any context instead. */
 export function deserializeFanoutMembershipVoucher(
-  context: Pick<Context, 'serializer'>,
+  context: object,
   rawAccount: RpcAccount
+): FanoutMembershipVoucher;
+export function deserializeFanoutMembershipVoucher(
+  rawAccount: RpcAccount
+): FanoutMembershipVoucher;
+export function deserializeFanoutMembershipVoucher(
+  context: RpcAccount | object,
+  rawAccount?: RpcAccount
 ): FanoutMembershipVoucher {
   return deserializeAccount(
-    rawAccount,
-    getFanoutMembershipVoucherAccountDataSerializer(context)
+    rawAccount ?? (context as RpcAccount),
+    getFanoutMembershipVoucherAccountDataSerializer()
   );
 }
 
 export async function fetchFanoutMembershipVoucher(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKey: PublicKey | Pda,
   options?: RpcGetAccountOptions
 ): Promise<FanoutMembershipVoucher> {
@@ -98,11 +124,11 @@ export async function fetchFanoutMembershipVoucher(
     options
   );
   assertAccountExists(maybeAccount, 'FanoutMembershipVoucher');
-  return deserializeFanoutMembershipVoucher(context, maybeAccount);
+  return deserializeFanoutMembershipVoucher(maybeAccount);
 }
 
 export async function safeFetchFanoutMembershipVoucher(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKey: PublicKey | Pda,
   options?: RpcGetAccountOptions
 ): Promise<FanoutMembershipVoucher | null> {
@@ -111,12 +137,12 @@ export async function safeFetchFanoutMembershipVoucher(
     options
   );
   return maybeAccount.exists
-    ? deserializeFanoutMembershipVoucher(context, maybeAccount)
+    ? deserializeFanoutMembershipVoucher(maybeAccount)
     : null;
 }
 
 export async function fetchAllFanoutMembershipVoucher(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKeys: Array<PublicKey | Pda>,
   options?: RpcGetAccountsOptions
 ): Promise<FanoutMembershipVoucher[]> {
@@ -126,12 +152,12 @@ export async function fetchAllFanoutMembershipVoucher(
   );
   return maybeAccounts.map((maybeAccount) => {
     assertAccountExists(maybeAccount, 'FanoutMembershipVoucher');
-    return deserializeFanoutMembershipVoucher(context, maybeAccount);
+    return deserializeFanoutMembershipVoucher(maybeAccount);
   });
 }
 
 export async function safeFetchAllFanoutMembershipVoucher(
-  context: Pick<Context, 'rpc' | 'serializer'>,
+  context: Pick<Context, 'rpc'>,
   publicKeys: Array<PublicKey | Pda>,
   options?: RpcGetAccountsOptions
 ): Promise<FanoutMembershipVoucher[]> {
@@ -142,14 +168,13 @@ export async function safeFetchAllFanoutMembershipVoucher(
   return maybeAccounts
     .filter((maybeAccount) => maybeAccount.exists)
     .map((maybeAccount) =>
-      deserializeFanoutMembershipVoucher(context, maybeAccount as RpcAccount)
+      deserializeFanoutMembershipVoucher(maybeAccount as RpcAccount)
     );
 }
 
 export function getFanoutMembershipVoucherGpaBuilder(
-  context: Pick<Context, 'rpc' | 'serializer' | 'programs'>
+  context: Pick<Context, 'rpc' | 'programs'>
 ) {
-  const s = context.serializer;
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
@@ -164,16 +189,16 @@ export function getFanoutMembershipVoucherGpaBuilder(
       membershipKey: PublicKey;
       shares: number | bigint;
     }>({
-      discriminator: [0, s.array(s.u8(), { size: 8 })],
-      fanout: [8, s.publicKey()],
-      totalInflow: [40, s.u64()],
-      lastInflow: [48, s.u64()],
-      bumpSeed: [56, s.u8()],
-      membershipKey: [57, s.publicKey()],
-      shares: [89, s.u64()],
+      discriminator: [0, array(u8(), { size: 8 })],
+      fanout: [8, publicKeySerializer()],
+      totalInflow: [40, u64()],
+      lastInflow: [48, u64()],
+      bumpSeed: [56, u8()],
+      membershipKey: [57, publicKeySerializer()],
+      shares: [89, u64()],
     })
     .deserializeUsing<FanoutMembershipVoucher>((account) =>
-      deserializeFanoutMembershipVoucher(context, account)
+      deserializeFanoutMembershipVoucher(account)
     )
     .whereField('discriminator', [185, 62, 74, 60, 105, 158, 178, 125]);
 }
@@ -183,7 +208,7 @@ export function getFanoutMembershipVoucherSize(): number {
 }
 
 export function findFanoutMembershipVoucherPda(
-  context: Pick<Context, 'eddsa' | 'programs' | 'serializer'>,
+  context: Pick<Context, 'eddsa' | 'programs'>,
   seeds: {
     /** The address of the fanout account */
     fanout: PublicKey;
@@ -191,20 +216,19 @@ export function findFanoutMembershipVoucherPda(
     member: PublicKey;
   }
 ): Pda {
-  const s = context.serializer;
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
   return context.eddsa.findPda(programId, [
-    s.string({ size: 'variable' }).serialize('fanout-membership'),
-    s.publicKey().serialize(seeds.fanout),
-    s.publicKey().serialize(seeds.member),
+    string({ size: 'variable' }).serialize('fanout-membership'),
+    publicKeySerializer().serialize(seeds.fanout),
+    publicKeySerializer().serialize(seeds.member),
   ]);
 }
 
 export async function fetchFanoutMembershipVoucherFromSeeds(
-  context: Pick<Context, 'eddsa' | 'programs' | 'rpc' | 'serializer'>,
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc'>,
   seeds: Parameters<typeof findFanoutMembershipVoucherPda>[1],
   options?: RpcGetAccountOptions
 ): Promise<FanoutMembershipVoucher> {
@@ -216,7 +240,7 @@ export async function fetchFanoutMembershipVoucherFromSeeds(
 }
 
 export async function safeFetchFanoutMembershipVoucherFromSeeds(
-  context: Pick<Context, 'eddsa' | 'programs' | 'rpc' | 'serializer'>,
+  context: Pick<Context, 'eddsa' | 'programs' | 'rpc'>,
   seeds: Parameters<typeof findFanoutMembershipVoucherPda>[1],
   options?: RpcGetAccountOptions
 ): Promise<FanoutMembershipVoucher | null> {

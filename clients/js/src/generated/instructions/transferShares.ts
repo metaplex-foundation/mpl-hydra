@@ -11,12 +11,18 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  mapSerializer,
+  struct,
+  u64,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -37,22 +43,29 @@ export type TransferSharesInstructionData = {
 
 export type TransferSharesInstructionDataArgs = { shares: number | bigint };
 
+/** @deprecated Use `getTransferSharesInstructionDataSerializer()` without any argument instead. */
 export function getTransferSharesInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<TransferSharesInstructionDataArgs, TransferSharesInstructionData>;
+export function getTransferSharesInstructionDataSerializer(): Serializer<
+  TransferSharesInstructionDataArgs,
+  TransferSharesInstructionData
+>;
+export function getTransferSharesInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<
   TransferSharesInstructionDataArgs,
   TransferSharesInstructionData
 > {
-  const s = context.serializer;
   return mapSerializer<
     TransferSharesInstructionDataArgs,
     any,
     TransferSharesInstructionData
   >(
-    s.struct<TransferSharesInstructionData>(
+    struct<TransferSharesInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['shares', s.u64()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['shares', u64()],
       ],
       { description: 'TransferSharesInstructionData' }
     ),
@@ -71,7 +84,7 @@ export type TransferSharesInstructionArgs = TransferSharesInstructionDataArgs;
 
 // Instruction.
 export function transferShares(
-  context: Pick<Context, 'serializer' | 'programs' | 'identity'>,
+  context: Pick<Context, 'programs' | 'identity'>,
   input: TransferSharesInstructionAccounts & TransferSharesInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -110,7 +123,7 @@ export function transferShares(
 
   // Data.
   const data =
-    getTransferSharesInstructionDataSerializer(context).serialize(resolvedArgs);
+    getTransferSharesInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

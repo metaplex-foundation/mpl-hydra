@@ -11,13 +11,19 @@ import {
   Context,
   Pda,
   PublicKey,
-  Serializer,
   Signer,
   TransactionBuilder,
-  mapSerializer,
   publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
+import {
+  Serializer,
+  array,
+  bool,
+  mapSerializer,
+  struct,
+  u8,
+} from '@metaplex-foundation/umi/serializers';
 import { addAccountMeta, addObjectProperty } from '../shared';
 
 // Accounts.
@@ -47,22 +53,32 @@ export type DistributeTokenInstructionData = {
 
 export type DistributeTokenInstructionDataArgs = { distributeForMint: boolean };
 
+/** @deprecated Use `getDistributeTokenInstructionDataSerializer()` without any argument instead. */
 export function getDistributeTokenInstructionDataSerializer(
-  context: Pick<Context, 'serializer'>
+  _context: object
+): Serializer<
+  DistributeTokenInstructionDataArgs,
+  DistributeTokenInstructionData
+>;
+export function getDistributeTokenInstructionDataSerializer(): Serializer<
+  DistributeTokenInstructionDataArgs,
+  DistributeTokenInstructionData
+>;
+export function getDistributeTokenInstructionDataSerializer(
+  _context: object = {}
 ): Serializer<
   DistributeTokenInstructionDataArgs,
   DistributeTokenInstructionData
 > {
-  const s = context.serializer;
   return mapSerializer<
     DistributeTokenInstructionDataArgs,
     any,
     DistributeTokenInstructionData
   >(
-    s.struct<DistributeTokenInstructionData>(
+    struct<DistributeTokenInstructionData>(
       [
-        ['discriminator', s.array(s.u8(), { size: 8 })],
-        ['distributeForMint', s.bool()],
+        ['discriminator', array(u8(), { size: 8 })],
+        ['distributeForMint', bool()],
       ],
       { description: 'DistributeTokenInstructionData' }
     ),
@@ -81,7 +97,7 @@ export type DistributeTokenInstructionArgs = DistributeTokenInstructionDataArgs;
 
 // Instruction.
 export function distributeToken(
-  context: Pick<Context, 'serializer' | 'programs' | 'payer'>,
+  context: Pick<Context, 'programs' | 'payer'>,
   input: DistributeTokenInstructionAccounts & DistributeTokenInstructionArgs
 ): TransactionBuilder {
   const signers: Signer[] = [];
@@ -195,9 +211,7 @@ export function distributeToken(
 
   // Data.
   const data =
-    getDistributeTokenInstructionDataSerializer(context).serialize(
-      resolvedArgs
-    );
+    getDistributeTokenInstructionDataSerializer().serialize(resolvedArgs);
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;
