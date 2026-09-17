@@ -1,703 +1,1570 @@
 {
-  "version": "0.3.0",
-  "name": "hydra",
+  "address": "hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg",
+  "metadata": {
+    "name": "hydra",
+    "version": "0.4.2",
+    "spec": "0.1.0",
+    "description": "Collective account pooling, fan out wallet, dao treasury, all of the things you need to FAN OUT",
+    "repository": "https://github.com/metaplex-foundation/mpl-hydra"
+  },
   "instructions": [
     {
-      "name": "processInit",
+      "name": "process_add_member_nft",
+      "discriminator": [
+        92,
+        255,
+        105,
+        209,
+        25,
+        41,
+        3,
+        7
+      ],
       "accounts": [
         {
           "name": "authority",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "fanout"
+          ]
         },
         {
           "name": "fanout",
-          "isMut": true,
-          "isSigner": false
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
         },
         {
-          "name": "holdingAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "membership_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "mint"
         },
         {
-          "name": "membershipMint",
-          "isMut": true,
-          "isSigner": false
+          "name": "metadata"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          "address": "SysvarRent111111111111111111111111111111111"
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         }
       ],
       "args": [
         {
           "name": "args",
           "type": {
-            "defined": "InitializeFanoutArgs"
+            "defined": {
+              "name": "AddMemberArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "process_add_member_wallet",
+      "discriminator": [
+        201,
+        9,
+        59,
+        128,
+        69,
+        117,
+        220,
+        235
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "fanout"
+          ]
+        },
+        {
+          "name": "member"
+        },
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "membership_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "member"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "AddMemberArgs"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "process_distribute_nft",
+      "discriminator": [
+        108,
+        240,
+        68,
+        81,
+        144,
+        83,
+        58,
+        153
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "signer": true
+        },
+        {
+          "name": "member",
+          "writable": true
+        },
+        {
+          "name": "membership_mint_token_account",
+          "writable": true
+        },
+        {
+          "name": "membership_key"
+        },
+        {
+          "name": "membership_voucher",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "membership_key"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holding_account",
+          "writable": true
+        },
+        {
+          "name": "fanout_for_mint",
+          "writable": true
+        },
+        {
+          "name": "fanout_for_mint_membership_voucher",
+          "writable": true
+        },
+        {
+          "name": "fanout_mint"
+        },
+        {
+          "name": "fanout_mint_member_token_account",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "distribute_for_mint",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "process_distribute_token",
+      "discriminator": [
+        126,
+        105,
+        46,
+        135,
+        28,
+        36,
+        117,
+        212
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "signer": true
+        },
+        {
+          "name": "member",
+          "writable": true
+        },
+        {
+          "name": "membership_voucher",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "member"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holding_account",
+          "writable": true
+        },
+        {
+          "name": "fanout_for_mint",
+          "writable": true
+        },
+        {
+          "name": "fanout_for_mint_membership_voucher",
+          "writable": true
+        },
+        {
+          "name": "fanout_mint"
+        },
+        {
+          "name": "fanout_mint_member_token_account",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "membership_mint",
+          "writable": true
+        },
+        {
+          "name": "member_stake_account",
+          "writable": true
+        }
+      ],
+      "args": [
+        {
+          "name": "distribute_for_mint",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "process_distribute_wallet",
+      "discriminator": [
+        252,
+        168,
+        167,
+        66,
+        40,
+        201,
+        182,
+        163
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "signer": true
+        },
+        {
+          "name": "member",
+          "writable": true
+        },
+        {
+          "name": "membership_voucher",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "member"
+              }
+            ]
+          }
+        },
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holding_account",
+          "writable": true
+        },
+        {
+          "name": "fanout_for_mint",
+          "writable": true
+        },
+        {
+          "name": "fanout_for_mint_membership_voucher",
+          "writable": true
+        },
+        {
+          "name": "fanout_mint"
+        },
+        {
+          "name": "fanout_mint_member_token_account",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "distribute_for_mint",
+          "type": "bool"
+        }
+      ]
+    },
+    {
+      "name": "process_init",
+      "discriminator": [
+        172,
+        5,
+        165,
+        143,
+        86,
+        159,
+        50,
+        237
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "arg",
+                "path": "args.name"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holding_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  110,
+                  97,
+                  116,
+                  105,
+                  118,
+                  101,
+                  45,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "membership_mint",
+          "writable": true
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "args",
+          "type": {
+            "defined": {
+              "name": "InitializeFanoutArgs"
+            }
           }
         },
         {
           "name": "model",
           "type": {
-            "defined": "MembershipModel"
+            "defined": {
+              "name": "MembershipModel"
+            }
           }
         }
       ]
     },
     {
-      "name": "processInitForMint",
+      "name": "process_init_for_mint",
+      "discriminator": [
+        140,
+        150,
+        232,
+        195,
+        93,
+        219,
+        35,
+        170
+      ],
       "accounts": [
         {
           "name": "authority",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "fanout"
+          ]
         },
         {
           "name": "fanout",
-          "isMut": true,
-          "isSigner": false
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
         },
         {
-          "name": "fanoutForMint",
-          "isMut": true,
-          "isSigner": false
+          "name": "fanout_for_mint",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
         },
         {
-          "name": "mintHoldingAccount",
-          "isMut": true,
-          "isSigner": false
+          "name": "mint_holding_account",
+          "writable": true
         },
         {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false
+          "name": "mint"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
         },
         {
           "name": "rent",
-          "isMut": false,
-          "isSigner": false
+          "address": "SysvarRent111111111111111111111111111111111"
         }
       ],
       "args": [
         {
-          "name": "bumpSeed",
+          "name": "bump_seed",
           "type": "u8"
         }
       ]
     },
     {
-      "name": "processAddMemberWallet",
+      "name": "process_remove_member",
+      "discriminator": [
+        9,
+        45,
+        36,
+        163,
+        245,
+        40,
+        150,
+        85
+      ],
       "accounts": [
         {
           "name": "authority",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "fanout"
+          ]
         },
         {
-          "name": "member",
-          "isMut": false,
-          "isSigner": false
+          "name": "member"
         },
         {
           "name": "fanout",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": "AddMemberArgs"
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
           }
-        }
-      ]
-    },
-    {
-      "name": "processAddMemberNft",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true
         },
         {
-          "name": "fanout",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "metadata",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "args",
-          "type": {
-            "defined": "AddMemberArgs"
+          "name": "membership_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "member"
+              }
+            ]
           }
-        }
-      ]
-    },
-    {
-      "name": "processSetTokenMemberStake",
-      "accounts": [
-        {
-          "name": "member",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "fanout",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipVoucher",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipMintTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "memberStakeAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "shares",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "processSetForTokenMemberStake",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "member",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "fanout",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipVoucher",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipMintTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "memberStakeAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "shares",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "processDistributeNft",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "member",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipMintTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipKey",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "membershipVoucher",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanout",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "holdingAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutForMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutForMintMembershipVoucher",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutMintMemberTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "distributeForMint",
-          "type": "bool"
-        }
-      ]
-    },
-    {
-      "name": "processDistributeWallet",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "member",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipVoucher",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanout",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "holdingAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutForMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutForMintMembershipVoucher",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutMintMemberTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "distributeForMint",
-          "type": "bool"
-        }
-      ]
-    },
-    {
-      "name": "processDistributeToken",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "member",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipMintTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipVoucher",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanout",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "holdingAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutForMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutForMintMembershipVoucher",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutMint",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "fanoutMintMemberTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "rent",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "membershipMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "memberStakeAccount",
-          "isMut": true,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "distributeForMint",
-          "type": "bool"
-        }
-      ]
-    },
-    {
-      "name": "processSignMetadata",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "fanout",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "holdingAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "metadata",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenMetadataProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "processTransferShares",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "fromMember",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "toMember",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "fanout",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "fromMembershipAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "toMembershipAccount",
-          "isMut": true,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "shares",
-          "type": "u64"
-        }
-      ]
-    },
-    {
-      "name": "processUnstake",
-      "accounts": [
-        {
-          "name": "member",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "fanout",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipVoucher",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipMint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipMintTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "memberStakeAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "instructions",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "processRemoveMember",
-      "accounts": [
-        {
-          "name": "authority",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "member",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "fanout",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "membershipAccount",
-          "isMut": true,
-          "isSigner": false
         },
         {
           "name": "destination",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "process_set_for_token_member_stake",
+      "discriminator": [
+        210,
+        40,
+        6,
+        254,
+        2,
+        80,
+        154,
+        109
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "member"
+        },
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "membership_voucher",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "member"
+              }
+            ]
+          }
+        },
+        {
+          "name": "membership_mint",
+          "writable": true
+        },
+        {
+          "name": "membership_mint_token_account",
+          "writable": true
+        },
+        {
+          "name": "member_stake_account",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "shares",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "process_set_token_member_stake",
+      "discriminator": [
+        167,
+        29,
+        12,
+        30,
+        44,
+        193,
+        249,
+        142
+      ],
+      "accounts": [
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "membership_voucher",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "member"
+              }
+            ]
+          }
+        },
+        {
+          "name": "membership_mint",
+          "writable": true
+        },
+        {
+          "name": "membership_mint_token_account",
+          "writable": true
+        },
+        {
+          "name": "member_stake_account",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "shares",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "process_sign_metadata",
+      "discriminator": [
+        188,
+        67,
+        163,
+        49,
+        0,
+        150,
+        63,
+        89
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "relations": [
+            "fanout"
+          ]
+        },
+        {
+          "name": "fanout",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holding_account",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  110,
+                  97,
+                  116,
+                  105,
+                  118,
+                  101,
+                  45,
+                  97,
+                  99,
+                  99,
+                  111,
+                  117,
+                  110,
+                  116
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "metadata",
+          "writable": true
+        },
+        {
+          "name": "token_metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "process_transfer_shares",
+      "discriminator": [
+        195,
+        175,
+        36,
+        50,
+        101,
+        22,
+        28,
+        87
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "relations": [
+            "fanout"
+          ]
+        },
+        {
+          "name": "from_member"
+        },
+        {
+          "name": "to_member"
+        },
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          },
+          "relations": [
+            "from_membership_account",
+            "to_membership_account"
+          ]
+        },
+        {
+          "name": "from_membership_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "from_member"
+              }
+            ]
+          }
+        },
+        {
+          "name": "to_membership_account",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "to_member"
+              }
+            ]
+          }
+        }
+      ],
+      "args": [
+        {
+          "name": "shares",
+          "type": "u64"
+        }
+      ]
+    },
+    {
+      "name": "process_unstake",
+      "discriminator": [
+        217,
+        160,
+        136,
+        174,
+        149,
+        62,
+        79,
+        133
+      ],
+      "accounts": [
+        {
+          "name": "member",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "membership_voucher",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  109,
+                  101,
+                  109,
+                  98,
+                  101,
+                  114,
+                  115,
+                  104,
+                  105,
+                  112
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "member"
+              }
+            ]
+          }
+        },
+        {
+          "name": "membership_mint",
+          "writable": true
+        },
+        {
+          "name": "membership_mint_token_account",
+          "writable": true
+        },
+        {
+          "name": "member_stake_account",
+          "writable": true
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "instructions",
+          "address": "Sysvar1nstructions1111111111111111111111111"
         }
       ],
       "args": []
@@ -706,212 +1573,42 @@
   "accounts": [
     {
       "name": "Fanout",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "authority",
-            "type": "publicKey"
-          },
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "accountKey",
-            "type": "publicKey"
-          },
-          {
-            "name": "totalShares",
-            "type": "u64"
-          },
-          {
-            "name": "totalMembers",
-            "type": "u64"
-          },
-          {
-            "name": "totalInflow",
-            "type": "u64"
-          },
-          {
-            "name": "lastSnapshotAmount",
-            "type": "u64"
-          },
-          {
-            "name": "bumpSeed",
-            "type": "u8"
-          },
-          {
-            "name": "accountOwnerBumpSeed",
-            "type": "u8"
-          },
-          {
-            "name": "totalAvailableShares",
-            "type": "u64"
-          },
-          {
-            "name": "membershipModel",
-            "type": {
-              "defined": "MembershipModel"
-            }
-          },
-          {
-            "name": "membershipMint",
-            "type": {
-              "option": "publicKey"
-            }
-          },
-          {
-            "name": "totalStakedShares",
-            "type": {
-              "option": "u64"
-            }
-          }
-        ]
-      }
-    },
-    {
-      "name": "FanoutMint",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "mint",
-            "type": "publicKey"
-          },
-          {
-            "name": "fanout",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenAccount",
-            "type": "publicKey"
-          },
-          {
-            "name": "totalInflow",
-            "type": "u64"
-          },
-          {
-            "name": "lastSnapshotAmount",
-            "type": "u64"
-          },
-          {
-            "name": "bumpSeed",
-            "type": "u8"
-          }
-        ]
-      }
+      "discriminator": [
+        164,
+        101,
+        210,
+        92,
+        222,
+        14,
+        75,
+        156
+      ]
     },
     {
       "name": "FanoutMembershipVoucher",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "fanout",
-            "type": "publicKey"
-          },
-          {
-            "name": "totalInflow",
-            "type": "u64"
-          },
-          {
-            "name": "lastInflow",
-            "type": "u64"
-          },
-          {
-            "name": "bumpSeed",
-            "type": "u8"
-          },
-          {
-            "name": "membershipKey",
-            "type": "publicKey"
-          },
-          {
-            "name": "shares",
-            "type": "u64"
-          }
-        ]
-      }
+      "discriminator": [
+        185,
+        62,
+        74,
+        60,
+        105,
+        158,
+        178,
+        125
+      ]
     },
     {
-      "name": "FanoutMembershipMintVoucher",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "fanout",
-            "type": "publicKey"
-          },
-          {
-            "name": "fanoutMint",
-            "type": "publicKey"
-          },
-          {
-            "name": "lastInflow",
-            "type": "u64"
-          },
-          {
-            "name": "bumpSeed",
-            "type": "u8"
-          }
-        ]
-      }
-    }
-  ],
-  "types": [
-    {
-      "name": "AddMemberArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "shares",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "InitializeFanoutArgs",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "bumpSeed",
-            "type": "u8"
-          },
-          {
-            "name": "nativeAccountBumpSeed",
-            "type": "u8"
-          },
-          {
-            "name": "name",
-            "type": "string"
-          },
-          {
-            "name": "totalShares",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "MembershipModel",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Wallet"
-          },
-          {
-            "name": "Token"
-          },
-          {
-            "name": "NFT"
-          }
-        ]
-      }
+      "name": "FanoutMint",
+      "discriminator": [
+        50,
+        164,
+        42,
+        108,
+        90,
+        201,
+        250,
+        216
+      ]
     }
   ],
   "errors": [
@@ -1032,13 +1729,198 @@
     {
       "code": 6024,
       "name": "InvalidCloseAccountDestination",
-      "msg": "Sending Sol to a SPL token destination will render the sol unusable"
+      "msg": "Sending Sol to a non-Native Account destination will render the sol unusable"
     }
   ],
-  "metadata": {
-    "address": "hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg",
-    "origin": "anchor",
-    "binaryVersion": "0.26.0",
-    "libVersion": "0.26.0"
-  }
+  "types": [
+    {
+      "name": "AddMemberArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "shares",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Fanout",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "authority",
+            "type": "pubkey"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "account_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_shares",
+            "type": "u64"
+          },
+          {
+            "name": "total_members",
+            "type": "u64"
+          },
+          {
+            "name": "total_inflow",
+            "type": "u64"
+          },
+          {
+            "name": "last_snapshot_amount",
+            "type": "u64"
+          },
+          {
+            "name": "bump_seed",
+            "type": "u8"
+          },
+          {
+            "name": "account_owner_bump_seed",
+            "type": "u8"
+          },
+          {
+            "name": "total_available_shares",
+            "type": "u64"
+          },
+          {
+            "name": "membership_model",
+            "type": {
+              "defined": {
+                "name": "MembershipModel"
+              }
+            }
+          },
+          {
+            "name": "membership_mint",
+            "type": {
+              "option": "pubkey"
+            }
+          },
+          {
+            "name": "total_staked_shares",
+            "type": {
+              "option": "u64"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "name": "FanoutMembershipVoucher",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "fanout",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_inflow",
+            "type": "u64"
+          },
+          {
+            "name": "last_inflow",
+            "type": "u64"
+          },
+          {
+            "name": "bump_seed",
+            "type": "u8"
+          },
+          {
+            "name": "membership_key",
+            "type": "pubkey"
+          },
+          {
+            "name": "shares",
+            "type": "u64"
+          },
+          {
+            "name": "stake_time",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "FanoutMint",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "mint",
+            "type": "pubkey"
+          },
+          {
+            "name": "fanout",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_account",
+            "type": "pubkey"
+          },
+          {
+            "name": "total_inflow",
+            "type": "u64"
+          },
+          {
+            "name": "last_snapshot_amount",
+            "type": "u64"
+          },
+          {
+            "name": "bump_seed",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "InitializeFanoutArgs",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "bump_seed",
+            "type": "u8"
+          },
+          {
+            "name": "native_account_bump_seed",
+            "type": "u8"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "total_shares",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "MembershipModel",
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Wallet"
+          },
+          {
+            "name": "Token"
+          },
+          {
+            "name": "NFT"
+          }
+        ]
+      }
+    }
+  ]
 }

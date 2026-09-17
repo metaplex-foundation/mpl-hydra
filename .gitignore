@@ -9,3 +9,4 @@ dist
 .amman
 .crates
 clients/js/docs
+.bin
