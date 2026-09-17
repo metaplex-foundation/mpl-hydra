@@ -1,11 +1,9 @@
 const path = require("path");
 
 const programDir = path.join(__dirname, "..", "programs");
-function getProgram(dir, programName) {
-  return path.join(programDir, dir, "target", "deploy", programName);
-}
-function getExternalProgram(programName) {
-  return path.join(__dirname, "external-programs", programName);
+
+function getProgram(programBinary) {
+  return path.join(programDir, ".bin", programBinary);
 }
 
 module.exports = {
@@ -13,24 +11,27 @@ module.exports = {
     commitment: "processed",
     programs: [
       {
-        label: "Hydra",
+        label: "Mpl Hydra",
         programId: "hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg",
-        deployPath: getProgram("hydra", "mpl_hydra.so"),
+        deployPath: getProgram("mpl_hydra.so"),
       },
+      // Below are external programs that should be included in the local validator.
+      // You may configure which ones to fetch from the cluster when building
+      // programs within the `configs/scripts/program/dump.sh` script.
       {
         label: "Token Metadata",
         programId: "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-        deployPath: getExternalProgram("mpl_token_metadata.so"),
+        deployPath: getProgram("mpl_token_metadata.so"),
       },
       {
         label: "System Extras",
         programId: "SysExL2WDyJi9aRZrXorrjHJut3JwHQ7R9bTyctbNNG",
-        deployPath: getExternalProgram("mpl_system_extras.so"),
+        deployPath: getProgram("mpl_system_extras.so"),
       },
       {
         label: "Token Extras",
         programId: "TokExjvjJmhKaRBShsBAsbSvEWMA1AgUNK7ps4SAc2p",
-        deployPath: getExternalProgram("mpl_token_extras.so"),
+        deployPath: getProgram("mpl_token_extras.so"),
       },
     ],
   },

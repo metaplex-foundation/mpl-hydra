@@ -6,18 +6,30 @@
 
 program_common: &program_common
   - ".github/workflows/build-programs.yml"
+  - ".github/workflows/test-programs.yml"
   - ".github/workflows/main.yml"
+  - ".github/file-filters.yml"
+  - ".github/.env"
+
+hydra_program: &hydra_program
+  - *program_common
+  - "programs/hydra/**"
+  - "Anchor.toml"
+  - "Cargo.toml"
+  - "Cargo.lock"
+  - "rust-toolchain.toml"
 
 programs: &programs
-  - *program_common
-  - "programs/**"
+  - *hydra_program
 
 # Clients.
 
 client_common: &client_common
   - *programs
-  - ".github/workflows/test-js.yml"
+  - ".github/workflows/test-js-client.yml"
   - ".github/workflows/main.yml"
+  - ".github/file-filters.yml"
+  - ".github/.env"
   - "configs/shank.cjs"
   - "configs/kinobi.cjs"
 

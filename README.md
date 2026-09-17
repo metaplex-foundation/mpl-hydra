@@ -8,10 +8,33 @@ This project contains the following programs:
 
 - [Mpl Hydra](./programs/hydra/README.md) `hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg`
 
-You will need a Rust version compatible with BPF to compile the program, currently we recommend using Rust 1.65.0.
+Hydra is an [Anchor](https://www.anchor-lang.com) program. The toolchain versions used by CI are
+declared in [`.github/.env`](./.github/.env):
+
+| Tool | Version |
+| ---- | ------- |
+| Rust | `1.89.0` |
+| Solana | `2.3.5` |
+| Anchor CLI | `0.32.2` |
+| Node.js | `20.x` |
+| pnpm | `10.x` |
 
 ## Clients
 
 This project contains the following clients:
 
 - [JavaScript](./clients/js/README.md)
+
+## Quick start
+
+```sh
+pnpm install         # install the root tooling
+pnpm programs:build  # build programs/.bin/mpl_hydra.so + fetch external programs
+pnpm programs:test   # run the program tests
+pnpm generate        # regenerate idls/hydra.json and the JS client
+pnpm validator       # start a local Amman validator preloaded with the programs
+```
+
+## Contributing
+
+Check out the [Contributing Guide](./CONTRIBUTING.md) the learn more about how to contribute to this project.

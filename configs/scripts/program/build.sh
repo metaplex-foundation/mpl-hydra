@@ -1,0 +1,42 @@
+#!/bin/bash
+
+set -euo pipefail
+
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
+OUTPUT="./programs/.bin"
+
+# go to parent folder
+cd "$(dirname "$(dirname "$(dirname "${SCRIPT_DIR}")")")" || exit 1
+
+# saves external programs binaries to the output directory
+source ${SCRIPT_DIR}/dump.sh ${OUTPUT}
+source ${SCRIPT_DIR}/dump-devnet.sh ${OUTPUT}
+
+if [ -z ${PROGRAMS+x} ]; then
+    PROGRAMS="$(cat .github/.env | grep "PROGRAMS" | cut -d '=' -f 2)"
+fi
+
+# default to input from the command-line
+ARGS=("$@")
+
+# command-line arguments override env variable
+if [ $# -gt 0 ]; then
+    PROGRAMS="[\"${1}\"]"
+    shift
+    ARGS=("$@")
+fi
+
+PROGRAMS=$(printf '%s\n' "${PROGRAMS}" | jq -c '.[]' | sed 's/"//g')
+
+# creates the output directory if it doesn't exist
+if [ ! -d ${OUTPUT} ]; then
+    mkdir ${OUTPUT}
+fi
+
+WORKING_DIR=$(pwd)
+export SBF_OUT_DIR="${WORKING_DIR}/${OUTPUT}"
+
+while IFS= read -r p; do
+    cd "${WORKING_DIR}/programs/${p}" || exit 1
+    cargo build-sbf --sbf-out-dir "${WORKING_DIR}/${OUTPUT}" ${ARGS[@]+"${ARGS[@]}"}
+done <<< "${PROGRAMS}"

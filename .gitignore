@@ -8,5 +8,14 @@ test-ledger
 dist
 .amman
 .crates
-clients/js/docs
 .bin
+clients/js/docs
+
+# Husky's generated helper scripts.
+.husky/_
+
+# Agent / assistant scratch files (local only).
+.superpowers
+.claude/*
+!.claude/skills/
+*.claude.md
