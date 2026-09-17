@@ -64,6 +64,9 @@ pub fn set_token_member_stake(ctx: Context<SetTokenMemberStake>, shares: u64) ->
         Some(HydraError::InvalidStakeAta.into()),
     )?;
     membership_voucher.stake_time = Clock::get()?.unix_timestamp;
+    // Start the voucher at the current cumulative inflow so a late staker only
+    // claims SOL that arrives after they stake, matching the SPL-token path.
+    membership_voucher.last_inflow = fanout.total_inflow;
     membership_voucher.fanout = fanout.key();
     membership_voucher.membership_key = member.key();
     fanout.total_staked_shares = fanout
