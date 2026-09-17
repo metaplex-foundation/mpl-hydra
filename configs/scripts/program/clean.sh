@@ -1,11 +1,14 @@
 #!/bin/bash
 
+set -euo pipefail
+
 SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 OUTPUT="./programs/.bin"
-# go to parent folder
-cd $(dirname $(dirname $(dirname ${SCRIPT_DIR})))
+# go to parent folder; quoted so a checkout path containing spaces cannot make
+# `cd` fail silently and delete the wrong `programs/.bin`
+cd "$(dirname "$(dirname "$(dirname "${SCRIPT_DIR}")")")"
 
-rm -rf $OUTPUT
+rm -rf -- "${OUTPUT:?}"
 
 if [ -z ${PROGRAMS+x} ]; then
     PROGRAMS="$(cat .github/.env | grep "PROGRAMS" | cut -d '=' -f 2)"

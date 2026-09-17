@@ -45,6 +45,11 @@ For this to work, some initial setup is required on the repository as explained 
 
 ## Setting up GitHub actions
 
-To publish JavaScript clients using GitHub actions, we first need the following secret variable to be set up on the repository.
+The publish workflow authenticates to NPM with [trusted publishing](https://docs.npmjs.com/trusted-publishers)
+rather than a long-lived token: it requests an OIDC token from GitHub (`id-token: write`) and
+publishes with `npm` 11.5.1 or newer, so no `NPM_TOKEN` secret is read or needed.
 
-- `NPM_TOKEN` — An access token that can publish your packages to NPM.
+To enable it, on npmjs.com open the `@metaplex-foundation/mpl-hydra` package settings, add a
+trusted publisher, and point it at this repository with the workflow file
+`.github/workflows/publish-js-client.yml`. The npm account performing that setup must be able to
+publish the package.

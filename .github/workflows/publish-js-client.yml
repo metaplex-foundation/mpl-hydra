@@ -44,8 +44,17 @@ jobs:
     steps:
       - name: Check tag
         id: set_type
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
+          NPM_TAG: ${{ inputs.tag }}
         run: |
-          if [[ "${{ inputs.git_ref }}" =~ ^release/hydra@* ]]; then
+          # npm dist-tags may not look like a semver version and may not start
+          # with a dot or a dash; reject anything else before it reaches a shell.
+          if ! [[ "$NPM_TAG" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]]; then
+            echo "Invalid npm dist-tag: $NPM_TAG" >&2
+            exit 1
+          fi
+          if [[ "$GIT_REF" =~ ^release/hydra@[^/]+$ ]]; then
             echo type="release" >> $GITHUB_OUTPUT
           else
             echo type="ref" >> $GITHUB_OUTPUT
@@ -75,7 +84,11 @@ jobs:
     needs: [check_tag, test_js]
     if: |
       always()
-      && (needs.test_js.result == 'success' || needs.test_js.result == 'skipped')
+      && needs.check_tag.result == 'success'
+      && (
+        needs.test_js.result == 'success'
+        || (needs.test_js.result == 'skipped' && needs.check_tag.outputs.type == 'release')
+      )
     permissions:
       contents: write
       packages: write
@@ -120,9 +133,15 @@ jobs:
       - name: Bump
         id: bump
         working-directory: ./clients/js
+        env:
+          # `bump` is a choice input and `create_release` a boolean, but `tag`
+          # is free-form, so it only ever reaches the shell through the
+          # environment (and is validated in the `check_tag` job).
+          NPM_TAG: ${{ inputs.tag }}
+          IS_PRERELEASE: ${{ startsWith(inputs.bump, 'pre') }}
         run: |
-          if [ "${{ startsWith(inputs.bump, 'pre') }}" == "true" ]; then
-            pnpm version ${{ inputs.bump }} --preid ${{ inputs.tag }} --no-git-tag-version
+          if [ "$IS_PRERELEASE" == "true" ]; then
+            pnpm version ${{ inputs.bump }} --preid "$NPM_TAG" --no-git-tag-version
           else
             pnpm version ${{ inputs.bump }} --no-git-tag-version
           fi
@@ -130,7 +149,9 @@ jobs:
 
       - name: Publish
         working-directory: ./clients/js
-        run: npm publish --access public --tag ${{ inputs.tag }}
+        env:
+          NPM_TAG: ${{ inputs.tag }}
+        run: npm publish --access public --tag "$NPM_TAG"
 
       - name: Create release pull request
         if: ${{ github.event.inputs.create_release == 'true' }}

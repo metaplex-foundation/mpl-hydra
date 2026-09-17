@@ -5,10 +5,7 @@ SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" &>/dev/null && pwd)
 cd $(dirname $(dirname $(dirname $SCRIPT_DIR)))
 WORKING_DIR=$(pwd)
 
-# command-line input
-ARGS=$*
-
 # js client folder
 cd ${WORKING_DIR}/clients/js
 
-pnpm install && pnpm format
+pnpm install && pnpm format && pnpm lint

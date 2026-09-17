@@ -42,9 +42,11 @@ jobs:
     steps:
       - name: Check tag
         id: set_program
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
         run: |
           echo program="hydra" >> $GITHUB_OUTPUT
-          if [[ "${{ inputs.git_ref }}" =~ ^release/hydra@* ]]; then
+          if [[ "$GIT_REF" =~ ^release/hydra@[^/]+$ ]]; then
             echo type="release" >> $GITHUB_OUTPUT
           else
             echo type="ref" >> $GITHUB_OUTPUT
@@ -93,6 +95,14 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.git_ref }}
+
+      # `git_ref` may be a commit hash, which `git.getRef` cannot resolve. The
+      # checkout above already resolved it, so record the concrete commit and
+      # use it when moving the environment tag.
+      - name: Resolve deployed commit
+        id: deployed_commit
+        shell: bash
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
       - name: Load environment variables
         id: env_vars
@@ -156,8 +166,10 @@ jobs:
       - name: Sanitize Ref
         id: sanitize
         shell: bash
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
         run: |
-          REF="${{ inputs.git_ref }}"
+          REF="$GIT_REF"
           if [ -z "$REF" ]; then
             REF="default"
           fi
@@ -174,10 +186,12 @@ jobs:
         uses: actions/github-script@v7
         id: get_release
         if: needs.check_tag.outputs.type == 'release'
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
         with:
           script: |
-            const tag = "${{ inputs.git_ref }}";
-            const assetName = "${{ env.PROGRAM_BINARY }}";
+            const tag = process.env.GIT_REF;
+            const assetName = process.env.PROGRAM_BINARY;
 
             // Fetch the release associated with the tag
             const release = await github.rest.repos.getReleaseByTag({
@@ -238,7 +252,10 @@ jobs:
 
       - name: Create Squads proposal
         if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads'
-        uses: metaplex-foundation/squads-program-upgrade@main
+        # Pinned to an immutable commit: this step receives SQUADS_BOT_KEY and
+        # sets the upgrade proposal parameters. The repository publishes no
+        # tags or releases, so `main`'s current head is pinned instead.
+        uses: metaplex-foundation/squads-program-upgrade@ffd43c7f9b91cf479ff5544ad3e10c923c10f4f9 # main
         with:
           network-url: ${{ env.RPC }}
           program-multisig: ${{ env.SQUADS_MULTISIG }}
@@ -253,29 +270,30 @@ jobs:
       - name: Create env tag
         uses: actions/github-script@v7
         if: github.event.inputs.dry_run == 'false'
+        env:
+          DEPLOYED_SHA: ${{ steps.deployed_commit.outputs.sha }}
+          ENV_TAG: ${{ needs.check_tag.outputs.program }}-${{ inputs.cluster }}
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
-            const refData = await github.rest.git.getRef({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              ref: '${{ (needs.check_tag.outputs.type == 'release' && format('tags/{0}', inputs.git_ref)) || inputs.git_ref }}'
-            });
-            if (refData.status !== 200) {
-              throw new Error('Failed to fetch existing tag');
+            const sha = process.env.DEPLOYED_SHA;
+            const tag = process.env.ENV_TAG;
+            if (!sha) {
+              throw new Error('Failed to resolve the deployed commit');
             }
             await github.rest.git.createRef({
               owner: context.repo.owner,
               repo: context.repo.repo,
-              ref: 'refs/tags/${{ needs.check_tag.outputs.program }}-${{ inputs.cluster }}',
-              sha: refData.data.object.sha
-            }).catch(err => {
+              ref: `refs/tags/${tag}`,
+              sha
+            }).catch(async (err) => {
               if (err.status !== 422) throw err;
-              github.rest.git.updateRef({
+              await github.rest.git.updateRef({
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                ref: 'tags/${{ needs.check_tag.outputs.program }}-${{ inputs.cluster }}',
-                sha: refData.data.object.sha
+                ref: `tags/${tag}`,
+                sha,
+                force: true
               });
             })
 
