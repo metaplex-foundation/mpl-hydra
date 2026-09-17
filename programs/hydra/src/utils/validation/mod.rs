@@ -121,7 +121,7 @@ pub fn assert_valid_metadata(
     if data.is_empty() || data[0] != MetadataKey::MetadataV1 as u8 {
         return Err(HydraError::InvalidMetadata.into());
     }
-    let meta = Metadata::from_bytes(data.as_ref())?;
+    let meta = Metadata::safe_deserialize(data.as_ref())?;
     if !cmp_pubkeys(&meta.mint, mint.key) {
         return Err(HydraError::InvalidMetadata.into());
     }
