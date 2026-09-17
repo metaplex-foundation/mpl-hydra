@@ -44,7 +44,7 @@ jobs:
           # Allowlist instead of a blanket `cat .github/.env >> "$GITHUB_ENV"`
           # so a PR-editable key in `.github/.env` cannot inject arbitrary env
           # vars into subsequent steps.
-          grep -E '^(RUST_VERSION|SOLANA_VERSION|DEPLOY_SOLANA_VERSION|SOLANA_VERIFY_VERSION)=' .github/.env >> "$GITHUB_ENV"
+          grep -E '^(RUST_VERSION|SOLANA_VERSION|DEPLOY_SOLANA_VERSION|SOLANA_VERIFY_VERSION|SOLANA_VERIFY_BUILD_VERSION)=' .github/.env >> "$GITHUB_ENV"
           while IFS='=' read -r key value; do
             case "$key" in
               RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
@@ -99,7 +99,14 @@ jobs:
           rpc-url: ${{ env.RPC }}
           library-name: ${{ env.PROGRAM_LIBRARY }}
           package: ${{ env.PROGRAM_PACKAGE }}
-          solana-version: ${{ env.SOLANA_VERSION }}
+          # Verified-build toolchain version (SOLANA_VERIFY_BUILD_VERSION in
+          # .github/.env). Pinned to 3.1.14 = platform-tools v1.52, the newest
+          # official image; 2.3.x's platform-tools is too old for the crate
+          # versions this program pins (anchor-lang 0.32, solana-program 2.3).
+          # The action resolves it to a digest-pinned image via
+          # solana-verify-base-images.json. It must match the version
+          # build-programs.yml built with, or the hashes will not match.
+          solana-version: ${{ env.SOLANA_VERIFY_BUILD_VERSION }}
           repo-visibility: public
           submit-remote: true
 

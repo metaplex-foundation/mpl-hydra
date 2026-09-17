@@ -100,7 +100,7 @@ jobs:
           # Allowlist instead of a blanket `cat .github/.env >> "$GITHUB_ENV"`
           # so a PR-editable key in `.github/.env` cannot inject arbitrary env
           # vars into subsequent steps.
-          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|SOLANA_VERSION|SOLANA_VERIFY_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL|DEPLOY_SOLANA_VERSION)=' .github/.env >> "$GITHUB_ENV"
+          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL|DEPLOY_SOLANA_VERSION)=' .github/.env >> "$GITHUB_ENV"
           while IFS='=' read -r key value; do
             case "$key" in
               RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
@@ -119,12 +119,6 @@ jobs:
           version: ${{ steps.env_vars.outputs.deploy_solana_version }}
           cache: ${{ env.CACHE }}
 
-      - name: Install solana-verify
-        if: github.event.inputs.dry_run == 'false'
-        uses: metaplex-foundation/actions/install-solana-verify@v1
-        with:
-          version: ${{ env.SOLANA_VERIFY_VERSION }}
-
       - name: Set RPC
         run: |
           # We do this if waterfall because github actions does not allow dynamic access to secrets
@@ -142,10 +136,7 @@ jobs:
           HYDRA_ID: ${{ secrets.HYDRA_ID }}
           HYDRA_DEPLOY_KEY: ${{ secrets.HYDRA_DEPLOY_KEY }}
         run: |
-          echo PROGRAM_NAME="hydra" >> $GITHUB_ENV
           echo PROGRAM_BINARY="mpl_hydra.so" >> $GITHUB_ENV
-          echo PROGRAM_LIBRARY="mpl_hydra" >> $GITHUB_ENV
-          echo PROGRAM_PACKAGE="mpl-hydra" >> $GITHUB_ENV
           printf '%s' "$HYDRA_ID" > ./program-id.json
           # Derive the program id pubkey from the canonical keypair so later
           # steps cannot drift from the deploy target.
@@ -180,7 +171,7 @@ jobs:
           name: program-builds-${{ steps.sanitize.outputs.sanitized }}
 
       - name: Download release asset
-        uses: actions/github-script@v5
+        uses: actions/github-script@v7
         id: get_release
         if: needs.check_tag.outputs.type == 'release'
         with:
@@ -226,24 +217,6 @@ jobs:
             -k ./deployer-key.json \
             --max-sign-attempts 100 \
             --use-rpc
-
-      # Squads-deployed clusters need the squads vault to sign the verified-build
-      # PDA write, so export the instruction here and let the multisig execute it
-      # alongside the upgrade.
-      - name: Export verified-build PDA transaction
-        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads'
-        uses: metaplex-foundation/actions/verify-program@v1
-        with:
-          mode: export-pda-tx
-          program-id-keypair: ./program-id.json
-          uploader: ${{ env.SQUADS_VAULT }}
-          rpc-url: ${{ env.RPC }}
-          library-name: ${{ env.PROGRAM_LIBRARY }}
-          package: ${{ env.PROGRAM_PACKAGE }}
-          solana-version: ${{ env.SOLANA_VERSION }}
-          repo-visibility: public
-          submit-remote: false
-          output-file: verify-pda-tx.b58
 
       - name: Deploy squads buffer
         if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads'
