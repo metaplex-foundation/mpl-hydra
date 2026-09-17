@@ -7,7 +7,6 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -24,7 +23,11 @@ import {
   struct,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type DistributeWalletInstructionAccounts = {
@@ -52,20 +55,7 @@ export type DistributeWalletInstructionDataArgs = {
   distributeForMint: boolean;
 };
 
-/** @deprecated Use `getDistributeWalletInstructionDataSerializer()` without any argument instead. */
-export function getDistributeWalletInstructionDataSerializer(
-  _context: object
-): Serializer<
-  DistributeWalletInstructionDataArgs,
-  DistributeWalletInstructionData
->;
 export function getDistributeWalletInstructionDataSerializer(): Serializer<
-  DistributeWalletInstructionDataArgs,
-  DistributeWalletInstructionData
->;
-export function getDistributeWalletInstructionDataSerializer(
-  _context: object = {}
-): Serializer<
   DistributeWalletInstructionDataArgs,
   DistributeWalletInstructionData
 > {
@@ -95,109 +85,129 @@ export function getDistributeWalletInstructionDataSerializer(
 export type DistributeWalletInstructionArgs =
   DistributeWalletInstructionDataArgs;
 
+// Instruction discriminator.
+export const distributeWalletInstructionDiscriminator = [
+  252, 168, 167, 66, 40, 201, 182, 163,
+];
+
 // Instruction.
 export function distributeWallet(
-  context: Pick<Context, 'programs' | 'payer'>,
+  context: Pick<Context, 'payer' | 'programs'>,
   input: DistributeWalletInstructionAccounts & DistributeWalletInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
 
-  // Resolved inputs.
+  // Accounts.
   const resolvedAccounts = {
-    member: [input.member, true] as const,
-    membershipVoucher: [input.membershipVoucher, true] as const,
-    fanout: [input.fanout, true] as const,
-    holdingAccount: [input.holdingAccount, true] as const,
-    fanoutForMint: [input.fanoutForMint, true] as const,
-    fanoutForMintMembershipVoucher: [
-      input.fanoutForMintMembershipVoucher,
-      true,
-    ] as const,
-    fanoutMint: [input.fanoutMint, false] as const,
-    fanoutMintMemberTokenAccount: [
-      input.fanoutMintMemberTokenAccount,
-      true,
-    ] as const,
-  };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'payer',
-    input.payer
-      ? ([input.payer, false] as const)
-      : ([context.payer, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'rent',
-    input.rent
-      ? ([input.rent, false] as const)
-      : ([
-          publicKey('SysvarRent111111111111111111111111111111111'),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'tokenProgram',
-    input.tokenProgram
-      ? ([input.tokenProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splToken',
-            'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-          ),
-          false,
-        ] as const)
-  );
-  const resolvedArgs = { ...input, ...resolvingArgs };
+    payer: {
+      index: 0,
+      isWritable: false as boolean,
+      value: input.payer ?? null,
+    },
+    member: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.member ?? null,
+    },
+    membershipVoucher: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.membershipVoucher ?? null,
+    },
+    fanout: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.fanout ?? null,
+    },
+    holdingAccount: {
+      index: 4,
+      isWritable: true as boolean,
+      value: input.holdingAccount ?? null,
+    },
+    fanoutForMint: {
+      index: 5,
+      isWritable: true as boolean,
+      value: input.fanoutForMint ?? null,
+    },
+    fanoutForMintMembershipVoucher: {
+      index: 6,
+      isWritable: true as boolean,
+      value: input.fanoutForMintMembershipVoucher ?? null,
+    },
+    fanoutMint: {
+      index: 7,
+      isWritable: false as boolean,
+      value: input.fanoutMint ?? null,
+    },
+    fanoutMintMemberTokenAccount: {
+      index: 8,
+      isWritable: true as boolean,
+      value: input.fanoutMintMemberTokenAccount ?? null,
+    },
+    systemProgram: {
+      index: 9,
+      isWritable: false as boolean,
+      value: input.systemProgram ?? null,
+    },
+    rent: {
+      index: 10,
+      isWritable: false as boolean,
+      value: input.rent ?? null,
+    },
+    tokenProgram: {
+      index: 11,
+      isWritable: false as boolean,
+      value: input.tokenProgram ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
-  addAccountMeta(keys, signers, resolvedAccounts.payer, false);
-  addAccountMeta(keys, signers, resolvedAccounts.member, false);
-  addAccountMeta(keys, signers, resolvedAccounts.membershipVoucher, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
-  addAccountMeta(keys, signers, resolvedAccounts.holdingAccount, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanoutForMint, false);
-  addAccountMeta(
-    keys,
-    signers,
-    resolvedAccounts.fanoutForMintMembershipVoucher,
-    false
+  // Arguments.
+  const resolvedArgs: DistributeWalletInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.payer.value) {
+    resolvedAccounts.payer.value = context.payer;
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.rent.value) {
+    resolvedAccounts.rent.value = publicKey(
+      'SysvarRent111111111111111111111111111111111'
+    );
+  }
+  if (!resolvedAccounts.tokenProgram.value) {
+    resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    );
+    resolvedAccounts.tokenProgram.isWritable = false;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
   );
-  addAccountMeta(keys, signers, resolvedAccounts.fanoutMint, false);
-  addAccountMeta(
-    keys,
-    signers,
-    resolvedAccounts.fanoutMintMemberTokenAccount,
-    false
-  );
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.rent, false);
-  addAccountMeta(keys, signers, resolvedAccounts.tokenProgram, false);
 
   // Data.
-  const data =
-    getDistributeWalletInstructionDataSerializer().serialize(resolvedArgs);
+  const data = getDistributeWalletInstructionDataSerializer().serialize(
+    resolvedArgs as DistributeWalletInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

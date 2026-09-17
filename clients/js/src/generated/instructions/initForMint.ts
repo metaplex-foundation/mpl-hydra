@@ -7,7 +7,6 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -23,7 +22,11 @@ import {
   struct,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type InitForMintInstructionAccounts = {
@@ -44,17 +47,10 @@ export type InitForMintInstructionData = {
 
 export type InitForMintInstructionDataArgs = { bumpSeed: number };
 
-/** @deprecated Use `getInitForMintInstructionDataSerializer()` without any argument instead. */
-export function getInitForMintInstructionDataSerializer(
-  _context: object
-): Serializer<InitForMintInstructionDataArgs, InitForMintInstructionData>;
 export function getInitForMintInstructionDataSerializer(): Serializer<
   InitForMintInstructionDataArgs,
   InitForMintInstructionData
->;
-export function getInitForMintInstructionDataSerializer(
-  _context: object = {}
-): Serializer<InitForMintInstructionDataArgs, InitForMintInstructionData> {
+> {
   return mapSerializer<
     InitForMintInstructionDataArgs,
     any,
@@ -77,71 +73,89 @@ export function getInitForMintInstructionDataSerializer(
 // Args.
 export type InitForMintInstructionArgs = InitForMintInstructionDataArgs;
 
+// Instruction discriminator.
+export const initForMintInstructionDiscriminator = [
+  140, 150, 232, 195, 93, 219, 35, 170,
+];
+
 // Instruction.
 export function initForMint(
-  context: Pick<Context, 'programs' | 'identity'>,
+  context: Pick<Context, 'identity' | 'programs'>,
   input: InitForMintInstructionAccounts & InitForMintInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
 
-  // Resolved inputs.
+  // Accounts.
   const resolvedAccounts = {
-    fanout: [input.fanout, true] as const,
-    fanoutForMint: [input.fanoutForMint, true] as const,
-    mintHoldingAccount: [input.mintHoldingAccount, true] as const,
-    mint: [input.mint, false] as const,
-  };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'authority',
-    input.authority
-      ? ([input.authority, true] as const)
-      : ([context.identity, true] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'rent',
-    input.rent
-      ? ([input.rent, false] as const)
-      : ([
-          publicKey('SysvarRent111111111111111111111111111111111'),
-          false,
-        ] as const)
-  );
-  const resolvedArgs = { ...input, ...resolvingArgs };
+    authority: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.authority ?? null,
+    },
+    fanout: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.fanout ?? null,
+    },
+    fanoutForMint: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.fanoutForMint ?? null,
+    },
+    mintHoldingAccount: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.mintHoldingAccount ?? null,
+    },
+    mint: { index: 4, isWritable: false as boolean, value: input.mint ?? null },
+    systemProgram: {
+      index: 5,
+      isWritable: false as boolean,
+      value: input.systemProgram ?? null,
+    },
+    rent: { index: 6, isWritable: false as boolean, value: input.rent ?? null },
+  } satisfies ResolvedAccountsWithIndices;
 
-  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanoutForMint, false);
-  addAccountMeta(keys, signers, resolvedAccounts.mintHoldingAccount, false);
-  addAccountMeta(keys, signers, resolvedAccounts.mint, false);
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.rent, false);
+  // Arguments.
+  const resolvedArgs: InitForMintInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.rent.value) {
+    resolvedAccounts.rent.value = publicKey(
+      'SysvarRent111111111111111111111111111111111'
+    );
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
+  );
 
   // Data.
-  const data =
-    getInitForMintInstructionDataSerializer().serialize(resolvedArgs);
+  const data = getInitForMintInstructionDataSerializer().serialize(
+    resolvedArgs as InitForMintInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

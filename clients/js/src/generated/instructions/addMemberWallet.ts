@@ -8,7 +8,6 @@
 
 import {
   ACCOUNT_HEADER_SIZE,
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -29,7 +28,12 @@ import {
   findFanoutMembershipVoucherPda,
   getFanoutMembershipVoucherSize,
 } from '../accounts';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  expectPublicKey,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type AddMemberWalletInstructionAccounts = {
@@ -50,20 +54,7 @@ export type AddMemberWalletInstructionData = {
 
 export type AddMemberWalletInstructionDataArgs = { shares: number | bigint };
 
-/** @deprecated Use `getAddMemberWalletInstructionDataSerializer()` without any argument instead. */
-export function getAddMemberWalletInstructionDataSerializer(
-  _context: object
-): Serializer<
-  AddMemberWalletInstructionDataArgs,
-  AddMemberWalletInstructionData
->;
 export function getAddMemberWalletInstructionDataSerializer(): Serializer<
-  AddMemberWalletInstructionDataArgs,
-  AddMemberWalletInstructionData
->;
-export function getAddMemberWalletInstructionDataSerializer(
-  _context: object = {}
-): Serializer<
   AddMemberWalletInstructionDataArgs,
   AddMemberWalletInstructionData
 > {
@@ -92,95 +83,109 @@ export function getAddMemberWalletInstructionDataSerializer(
 // Args.
 export type AddMemberWalletInstructionArgs = AddMemberWalletInstructionDataArgs;
 
+// Instruction discriminator.
+export const addMemberWalletInstructionDiscriminator = [
+  201, 9, 59, 128, 69, 117, 220, 235,
+];
+
 // Instruction.
 export function addMemberWallet(
-  context: Pick<Context, 'programs' | 'eddsa' | 'identity'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'programs'>,
   input: AddMemberWalletInstructionAccounts & AddMemberWalletInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
 
-  // Resolved inputs.
+  // Accounts.
   const resolvedAccounts = {
-    member: [input.member, false] as const,
-    fanout: [input.fanout, true] as const,
-  };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'authority',
-    input.authority
-      ? ([input.authority, true] as const)
-      : ([context.identity, true] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'membershipAccount',
-    input.membershipAccount
-      ? ([input.membershipAccount, true] as const)
-      : ([
-          findFanoutMembershipVoucherPda(context, {
-            fanout: publicKey(input.fanout, false),
-            member: publicKey(input.member, false),
-          }),
-          true,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'rent',
-    input.rent
-      ? ([input.rent, false] as const)
-      : ([
-          publicKey('SysvarRent111111111111111111111111111111111'),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'tokenProgram',
-    input.tokenProgram
-      ? ([input.tokenProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splToken',
-            'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-          ),
-          false,
-        ] as const)
-  );
-  const resolvedArgs = { ...input, ...resolvingArgs };
+    authority: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.authority ?? null,
+    },
+    member: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.member ?? null,
+    },
+    fanout: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.fanout ?? null,
+    },
+    membershipAccount: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.membershipAccount ?? null,
+    },
+    systemProgram: {
+      index: 4,
+      isWritable: false as boolean,
+      value: input.systemProgram ?? null,
+    },
+    rent: { index: 5, isWritable: false as boolean, value: input.rent ?? null },
+    tokenProgram: {
+      index: 6,
+      isWritable: false as boolean,
+      value: input.tokenProgram ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
-  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
-  addAccountMeta(keys, signers, resolvedAccounts.member, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
-  addAccountMeta(keys, signers, resolvedAccounts.membershipAccount, false);
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.rent, false);
-  addAccountMeta(keys, signers, resolvedAccounts.tokenProgram, false);
+  // Arguments.
+  const resolvedArgs: AddMemberWalletInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
+  if (!resolvedAccounts.membershipAccount.value) {
+    resolvedAccounts.membershipAccount.value = findFanoutMembershipVoucherPda(
+      context,
+      {
+        fanout: expectPublicKey(resolvedAccounts.fanout.value),
+        member: expectPublicKey(resolvedAccounts.member.value),
+      }
+    );
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.rent.value) {
+    resolvedAccounts.rent.value = publicKey(
+      'SysvarRent111111111111111111111111111111111'
+    );
+  }
+  if (!resolvedAccounts.tokenProgram.value) {
+    resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    );
+    resolvedAccounts.tokenProgram.isWritable = false;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
+  );
 
   // Data.
-  const data =
-    getAddMemberWalletInstructionDataSerializer().serialize(resolvedArgs);
+  const data = getAddMemberWalletInstructionDataSerializer().serialize(
+    resolvedArgs as AddMemberWalletInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain =

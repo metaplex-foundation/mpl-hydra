@@ -7,7 +7,6 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -22,7 +21,11 @@ import {
   struct,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type SignMetadataInstructionAccounts = {
@@ -38,17 +41,10 @@ export type SignMetadataInstructionData = { discriminator: Array<number> };
 
 export type SignMetadataInstructionDataArgs = {};
 
-/** @deprecated Use `getSignMetadataInstructionDataSerializer()` without any argument instead. */
-export function getSignMetadataInstructionDataSerializer(
-  _context: object
-): Serializer<SignMetadataInstructionDataArgs, SignMetadataInstructionData>;
 export function getSignMetadataInstructionDataSerializer(): Serializer<
   SignMetadataInstructionDataArgs,
   SignMetadataInstructionData
->;
-export function getSignMetadataInstructionDataSerializer(
-  _context: object = {}
-): Serializer<SignMetadataInstructionDataArgs, SignMetadataInstructionData> {
+> {
   return mapSerializer<
     SignMetadataInstructionDataArgs,
     any,
@@ -62,52 +58,74 @@ export function getSignMetadataInstructionDataSerializer(
   ) as Serializer<SignMetadataInstructionDataArgs, SignMetadataInstructionData>;
 }
 
+// Instruction discriminator.
+export const signMetadataInstructionDiscriminator = [
+  188, 67, 163, 49, 0, 150, 63, 89,
+];
+
 // Instruction.
 export function signMetadata(
-  context: Pick<Context, 'programs' | 'identity'>,
+  context: Pick<Context, 'identity' | 'programs'>,
   input: SignMetadataInstructionAccounts
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
 
-  // Resolved inputs.
+  // Accounts.
   const resolvedAccounts = {
-    fanout: [input.fanout, false] as const,
-    holdingAccount: [input.holdingAccount, false] as const,
-    metadata: [input.metadata, true] as const,
-  };
-  addObjectProperty(
-    resolvedAccounts,
-    'authority',
-    input.authority
-      ? ([input.authority, true] as const)
-      : ([context.identity, true] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'tokenMetadataProgram',
-    input.tokenMetadataProgram
-      ? ([input.tokenMetadataProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'mplTokenMetadata',
-            'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
-          ),
-          false,
-        ] as const)
-  );
+    authority: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.authority ?? null,
+    },
+    fanout: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.fanout ?? null,
+    },
+    holdingAccount: {
+      index: 2,
+      isWritable: false as boolean,
+      value: input.holdingAccount ?? null,
+    },
+    metadata: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.metadata ?? null,
+    },
+    tokenMetadataProgram: {
+      index: 4,
+      isWritable: false as boolean,
+      value: input.tokenMetadataProgram ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
-  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
-  addAccountMeta(keys, signers, resolvedAccounts.holdingAccount, false);
-  addAccountMeta(keys, signers, resolvedAccounts.metadata, false);
-  addAccountMeta(keys, signers, resolvedAccounts.tokenMetadataProgram, false);
+  // Default values.
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
+  if (!resolvedAccounts.tokenMetadataProgram.value) {
+    resolvedAccounts.tokenMetadataProgram.value = context.programs.getPublicKey(
+      'mplTokenMetadata',
+      'metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s'
+    );
+    resolvedAccounts.tokenMetadataProgram.isWritable = false;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
+  );
 
   // Data.
   const data = getSignMetadataInstructionDataSerializer().serialize({});

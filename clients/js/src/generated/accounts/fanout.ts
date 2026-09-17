@@ -73,17 +73,10 @@ export type FanoutAccountDataArgs = {
   totalStakedShares: OptionOrNullable<number | bigint>;
 };
 
-/** @deprecated Use `getFanoutAccountDataSerializer()` without any argument instead. */
-export function getFanoutAccountDataSerializer(
-  _context: object
-): Serializer<FanoutAccountDataArgs, FanoutAccountData>;
 export function getFanoutAccountDataSerializer(): Serializer<
   FanoutAccountDataArgs,
   FanoutAccountData
->;
-export function getFanoutAccountDataSerializer(
-  _context: object = {}
-): Serializer<FanoutAccountDataArgs, FanoutAccountData> {
+> {
   return mapSerializer<FanoutAccountDataArgs, any, FanoutAccountData>(
     struct<FanoutAccountData>(
       [
@@ -111,20 +104,8 @@ export function getFanoutAccountDataSerializer(
   ) as Serializer<FanoutAccountDataArgs, FanoutAccountData>;
 }
 
-/** @deprecated Use `deserializeFanout(rawAccount)` without any context instead. */
-export function deserializeFanout(
-  context: object,
-  rawAccount: RpcAccount
-): Fanout;
-export function deserializeFanout(rawAccount: RpcAccount): Fanout;
-export function deserializeFanout(
-  context: RpcAccount | object,
-  rawAccount?: RpcAccount
-): Fanout {
-  return deserializeAccount(
-    rawAccount ?? (context as RpcAccount),
-    getFanoutAccountDataSerializer()
-  );
+export function deserializeFanout(rawAccount: RpcAccount): Fanout {
+  return deserializeAccount(rawAccount, getFanoutAccountDataSerializer());
 }
 
 export async function fetchFanout(

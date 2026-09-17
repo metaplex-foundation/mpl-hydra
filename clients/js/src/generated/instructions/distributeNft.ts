@@ -7,7 +7,6 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -24,7 +23,11 @@ import {
   struct,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type DistributeNftInstructionAccounts = {
@@ -52,17 +55,10 @@ export type DistributeNftInstructionData = {
 
 export type DistributeNftInstructionDataArgs = { distributeForMint: boolean };
 
-/** @deprecated Use `getDistributeNftInstructionDataSerializer()` without any argument instead. */
-export function getDistributeNftInstructionDataSerializer(
-  _context: object
-): Serializer<DistributeNftInstructionDataArgs, DistributeNftInstructionData>;
 export function getDistributeNftInstructionDataSerializer(): Serializer<
   DistributeNftInstructionDataArgs,
   DistributeNftInstructionData
->;
-export function getDistributeNftInstructionDataSerializer(
-  _context: object = {}
-): Serializer<DistributeNftInstructionDataArgs, DistributeNftInstructionData> {
+> {
   return mapSerializer<
     DistributeNftInstructionDataArgs,
     any,
@@ -88,121 +84,139 @@ export function getDistributeNftInstructionDataSerializer(
 // Args.
 export type DistributeNftInstructionArgs = DistributeNftInstructionDataArgs;
 
+// Instruction discriminator.
+export const distributeNftInstructionDiscriminator = [
+  108, 240, 68, 81, 144, 83, 58, 153,
+];
+
 // Instruction.
 export function distributeNft(
-  context: Pick<Context, 'programs' | 'payer'>,
+  context: Pick<Context, 'payer' | 'programs'>,
   input: DistributeNftInstructionAccounts & DistributeNftInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
 
-  // Resolved inputs.
+  // Accounts.
   const resolvedAccounts = {
-    member: [input.member, true] as const,
-    membershipMintTokenAccount: [
-      input.membershipMintTokenAccount,
-      true,
-    ] as const,
-    membershipKey: [input.membershipKey, false] as const,
-    membershipVoucher: [input.membershipVoucher, true] as const,
-    fanout: [input.fanout, true] as const,
-    holdingAccount: [input.holdingAccount, true] as const,
-    fanoutForMint: [input.fanoutForMint, true] as const,
-    fanoutForMintMembershipVoucher: [
-      input.fanoutForMintMembershipVoucher,
-      true,
-    ] as const,
-    fanoutMint: [input.fanoutMint, false] as const,
-    fanoutMintMemberTokenAccount: [
-      input.fanoutMintMemberTokenAccount,
-      true,
-    ] as const,
-  };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'payer',
-    input.payer
-      ? ([input.payer, false] as const)
-      : ([context.payer, false] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'rent',
-    input.rent
-      ? ([input.rent, false] as const)
-      : ([
-          publicKey('SysvarRent111111111111111111111111111111111'),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'tokenProgram',
-    input.tokenProgram
-      ? ([input.tokenProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splToken',
-            'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-          ),
-          false,
-        ] as const)
-  );
-  const resolvedArgs = { ...input, ...resolvingArgs };
+    payer: {
+      index: 0,
+      isWritable: false as boolean,
+      value: input.payer ?? null,
+    },
+    member: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.member ?? null,
+    },
+    membershipMintTokenAccount: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.membershipMintTokenAccount ?? null,
+    },
+    membershipKey: {
+      index: 3,
+      isWritable: false as boolean,
+      value: input.membershipKey ?? null,
+    },
+    membershipVoucher: {
+      index: 4,
+      isWritable: true as boolean,
+      value: input.membershipVoucher ?? null,
+    },
+    fanout: {
+      index: 5,
+      isWritable: true as boolean,
+      value: input.fanout ?? null,
+    },
+    holdingAccount: {
+      index: 6,
+      isWritable: true as boolean,
+      value: input.holdingAccount ?? null,
+    },
+    fanoutForMint: {
+      index: 7,
+      isWritable: true as boolean,
+      value: input.fanoutForMint ?? null,
+    },
+    fanoutForMintMembershipVoucher: {
+      index: 8,
+      isWritable: true as boolean,
+      value: input.fanoutForMintMembershipVoucher ?? null,
+    },
+    fanoutMint: {
+      index: 9,
+      isWritable: false as boolean,
+      value: input.fanoutMint ?? null,
+    },
+    fanoutMintMemberTokenAccount: {
+      index: 10,
+      isWritable: true as boolean,
+      value: input.fanoutMintMemberTokenAccount ?? null,
+    },
+    systemProgram: {
+      index: 11,
+      isWritable: false as boolean,
+      value: input.systemProgram ?? null,
+    },
+    rent: {
+      index: 12,
+      isWritable: false as boolean,
+      value: input.rent ?? null,
+    },
+    tokenProgram: {
+      index: 13,
+      isWritable: false as boolean,
+      value: input.tokenProgram ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
-  addAccountMeta(keys, signers, resolvedAccounts.payer, false);
-  addAccountMeta(keys, signers, resolvedAccounts.member, false);
-  addAccountMeta(
-    keys,
-    signers,
-    resolvedAccounts.membershipMintTokenAccount,
-    false
+  // Arguments.
+  const resolvedArgs: DistributeNftInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.payer.value) {
+    resolvedAccounts.payer.value = context.payer;
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.rent.value) {
+    resolvedAccounts.rent.value = publicKey(
+      'SysvarRent111111111111111111111111111111111'
+    );
+  }
+  if (!resolvedAccounts.tokenProgram.value) {
+    resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    );
+    resolvedAccounts.tokenProgram.isWritable = false;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
   );
-  addAccountMeta(keys, signers, resolvedAccounts.membershipKey, false);
-  addAccountMeta(keys, signers, resolvedAccounts.membershipVoucher, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
-  addAccountMeta(keys, signers, resolvedAccounts.holdingAccount, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanoutForMint, false);
-  addAccountMeta(
-    keys,
-    signers,
-    resolvedAccounts.fanoutForMintMembershipVoucher,
-    false
-  );
-  addAccountMeta(keys, signers, resolvedAccounts.fanoutMint, false);
-  addAccountMeta(
-    keys,
-    signers,
-    resolvedAccounts.fanoutMintMemberTokenAccount,
-    false
-  );
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.rent, false);
-  addAccountMeta(keys, signers, resolvedAccounts.tokenProgram, false);
 
   // Data.
-  const data =
-    getDistributeNftInstructionDataSerializer().serialize(resolvedArgs);
+  const data = getDistributeNftInstructionDataSerializer().serialize(
+    resolvedArgs as DistributeNftInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

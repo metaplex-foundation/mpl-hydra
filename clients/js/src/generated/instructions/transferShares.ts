@@ -7,7 +7,6 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -23,7 +22,11 @@ import {
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type TransferSharesInstructionAccounts = {
@@ -43,17 +46,7 @@ export type TransferSharesInstructionData = {
 
 export type TransferSharesInstructionDataArgs = { shares: number | bigint };
 
-/** @deprecated Use `getTransferSharesInstructionDataSerializer()` without any argument instead. */
-export function getTransferSharesInstructionDataSerializer(
-  _context: object
-): Serializer<TransferSharesInstructionDataArgs, TransferSharesInstructionData>;
 export function getTransferSharesInstructionDataSerializer(): Serializer<
-  TransferSharesInstructionDataArgs,
-  TransferSharesInstructionData
->;
-export function getTransferSharesInstructionDataSerializer(
-  _context: object = {}
-): Serializer<
   TransferSharesInstructionDataArgs,
   TransferSharesInstructionData
 > {
@@ -82,48 +75,80 @@ export function getTransferSharesInstructionDataSerializer(
 // Args.
 export type TransferSharesInstructionArgs = TransferSharesInstructionDataArgs;
 
+// Instruction discriminator.
+export const transferSharesInstructionDiscriminator = [
+  195, 175, 36, 50, 101, 22, 28, 87,
+];
+
 // Instruction.
 export function transferShares(
-  context: Pick<Context, 'programs' | 'identity'>,
+  context: Pick<Context, 'identity' | 'programs'>,
   input: TransferSharesInstructionAccounts & TransferSharesInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
 
-  // Resolved inputs.
+  // Accounts.
   const resolvedAccounts = {
-    fromMember: [input.fromMember, false] as const,
-    toMember: [input.toMember, false] as const,
-    fanout: [input.fanout, true] as const,
-    fromMembershipAccount: [input.fromMembershipAccount, true] as const,
-    toMembershipAccount: [input.toMembershipAccount, true] as const,
-  };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'authority',
-    input.authority
-      ? ([input.authority, false] as const)
-      : ([context.identity, false] as const)
-  );
-  const resolvedArgs = { ...input, ...resolvingArgs };
+    authority: {
+      index: 0,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
+    fromMember: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.fromMember ?? null,
+    },
+    toMember: {
+      index: 2,
+      isWritable: false as boolean,
+      value: input.toMember ?? null,
+    },
+    fanout: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.fanout ?? null,
+    },
+    fromMembershipAccount: {
+      index: 4,
+      isWritable: true as boolean,
+      value: input.fromMembershipAccount ?? null,
+    },
+    toMembershipAccount: {
+      index: 5,
+      isWritable: true as boolean,
+      value: input.toMembershipAccount ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
-  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fromMember, false);
-  addAccountMeta(keys, signers, resolvedAccounts.toMember, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fromMembershipAccount, false);
-  addAccountMeta(keys, signers, resolvedAccounts.toMembershipAccount, false);
+  // Arguments.
+  const resolvedArgs: TransferSharesInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
+  );
 
   // Data.
-  const data =
-    getTransferSharesInstructionDataSerializer().serialize(resolvedArgs);
+  const data = getTransferSharesInstructionDataSerializer().serialize(
+    resolvedArgs as TransferSharesInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

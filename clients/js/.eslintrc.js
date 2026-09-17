@@ -1,7 +1,17 @@
 module.exports = {
   extends: ['airbnb-base', 'airbnb-typescript/base', 'prettier'],
   plugins: ['prettier'],
-  overrides: [],
+  overrides: [
+    {
+      // Kinobi-generated code is not written by hand and does not follow every
+      // airbnb stylistic rule.
+      files: ['src/generated/**/*.ts'],
+      rules: {
+        '@typescript-eslint/no-shadow': 'off',
+        'prefer-destructuring': 'off',
+      },
+    },
+  ],
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
