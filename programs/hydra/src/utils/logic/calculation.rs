@@ -29,14 +29,10 @@ pub fn update_fanout_for_add(fanout: &mut Account<Fanout>, shares: u64) -> Resul
     let less_shares = fanout
         .total_available_shares
         .checked_sub(shares)
-        .or_arith_error()?;
+        .ok_or(HydraError::InsufficientShares)?;
     fanout.total_members = fanout.total_members.checked_add(1).or_arith_error()?;
     fanout.total_available_shares = less_shares;
-    if less_shares.ge(&0) {
-        Ok(())
-    } else {
-        Err(HydraError::InsufficientShares.into())
-    }
+    Ok(())
 }
 
 pub fn update_fanout_for_remove(fanout: &mut Account<Fanout>) -> Result<()> {
@@ -66,7 +62,10 @@ pub fn update_inflow_for_mint(
             .or_arith_error()?
             .checked_div(tss as u128)
             .or_arith_error()? as u64;
-        fanout_for_mint.total_inflow += unstaked_correction;
+        fanout_for_mint.total_inflow = fanout_for_mint
+            .total_inflow
+            .checked_add(unstaked_correction)
+            .or_arith_error()?;
     }
     fanout_for_mint.last_snapshot_amount = current_snapshot;
     Ok(())
@@ -87,7 +86,10 @@ pub fn update_inflow(fanout: &mut Fanout, current_snapshot: u64) -> Result<()> {
             .or_arith_error()?
             .checked_div(tss as u128)
             .or_arith_error()? as u64;
-        fanout.total_inflow += unstaked_correction;
+        fanout.total_inflow = fanout
+            .total_inflow
+            .checked_add(unstaked_correction)
+            .or_arith_error()?;
     }
     fanout.last_snapshot_amount = current_snapshot;
     Ok(())
@@ -128,4 +130,122 @@ pub fn current_lamports(
     holding_account_lamports
         .checked_sub(subtract_size)
         .ok_or_else(|| HydraError::NumericalOverflow.into())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::state::MembershipModel;
+
+    fn anchor_error_code(err: &error::Error) -> Option<u32> {
+        match err {
+            error::Error::AnchorError(e) => Some(e.error_code_number),
+            _ => None,
+        }
+    }
+
+    fn fanout(total_available_shares: u64) -> Fanout {
+        Fanout {
+            name: "test".to_string(),
+            total_shares: 100,
+            total_available_shares,
+            membership_model: MembershipModel::Token,
+            ..Fanout::default()
+        }
+    }
+
+    /// `update_fanout_for_add` takes an `Account<Fanout>`, so stage a real account buffer.
+    fn fanout_account_data(fanout: &Fanout) -> Vec<u8> {
+        let mut data = Vec::new();
+        fanout.try_serialize(&mut data).unwrap();
+        data
+    }
+
+    #[test]
+    fn test_update_fanout_for_add_over_allocation_is_insufficient_shares() {
+        let key = Pubkey::new_unique();
+        let owner = crate::ID;
+        let lamports = &mut 1_000_000u64;
+        let mut data = fanout_account_data(&fanout(10));
+        let info = AccountInfo::new(&key, false, true, lamports, &mut data, &owner, false, 0);
+        let mut account: Account<Fanout> = Account::try_from(&info).unwrap();
+
+        let err = update_fanout_for_add(&mut account, 11).unwrap_err();
+
+        assert_eq!(
+            anchor_error_code(&err),
+            Some(u32::from(HydraError::InsufficientShares))
+        );
+        // The instruction aborts, so nothing about the member count changed.
+        assert_eq!(account.total_members, 0);
+        assert_eq!(account.total_available_shares, 10);
+    }
+
+    #[test]
+    fn test_update_fanout_for_add_happy_path() {
+        let key = Pubkey::new_unique();
+        let owner = crate::ID;
+        let lamports = &mut 1_000_000u64;
+        let mut data = fanout_account_data(&fanout(10));
+        let info = AccountInfo::new(&key, false, true, lamports, &mut data, &owner, false, 0);
+        let mut account: Account<Fanout> = Account::try_from(&info).unwrap();
+
+        update_fanout_for_add(&mut account, 4).unwrap();
+
+        assert_eq!(account.total_available_shares, 6);
+        assert_eq!(account.total_members, 1);
+    }
+
+    #[test]
+    fn test_update_inflow_applies_unstaked_correction() {
+        let mut fanout = fanout(0);
+        fanout.total_shares = 10;
+        fanout.total_staked_shares = Some(5);
+        fanout.total_inflow = 1000;
+
+        update_inflow(&mut fanout, 100).unwrap();
+
+        // diff 100, shares_diff 5, correction 100 * 5 / 5 = 100
+        assert_eq!(fanout.total_inflow, 1200);
+        assert_eq!(fanout.last_snapshot_amount, 100);
+    }
+
+    #[test]
+    fn test_update_inflow_unstaked_correction_overflow_is_an_error() {
+        let mut fanout = fanout(0);
+        fanout.total_shares = 3;
+        fanout.total_staked_shares = Some(1);
+        fanout.total_inflow = u64::MAX - 100;
+
+        let err = update_inflow(&mut fanout, 100).unwrap_err();
+
+        assert_eq!(
+            anchor_error_code(&err),
+            Some(u32::from(HydraError::BadArtithmetic))
+        );
+    }
+
+    #[test]
+    fn test_update_inflow_for_mint_unstaked_correction_overflow_is_an_error() {
+        let key = Pubkey::new_unique();
+        let owner = crate::ID;
+        let lamports = &mut 1_000_000u64;
+        let mut fanout = fanout(0);
+        fanout.total_shares = 3;
+        fanout.total_staked_shares = Some(1);
+        let mut data = fanout_account_data(&fanout);
+        let info = AccountInfo::new(&key, false, true, lamports, &mut data, &owner, false, 0);
+        let mut account: Account<Fanout> = Account::try_from(&info).unwrap();
+        let mut fanout_for_mint = FanoutMint {
+            total_inflow: u64::MAX - 100,
+            ..FanoutMint::default()
+        };
+
+        let err = update_inflow_for_mint(&mut account, &mut fanout_for_mint, 100).unwrap_err();
+
+        assert_eq!(
+            anchor_error_code(&err),
+            Some(u32::from(HydraError::BadArtithmetic))
+        );
+    }
 }

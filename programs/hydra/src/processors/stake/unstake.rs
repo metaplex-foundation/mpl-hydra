@@ -1,5 +1,5 @@
 use crate::{
-    error::OrArithError,
+    error::{HydraError, OrArithError},
     state::{Fanout, FanoutMembershipVoucher},
 };
 
@@ -58,8 +58,16 @@ pub fn unstake(ctx: Context<UnStakeTokenMember>) -> Result<()> {
     let member = &ctx.accounts.member;
     let ixs = &ctx.accounts.instructions;
     let membership_mint = &mut ctx.accounts.membership_mint;
-    let prev_ix = get_instruction_relative(-1, ixs).unwrap();
-    assert_distributed(prev_ix, member.key, fanout.membership_model)?;
+    let membership_voucher_key = ctx.accounts.membership_voucher.key();
+    let prev_ix =
+        get_instruction_relative(-1, ixs).map_err(|_| error!(HydraError::MustDistribute))?;
+    assert_distributed(
+        prev_ix,
+        member.key,
+        &fanout.key(),
+        &membership_voucher_key,
+        fanout.membership_model,
+    )?;
     assert_owned_by(&fanout.to_account_info(), &crate::ID)?;
     assert_owned_by(&member.to_account_info(), &System::id())?;
     let amount = ctx.accounts.member_stake_account.amount;
