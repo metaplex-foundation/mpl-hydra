@@ -17,13 +17,17 @@ test-bpf = []
 no-idl = []
 cpi = ["no-entrypoint"]
 default = []
+idl-build = ["anchor-lang/idl-build", "anchor-spl/idl-build"]
+
+[lints.rust]
+# The anchor and solana entrypoint macros emit feature cfg checks in the destination
+# crate; declare them here so they are not reported as unexpected.
+unexpected_cfgs = { level = "warn", check-cfg = [
+    'cfg(feature, values("anchor-debug", "no-log-ix-name", "custom-heap", "custom-panic"))',
+] }
 
 [dependencies]
-anchor-lang = "0.26.0"
-anchor-spl = "0.26.0"
-solana-zk-token-sdk = "~1.14.13"
-spl-token = {version="3.5.0", features = [ "no-entrypoint" ]}
-mpl-token-metadata = {version="1.7.0", features = [ "no-entrypoint" ]}
-
-[profile.release]
-overflow-checks = true     # Enable integer overflow checks.
+anchor-lang = "0.32.2"
+anchor-spl = "0.32.2"
+spl-token = { version = "8.0.0", features = ["no-entrypoint"] }
+mpl-token-metadata = "5.1.1"

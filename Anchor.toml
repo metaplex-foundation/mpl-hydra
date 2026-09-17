@@ -1,0 +1,16 @@
+[workspace]
+members = ["programs/hydra"]
+
+[features]
+resolution = true
+skip-lint = false
+
+[programs.localnet]
+mpl_hydra = "hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[scripts]
+test = "pnpm test"

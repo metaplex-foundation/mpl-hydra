@@ -43,13 +43,13 @@ pub fn add_member_nft(ctx: Context<AddMemberWithNFT>, args: AddMemberArgs) -> Re
     let membership_account = &mut ctx.accounts.membership_account;
     let metadata = &ctx.accounts.metadata;
     let mint = &ctx.accounts.mint;
-    assert_owned_by(metadata, &mpl_token_metadata::id())?;
+    assert_owned_by(metadata, &mpl_token_metadata::ID)?;
     assert_membership_model(fanout, MembershipModel::NFT)?;
     assert_valid_metadata(metadata, &mint.to_account_info())?;
     update_fanout_for_add(fanout, args.shares)?;
     membership_account.membership_key = ctx.accounts.mint.to_account_info().key();
     membership_account.shares = args.shares;
-    membership_account.bump_seed = *ctx.bumps.get("membership_account").unwrap();
+    membership_account.bump_seed = ctx.bumps.membership_account;
     membership_account.fanout = fanout.key();
     membership_account.stake_time = Clock::get()?.unix_timestamp;
 
