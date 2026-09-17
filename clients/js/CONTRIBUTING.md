@@ -30,30 +30,21 @@ pnpm format:fix
 
 When something changes in the program(s), make sure to run `pnpm generate` in the root directory, to re-generate the clients accordingly.
 
-## Deploying the JavaScript client
+## Publishing the JavaScript client
 
-You can deploy a new version of the JavaScript client by manually dispatching the "Deploy JS Client" workflow in the GitHub Actions tab of the repository.
+You can publish a new version of the JavaScript client by manually dispatching the "Publish JS Client" workflow — configured in [`.github/workflows/publish-js-client.yml`](../../.github/workflows/publish-js-client.yml) — from the GitHub Actions tab of the repository. It takes a few inputs:
 
-![Click on the "Actions" tab, then on the "Deploy JS Client" workflow, then on the "Run workflow" dropdown. Select your options before clicking on the final "Run workflow" button inside the dropdown body.](https://user-images.githubusercontent.com/3642397/235444901-6ee95f30-ed84-4eef-b1c4-8b8474ab82a4.png)
+- `git_ref` — Release tag (e.g. `release/hydra@0.4.2`) or commit to publish from. Leave empty to use the default branch.
+- `bump` — The version bump to apply (`patch`, `minor`, `major`, or one of the `pre*` variants).
+- `tag` — The NPM dist-tag (and preid for pre-releases) to publish under.
+- `create_release` — Whether to open a release pull request once the package is built, tested and bumped.
+
+Merging that release pull request into `main` triggers the "Release JS Client" workflow — configured in [`.github/workflows/release-js-client.yml`](../../.github/workflows/release-js-client.yml) — which tags the commit as `js@v<version>` and creates the corresponding GitHub release.
 
 For this to work, some initial setup is required on the repository as explained below.
 
 ## Setting up GitHub actions
 
-To deploy JavaScript clients using GitHub actions, we first need the following secret variables to be set up on the repository.
+To publish JavaScript clients using GitHub actions, we first need the following secret variable to be set up on the repository.
 
 - `NPM_TOKEN` — An access token that can publish your packages to NPM.
-- `VERCEL_TOKEN` — An access token that can deploy to Vercel.
-- `VERCEL_ORG_ID` — The ID of the Vercel organization you want to deploy to.
-
-Then, we'll need to create a new GitHub environment called `js-client-documentation` for the generated documentation of the JavaScript client. We can then select the `main` branch only and add the following secret variable to this specific environment.
-
-- `VERCEL_PROJECT_ID` — The ID of the Vercel project you want to deploy to.
-  The convention for Metaplex is to create a new Vercel project named `mpl-hydra-js-docs` with the following deployment settings:
-
-  - Build Command: `pnpm run build:docs`
-  - Output Directory: `docs`
-  - Install Command: `pnpm install`
-  - Development Command: _None_
-
-With all that set up, you can now run the "Deploy JS Client" workflow by dispatching it from the GitHub UI.

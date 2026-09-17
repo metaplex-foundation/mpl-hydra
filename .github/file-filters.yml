@@ -32,6 +32,10 @@ client_common: &client_common
   - ".github/.env"
   - "configs/shank.cjs"
   - "configs/kinobi.cjs"
+  - "configs/anchor-idl-compat.cjs"
+  - "configs/validator.cjs"
+  - "configs/scripts/**"
+  - "idls/**"
 
 js_client: &js_client
   - *client_common

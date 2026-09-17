@@ -62,7 +62,7 @@ jobs:
   generate_clients:
     name: Generate clients
     if: ${{ needs.changes.outputs.any == 'true' }}
-    needs: build_programs
+    needs: [changes, build_programs]
     runs-on: ubuntu-latest
     steps:
       - name: Git checkout
