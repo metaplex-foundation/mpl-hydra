@@ -1,0 +1,66 @@
+name: Test Programs
+
+on:
+  workflow_call:
+    inputs:
+      program_matrix:
+        type: string
+      git_ref:
+        type: string
+
+env:
+  CACHE: true
+
+jobs:
+  test_programs:
+    name: Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        program: ${{ fromJson(inputs.program_matrix) }}
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
+
+      - name: Load environment variables
+        run: |
+          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|SOLANA_VERSION|PROGRAMS)=' .github/.env >> "$GITHUB_ENV"
+
+      - name: Install Rust
+        uses: metaplex-foundation/actions/install-rust@v1
+        with:
+          toolchain: ${{ env.RUST_VERSION }}
+
+      - name: Install Solana
+        uses: metaplex-foundation/actions/install-solana@v1
+        with:
+          version: ${{ env.SOLANA_VERSION }}
+          cache: ${{ env.CACHE }}
+
+      - name: Install modern SBF test tools
+        run: |
+          cargo install solana-cargo-build-sbf --version 4.0.0 --locked
+          cargo install solana-cargo-test-sbf --version 4.0.0 --locked
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
+      - name: Cache program dependencies
+        if: env.CACHE == 'true'
+        uses: metaplex-foundation/actions/cache-program@v1
+        with:
+          folder: ./programs/${{ matrix.program }}
+          key: program-${{ matrix.program }}
+
+      - name: Run cargo fmt
+        run: cargo fmt --all --manifest-path ./programs/${{ matrix.program }}/Cargo.toml -- --check
+
+      - name: Run cargo clippy
+        run: cargo clippy --all-targets --all-features --no-deps --manifest-path ./programs/${{ matrix.program }}/Cargo.toml
+
+      - name: Run tests
+        shell: bash
+        working-directory: configs/scripts/program
+        run: RUST_LOG=error ./test.sh
+        env:
+          PROGRAM: ${{ matrix.program }}

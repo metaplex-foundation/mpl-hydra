@@ -1,0 +1,302 @@
+name: Deploy Program
+
+on:
+  workflow_dispatch:
+    inputs:
+      git_ref:
+        description: Release tag (release/hydra@0.4.2) or commit to deploy
+        required: true
+        type: string
+        default: main
+      program:
+        description: Program
+        required: true
+        default: hydra
+        type: choice
+        options:
+          - hydra
+      cluster:
+        description: Cluster environment
+        required: true
+        default: devnet
+        type: choice
+        options:
+          - devnet
+          - mainnet-beta
+      dry_run:
+        description: Dry run
+        required: false
+        type: boolean
+        default: false
+
+env:
+  CACHE: true
+
+jobs:
+  check_tag:
+    name: "Check tag"
+    runs-on: ubuntu-latest
+    outputs:
+      program: ${{ steps.set_program.outputs.program }}
+      type: ${{ steps.set_program.outputs.type }}
+    steps:
+      - name: Check tag
+        id: set_program
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
+        run: |
+          echo program="hydra" >> $GITHUB_OUTPUT
+          if [[ "$GIT_REF" =~ ^release/hydra@[^/]+$ ]]; then
+            echo type="release" >> $GITHUB_OUTPUT
+          else
+            echo type="ref" >> $GITHUB_OUTPUT
+          fi
+
+  build_programs:
+    name: Programs
+    uses: ./.github/workflows/build-programs.yml
+    secrets: inherit
+    needs: check_tag
+    if: needs.check_tag.outputs.type == 'ref'
+    with:
+      git_ref: ${{ inputs.git_ref }}
+
+  test_programs:
+    name: Test Programs
+    uses: ./.github/workflows/test-programs.yml
+    secrets: inherit
+    needs: [build_programs, check_tag]
+    if: needs.check_tag.outputs.type == 'ref'
+    with:
+      program_matrix: '["${{ inputs.program }}"]'
+      git_ref: ${{ inputs.git_ref }}
+
+  test_js:
+    name: JS client
+    needs: [build_programs, check_tag]
+    uses: ./.github/workflows/test-js-client.yml
+    secrets: inherit
+    if: needs.check_tag.outputs.type == 'ref'
+    with:
+      git_ref: ${{ inputs.git_ref }}
+
+  deploy_program:
+    name: Program / Deploy
+    runs-on: ubuntu-latest
+    needs: [check_tag, test_js, test_programs]
+    if: |
+      always()
+      && (needs.test_js.result == 'success' || needs.test_js.result == 'skipped')
+      && (needs.test_programs.result == 'success' || needs.test_programs.result == 'skipped')
+    permissions:
+      contents: write
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.git_ref }}
+
+      # `git_ref` may be a commit hash, which `git.getRef` cannot resolve. The
+      # checkout above already resolved it, so record the concrete commit and
+      # use it when moving the environment tag.
+      - name: Resolve deployed commit
+        id: deployed_commit
+        shell: bash
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Load environment variables
+        id: env_vars
+        run: |
+          # Allowlist instead of a blanket `cat .github/.env >> "$GITHUB_ENV"`
+          # so a PR-editable key in `.github/.env` cannot inject arbitrary env
+          # vars into subsequent steps.
+          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL|DEPLOY_SOLANA_VERSION)=' .github/.env >> "$GITHUB_ENV"
+          while IFS='=' read -r key value; do
+            case "$key" in
+              RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
+              DEPLOY_SOLANA_VERSION) printf 'deploy_solana_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
+            esac
+          done < .github/.env
+
+      - name: Install Rust
+        uses: metaplex-foundation/actions/install-rust@v1
+        with:
+          toolchain: ${{ steps.env_vars.outputs.rust_version }}
+
+      - name: Install Solana
+        uses: metaplex-foundation/actions/install-solana@v1
+        with:
+          version: ${{ steps.env_vars.outputs.deploy_solana_version }}
+          cache: ${{ env.CACHE }}
+
+      - name: Set RPC
+        run: |
+          # We do this if waterfall because github actions does not allow dynamic access to secrets
+          if [ "${{ inputs.cluster }}" == "devnet" ]; then
+            printf 'RPC=%s\n' "${{ secrets.DEVNET_RPC }}" >> "$GITHUB_ENV"
+          elif [ "${{ inputs.cluster }}" == "mainnet-beta" ]; then
+            printf 'RPC=%s\n' "${{ secrets.MAINNET_RPC }}" >> "$GITHUB_ENV"
+          else
+            echo "Invalid cluster: ${{ inputs.cluster }}"
+            exit 1
+          fi
+
+      - name: Identify Program
+        env:
+          HYDRA_ID: ${{ secrets.HYDRA_ID }}
+          HYDRA_DEPLOY_KEY: ${{ secrets.HYDRA_DEPLOY_KEY }}
+        run: |
+          echo PROGRAM_BINARY="mpl_hydra.so" >> $GITHUB_ENV
+          printf '%s' "$HYDRA_ID" > ./program-id.json
+          # Derive the program id pubkey from the canonical keypair so later
+          # steps cannot drift from the deploy target.
+          # solana-keygen pubkey only emits the public key, not the secret.
+          echo "PROGRAM_ID=$(solana-keygen pubkey ./program-id.json)" >> $GITHUB_ENV
+
+          if [ "${{ inputs.cluster }}" == "devnet" ]; then
+            printf '%s' "$HYDRA_DEPLOY_KEY" > ./deployer-key.json
+            echo DEPLOY_TYPE="direct" >> $GITHUB_ENV
+          else
+            echo DEPLOY_TYPE="squads" >> $GITHUB_ENV
+            echo SQUADS_MULTISIG="${{ vars.SQUADS_MULTISIG }}" >> $GITHUB_ENV
+            echo SQUADS_VAULT="${{ vars.SQUADS_VAULT }}" >> $GITHUB_ENV
+            echo SQUADS_PROGRAM_INDEX="${{ vars.SQUADS_PROGRAM_INDEX }}" >> $GITHUB_ENV
+          fi
+
+      - name: Sanitize Ref
+        id: sanitize
+        shell: bash
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
+        run: |
+          REF="$GIT_REF"
+          if [ -z "$REF" ]; then
+            REF="default"
+          fi
+          SANITIZED=${REF//\//-}
+          echo "sanitized=$SANITIZED" >> "$GITHUB_OUTPUT"
+
+      - name: Download program builds
+        uses: actions/download-artifact@v4
+        if: needs.check_tag.outputs.type == 'ref'
+        with:
+          name: program-builds-${{ steps.sanitize.outputs.sanitized }}
+
+      - name: Download release asset
+        uses: actions/github-script@v7
+        id: get_release
+        if: needs.check_tag.outputs.type == 'release'
+        env:
+          GIT_REF: ${{ inputs.git_ref }}
+        with:
+          script: |
+            const tag = process.env.GIT_REF;
+            const assetName = process.env.PROGRAM_BINARY;
+
+            // Fetch the release associated with the tag
+            const release = await github.rest.repos.getReleaseByTag({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag: tag
+            });
+
+            if (release.status !== 200) {
+              throw new Error(`Failed to fetch release for tag ${tag}`);
+            }
+
+            const asset = release.data.assets.find(asset => asset.name === assetName);
+            if (!asset) {
+              throw new Error(`Asset ${assetName} not found in release tagged ${tag}`);
+            }
+
+            core.setOutput("url", asset.url);
+
+      - name: Download the Selected Asset
+        if: needs.check_tag.outputs.type == 'release'
+        run: |
+          mkdir -p ${{ github.workspace }}/programs/.bin
+          curl -L -o ${{ github.workspace }}/programs/.bin/${{ env.PROGRAM_BINARY }} \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/octet-stream" \
+            "${{ steps.get_release.outputs.url }}"
+
+      - name: Deploy Program
+        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'direct'
+        run: |
+          echo "Deploying ${{ needs.check_tag.outputs.program }} to ${{ inputs.cluster }}"
+
+          solana -v program deploy ./programs/.bin/${{ env.PROGRAM_BINARY }} \
+            -u ${{ env.RPC }} \
+            --program-id ./program-id.json \
+            -k ./deployer-key.json \
+            --max-sign-attempts 100 \
+            --use-rpc
+
+      - name: Deploy squads buffer
+        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads'
+        env:
+          SQUADS_BOT_KEY: ${{ secrets.SQUADS_BOT_KEY }}
+        run: |
+          echo "Deploying buffer for ${{ inputs.program }} on ${{ inputs.cluster }}"
+          printf '%s' "$SQUADS_BOT_KEY" > ./submitter-key.json
+
+          BUFFER=$(solana program write-buffer -u ${{ env.RPC }} -k ./submitter-key.json --max-sign-attempts 100 --use-rpc ./programs/.bin/${{ env.PROGRAM_BINARY }} | awk '{print $2}')
+          echo "Buffer: $BUFFER"
+
+          solana program set-buffer-authority $BUFFER \
+            --new-buffer-authority ${{ env.SQUADS_VAULT }} \
+            -k ./submitter-key.json \
+            -u ${{ env.RPC }}
+
+          echo "BUFFER=$BUFFER" >> $GITHUB_ENV
+
+      - name: Create Squads proposal
+        if: github.event.inputs.dry_run == 'false' && env.DEPLOY_TYPE == 'squads'
+        # Pinned to an immutable commit: this step receives SQUADS_BOT_KEY and
+        # sets the upgrade proposal parameters. The repository publishes no
+        # tags or releases, so `main`'s current head is pinned instead.
+        uses: metaplex-foundation/squads-program-upgrade@ffd43c7f9b91cf479ff5544ad3e10c923c10f4f9 # main
+        with:
+          network-url: ${{ env.RPC }}
+          program-multisig: ${{ env.SQUADS_MULTISIG }}
+          program-id: ${{ env.PROGRAM_ID }}
+          program-index: ${{ env.SQUADS_PROGRAM_INDEX }}
+          buffer: ${{ env.BUFFER }}
+          spill-address: ${{ env.SQUADS_VAULT }}
+          authority: ${{ env.SQUADS_VAULT }}
+          name: "Deploy ${{ inputs.git_ref }}"
+          keypair: ${{ secrets.SQUADS_BOT_KEY }}
+
+      - name: Create env tag
+        uses: actions/github-script@v7
+        if: github.event.inputs.dry_run == 'false'
+        env:
+          DEPLOYED_SHA: ${{ steps.deployed_commit.outputs.sha }}
+          ENV_TAG: ${{ needs.check_tag.outputs.program }}-${{ inputs.cluster }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const sha = process.env.DEPLOYED_SHA;
+            const tag = process.env.ENV_TAG;
+            if (!sha) {
+              throw new Error('Failed to resolve the deployed commit');
+            }
+            await github.rest.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: `refs/tags/${tag}`,
+              sha
+            }).catch(async (err) => {
+              if (err.status !== 422) throw err;
+              await github.rest.git.updateRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: `tags/${tag}`,
+                sha,
+                force: true
+              });
+            })
+
+      - name: Clean up signer files
+        if: always()
+        run: rm -f ./deployer-key.json ./program-id.json ./submitter-key.json

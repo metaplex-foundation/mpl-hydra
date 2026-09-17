@@ -1,0 +1,37 @@
+#!/bin/sh
+
+# Exit if a merge is in progress
+git rev-parse --verify MERGE_HEAD >/dev/null 2>&1 && exit 0
+
+set -eu
+
+stashed=false
+
+cleanup() {
+    if [ "$stashed" = "true" ]; then
+        git stash pop --index -q || echo "Warning: Failed to restore stashed changes"
+    fi
+}
+trap cleanup EXIT
+
+# Stash un-staged and untracked changes
+old_stash=$(git rev-parse -q --verify refs/stash || true)
+git stash push -q -u --keep-index
+new_stash=$(git rev-parse -q --verify refs/stash || true)
+if [ "$old_stash" != "$new_stash" ]; then
+    stashed=true
+fi
+
+# Run JS/TS lint
+echo "Linting..."
+pnpm lint || {
+    echo "Linting failed run 'pnpm lint:fix' to fix linting issues"
+    exit 1
+}
+
+# Run Rust formatting check
+echo "Checking Rust formatting..."
+cargo fmt --all --manifest-path ./programs/hydra/Cargo.toml -- --check || {
+    echo "Rust formatting check failed run 'cargo fmt --all --manifest-path ./programs/hydra/Cargo.toml' to fix formatting issues"
+    exit 1
+}

@@ -1,0 +1,59 @@
+name: Release JS Client
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  tag_and_release:
+    if: >
+      github.event.pull_request.merged == true &&
+      startsWith(github.event.pull_request.head.ref, 'release/js-client-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Git checkout
+        uses: actions/checkout@v4
+
+      - name: Load environment variables
+        run: |
+          grep -E '^(NODE_VERSION)=' .github/.env >> "$GITHUB_ENV"
+
+      - name: Install Node.js
+        uses: metaplex-foundation/actions/install-node-with-pnpm@v1
+        with:
+          version: ${{ env.NODE_VERSION }}
+          cache: false
+
+      - name: Read package version
+        id: pkg
+        working-directory: ./clients/js
+        run: |
+          set -euo pipefail
+          VERSION=$(pnpm pkg get version | tr -d '"')
+
+          if [ -z "$VERSION" ]; then
+            echo "Failed to read version from package.json" >&2
+            exit 1
+          fi
+
+          if ! echo "$VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z]+)*$'; then
+            echo "Invalid version '$VERSION' (expected semver-like value)" >&2
+            exit 1
+          fi
+
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create tag
+        run: |
+          git tag js@v${{ steps.pkg.outputs.version }}
+          git push origin js@v${{ steps.pkg.outputs.version }}
+
+      - name: Create GitHub release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: js@v${{ steps.pkg.outputs.version }}
