@@ -51,17 +51,10 @@ export type FanoutMintAccountDataArgs = {
   bumpSeed: number;
 };
 
-/** @deprecated Use `getFanoutMintAccountDataSerializer()` without any argument instead. */
-export function getFanoutMintAccountDataSerializer(
-  _context: object
-): Serializer<FanoutMintAccountDataArgs, FanoutMintAccountData>;
 export function getFanoutMintAccountDataSerializer(): Serializer<
   FanoutMintAccountDataArgs,
   FanoutMintAccountData
->;
-export function getFanoutMintAccountDataSerializer(
-  _context: object = {}
-): Serializer<FanoutMintAccountDataArgs, FanoutMintAccountData> {
+> {
   return mapSerializer<FanoutMintAccountDataArgs, any, FanoutMintAccountData>(
     struct<FanoutMintAccountData>(
       [
@@ -82,20 +75,8 @@ export function getFanoutMintAccountDataSerializer(
   ) as Serializer<FanoutMintAccountDataArgs, FanoutMintAccountData>;
 }
 
-/** @deprecated Use `deserializeFanoutMint(rawAccount)` without any context instead. */
-export function deserializeFanoutMint(
-  context: object,
-  rawAccount: RpcAccount
-): FanoutMint;
-export function deserializeFanoutMint(rawAccount: RpcAccount): FanoutMint;
-export function deserializeFanoutMint(
-  context: RpcAccount | object,
-  rawAccount?: RpcAccount
-): FanoutMint {
-  return deserializeAccount(
-    rawAccount ?? (context as RpcAccount),
-    getFanoutMintAccountDataSerializer()
-  );
+export function deserializeFanoutMint(rawAccount: RpcAccount): FanoutMint {
+  return deserializeAccount(rawAccount, getFanoutMintAccountDataSerializer());
 }
 
 export async function fetchFanoutMint(

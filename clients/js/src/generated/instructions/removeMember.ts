@@ -7,7 +7,6 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -22,7 +21,11 @@ import {
   struct,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type RemoveMemberInstructionAccounts = {
@@ -38,17 +41,10 @@ export type RemoveMemberInstructionData = { discriminator: Array<number> };
 
 export type RemoveMemberInstructionDataArgs = {};
 
-/** @deprecated Use `getRemoveMemberInstructionDataSerializer()` without any argument instead. */
-export function getRemoveMemberInstructionDataSerializer(
-  _context: object
-): Serializer<RemoveMemberInstructionDataArgs, RemoveMemberInstructionData>;
 export function getRemoveMemberInstructionDataSerializer(): Serializer<
   RemoveMemberInstructionDataArgs,
   RemoveMemberInstructionData
->;
-export function getRemoveMemberInstructionDataSerializer(
-  _context: object = {}
-): Serializer<RemoveMemberInstructionDataArgs, RemoveMemberInstructionData> {
+> {
   return mapSerializer<
     RemoveMemberInstructionDataArgs,
     any,
@@ -62,40 +58,67 @@ export function getRemoveMemberInstructionDataSerializer(
   ) as Serializer<RemoveMemberInstructionDataArgs, RemoveMemberInstructionData>;
 }
 
+// Instruction discriminator.
+export const removeMemberInstructionDiscriminator = [
+  9, 45, 36, 163, 245, 40, 150, 85,
+];
+
 // Instruction.
 export function removeMember(
-  context: Pick<Context, 'programs' | 'identity'>,
+  context: Pick<Context, 'identity' | 'programs'>,
   input: RemoveMemberInstructionAccounts
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
 
-  // Resolved inputs.
+  // Accounts.
   const resolvedAccounts = {
-    member: [input.member, false] as const,
-    fanout: [input.fanout, true] as const,
-    membershipAccount: [input.membershipAccount, true] as const,
-    destination: [input.destination, true] as const,
-  };
-  addObjectProperty(
-    resolvedAccounts,
-    'authority',
-    input.authority
-      ? ([input.authority, true] as const)
-      : ([context.identity, true] as const)
-  );
+    authority: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.authority ?? null,
+    },
+    member: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.member ?? null,
+    },
+    fanout: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.fanout ?? null,
+    },
+    membershipAccount: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.membershipAccount ?? null,
+    },
+    destination: {
+      index: 4,
+      isWritable: true as boolean,
+      value: input.destination ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
-  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
-  addAccountMeta(keys, signers, resolvedAccounts.member, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
-  addAccountMeta(keys, signers, resolvedAccounts.membershipAccount, false);
-  addAccountMeta(keys, signers, resolvedAccounts.destination, false);
+  // Default values.
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
+  );
 
   // Data.
   const data = getRemoveMemberInstructionDataSerializer().serialize({});

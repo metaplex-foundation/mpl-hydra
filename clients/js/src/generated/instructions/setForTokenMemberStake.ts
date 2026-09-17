@@ -7,7 +7,6 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -23,7 +22,11 @@ import {
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type SetForTokenMemberStakeInstructionAccounts = {
@@ -48,20 +51,7 @@ export type SetForTokenMemberStakeInstructionDataArgs = {
   shares: number | bigint;
 };
 
-/** @deprecated Use `getSetForTokenMemberStakeInstructionDataSerializer()` without any argument instead. */
-export function getSetForTokenMemberStakeInstructionDataSerializer(
-  _context: object
-): Serializer<
-  SetForTokenMemberStakeInstructionDataArgs,
-  SetForTokenMemberStakeInstructionData
->;
 export function getSetForTokenMemberStakeInstructionDataSerializer(): Serializer<
-  SetForTokenMemberStakeInstructionDataArgs,
-  SetForTokenMemberStakeInstructionData
->;
-export function getSetForTokenMemberStakeInstructionDataSerializer(
-  _context: object = {}
-): Serializer<
   SetForTokenMemberStakeInstructionDataArgs,
   SetForTokenMemberStakeInstructionData
 > {
@@ -88,89 +78,110 @@ export function getSetForTokenMemberStakeInstructionDataSerializer(
 export type SetForTokenMemberStakeInstructionArgs =
   SetForTokenMemberStakeInstructionDataArgs;
 
+// Instruction discriminator.
+export const setForTokenMemberStakeInstructionDiscriminator = [
+  210, 40, 6, 254, 2, 80, 154, 109,
+];
+
 // Instruction.
 export function setForTokenMemberStake(
-  context: Pick<Context, 'programs' | 'identity'>,
+  context: Pick<Context, 'identity' | 'programs'>,
   input: SetForTokenMemberStakeInstructionAccounts &
     SetForTokenMemberStakeInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
 
-  // Resolved inputs.
+  // Accounts.
   const resolvedAccounts = {
-    member: [input.member, false] as const,
-    fanout: [input.fanout, true] as const,
-    membershipVoucher: [input.membershipVoucher, true] as const,
-    membershipMint: [input.membershipMint, true] as const,
-    membershipMintTokenAccount: [
-      input.membershipMintTokenAccount,
-      true,
-    ] as const,
-    memberStakeAccount: [input.memberStakeAccount, true] as const,
-  };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'authority',
-    input.authority
-      ? ([input.authority, true] as const)
-      : ([context.identity, true] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'tokenProgram',
-    input.tokenProgram
-      ? ([input.tokenProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splToken',
-            'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-          ),
-          false,
-        ] as const)
-  );
-  const resolvedArgs = { ...input, ...resolvingArgs };
+    authority: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.authority ?? null,
+    },
+    member: {
+      index: 1,
+      isWritable: false as boolean,
+      value: input.member ?? null,
+    },
+    fanout: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.fanout ?? null,
+    },
+    membershipVoucher: {
+      index: 3,
+      isWritable: true as boolean,
+      value: input.membershipVoucher ?? null,
+    },
+    membershipMint: {
+      index: 4,
+      isWritable: true as boolean,
+      value: input.membershipMint ?? null,
+    },
+    membershipMintTokenAccount: {
+      index: 5,
+      isWritable: true as boolean,
+      value: input.membershipMintTokenAccount ?? null,
+    },
+    memberStakeAccount: {
+      index: 6,
+      isWritable: true as boolean,
+      value: input.memberStakeAccount ?? null,
+    },
+    systemProgram: {
+      index: 7,
+      isWritable: false as boolean,
+      value: input.systemProgram ?? null,
+    },
+    tokenProgram: {
+      index: 8,
+      isWritable: false as boolean,
+      value: input.tokenProgram ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
-  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
-  addAccountMeta(keys, signers, resolvedAccounts.member, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
-  addAccountMeta(keys, signers, resolvedAccounts.membershipVoucher, false);
-  addAccountMeta(keys, signers, resolvedAccounts.membershipMint, false);
-  addAccountMeta(
-    keys,
-    signers,
-    resolvedAccounts.membershipMintTokenAccount,
-    false
+  // Arguments.
+  const resolvedArgs: SetForTokenMemberStakeInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.tokenProgram.value) {
+    resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    );
+    resolvedAccounts.tokenProgram.isWritable = false;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
   );
-  addAccountMeta(keys, signers, resolvedAccounts.memberStakeAccount, false);
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.tokenProgram, false);
 
   // Data.
-  const data =
-    getSetForTokenMemberStakeInstructionDataSerializer().serialize(
-      resolvedArgs
-    );
+  const data = getSetForTokenMemberStakeInstructionDataSerializer().serialize(
+    resolvedArgs as SetForTokenMemberStakeInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

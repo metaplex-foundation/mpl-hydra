@@ -7,7 +7,6 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -27,7 +26,15 @@ import {
 } from '@metaplex-foundation/umi/serializers';
 import { findFanoutNativeAccountPda } from '../../hooked';
 import { findFanoutPda } from '../accounts';
-import { PickPartial, addAccountMeta, addObjectProperty } from '../shared';
+import {
+  PickPartial,
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  expectPda,
+  expectPublicKey,
+  expectSome,
+  getAccountMetasAndSigners,
+} from '../shared';
 import {
   MembershipModel,
   MembershipModelArgs,
@@ -63,17 +70,10 @@ export type InitInstructionDataArgs = {
   model: MembershipModelArgs;
 };
 
-/** @deprecated Use `getInitInstructionDataSerializer()` without any argument instead. */
-export function getInitInstructionDataSerializer(
-  _context: object
-): Serializer<InitInstructionDataArgs, InitInstructionData>;
 export function getInitInstructionDataSerializer(): Serializer<
   InitInstructionDataArgs,
   InitInstructionData
->;
-export function getInitInstructionDataSerializer(
-  _context: object = {}
-): Serializer<InitInstructionDataArgs, InitInstructionData> {
+> {
   return mapSerializer<InitInstructionDataArgs, any, InitInstructionData>(
     struct<InitInstructionData>(
       [
@@ -99,117 +99,124 @@ export type InitInstructionArgs = PickPartial<
   'bumpSeed' | 'nativeAccountBumpSeed'
 >;
 
+// Instruction discriminator.
+export const initInstructionDiscriminator = [
+  172, 5, 165, 143, 86, 159, 50, 237,
+];
+
 // Instruction.
 export function init(
-  context: Pick<Context, 'programs' | 'eddsa' | 'identity'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'programs'>,
   input: InitInstructionAccounts & InitInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
 
-  // Resolved inputs.
-  const resolvedAccounts = {};
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'authority',
-    input.authority
-      ? ([input.authority, true] as const)
-      : ([context.identity, true] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'fanout',
-    input.fanout
-      ? ([input.fanout, true] as const)
-      : ([findFanoutPda(context, { name: input.name }), true] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'holdingAccount',
-    input.holdingAccount
-      ? ([input.holdingAccount, true] as const)
-      : ([
-          findFanoutNativeAccountPda(context, {
-            fanout: publicKey(resolvedAccounts.fanout[0], false),
-          }),
-          true,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'membershipMint',
-    input.membershipMint
-      ? ([input.membershipMint, true] as const)
-      : ([
-          publicKey('So11111111111111111111111111111111111111112'),
-          true,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'rent',
-    input.rent
-      ? ([input.rent, false] as const)
-      : ([
-          publicKey('SysvarRent111111111111111111111111111111111'),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'tokenProgram',
-    input.tokenProgram
-      ? ([input.tokenProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splToken',
-            'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvingArgs,
-    'bumpSeed',
-    input.bumpSeed ?? resolvedAccounts.fanout[0][1]
-  );
-  addObjectProperty(
-    resolvingArgs,
-    'nativeAccountBumpSeed',
-    input.nativeAccountBumpSeed ?? resolvedAccounts.holdingAccount[0][1]
-  );
-  const resolvedArgs = { ...input, ...resolvingArgs };
+  // Accounts.
+  const resolvedAccounts = {
+    authority: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.authority ?? null,
+    },
+    fanout: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.fanout ?? null,
+    },
+    holdingAccount: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.holdingAccount ?? null,
+    },
+    systemProgram: {
+      index: 3,
+      isWritable: false as boolean,
+      value: input.systemProgram ?? null,
+    },
+    membershipMint: {
+      index: 4,
+      isWritable: true as boolean,
+      value: input.membershipMint ?? null,
+    },
+    rent: { index: 5, isWritable: false as boolean, value: input.rent ?? null },
+    tokenProgram: {
+      index: 6,
+      isWritable: false as boolean,
+      value: input.tokenProgram ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
-  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
-  addAccountMeta(keys, signers, resolvedAccounts.holdingAccount, false);
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.membershipMint, false);
-  addAccountMeta(keys, signers, resolvedAccounts.rent, false);
-  addAccountMeta(keys, signers, resolvedAccounts.tokenProgram, false);
+  // Arguments.
+  const resolvedArgs: InitInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
+  if (!resolvedAccounts.fanout.value) {
+    resolvedAccounts.fanout.value = findFanoutPda(context, {
+      name: expectSome(resolvedArgs.name),
+    });
+  }
+  if (!resolvedAccounts.holdingAccount.value) {
+    resolvedAccounts.holdingAccount.value = findFanoutNativeAccountPda(
+      context,
+      { fanout: expectPublicKey(resolvedAccounts.fanout.value) }
+    );
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.membershipMint.value) {
+    resolvedAccounts.membershipMint.value = publicKey(
+      'So11111111111111111111111111111111111111112'
+    );
+  }
+  if (!resolvedAccounts.rent.value) {
+    resolvedAccounts.rent.value = publicKey(
+      'SysvarRent111111111111111111111111111111111'
+    );
+  }
+  if (!resolvedAccounts.tokenProgram.value) {
+    resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    );
+    resolvedAccounts.tokenProgram.isWritable = false;
+  }
+  if (!resolvedArgs.bumpSeed) {
+    resolvedArgs.bumpSeed = expectPda(resolvedAccounts.fanout.value)[1];
+  }
+  if (!resolvedArgs.nativeAccountBumpSeed) {
+    resolvedArgs.nativeAccountBumpSeed = expectPda(
+      resolvedAccounts.holdingAccount.value
+    )[1];
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
+  );
 
   // Data.
-  const data = getInitInstructionDataSerializer().serialize(resolvedArgs);
+  const data = getInitInstructionDataSerializer().serialize(
+    resolvedArgs as InitInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 557;

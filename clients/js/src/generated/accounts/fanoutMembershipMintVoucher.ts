@@ -22,6 +22,7 @@ import {
 import {
   Serializer,
   array,
+  i64,
   mapSerializer,
   publicKey as publicKeySerializer,
   string,
@@ -39,6 +40,7 @@ export type FanoutMembershipMintVoucherAccountData = {
   fanoutMint: PublicKey;
   lastInflow: bigint;
   bumpSeed: number;
+  stakeTime: bigint;
 };
 
 export type FanoutMembershipMintVoucherAccountDataArgs = {
@@ -46,22 +48,10 @@ export type FanoutMembershipMintVoucherAccountDataArgs = {
   fanoutMint: PublicKey;
   lastInflow: number | bigint;
   bumpSeed: number;
+  stakeTime: number | bigint;
 };
 
-/** @deprecated Use `getFanoutMembershipMintVoucherAccountDataSerializer()` without any argument instead. */
-export function getFanoutMembershipMintVoucherAccountDataSerializer(
-  _context: object
-): Serializer<
-  FanoutMembershipMintVoucherAccountDataArgs,
-  FanoutMembershipMintVoucherAccountData
->;
 export function getFanoutMembershipMintVoucherAccountDataSerializer(): Serializer<
-  FanoutMembershipMintVoucherAccountDataArgs,
-  FanoutMembershipMintVoucherAccountData
->;
-export function getFanoutMembershipMintVoucherAccountDataSerializer(
-  _context: object = {}
-): Serializer<
   FanoutMembershipMintVoucherAccountDataArgs,
   FanoutMembershipMintVoucherAccountData
 > {
@@ -77,6 +67,7 @@ export function getFanoutMembershipMintVoucherAccountDataSerializer(
         ['fanoutMint', publicKeySerializer()],
         ['lastInflow', u64()],
         ['bumpSeed', u8()],
+        ['stakeTime', i64()],
       ],
       { description: 'FanoutMembershipMintVoucherAccountData' }
     ),
@@ -90,20 +81,11 @@ export function getFanoutMembershipMintVoucherAccountDataSerializer(
   >;
 }
 
-/** @deprecated Use `deserializeFanoutMembershipMintVoucher(rawAccount)` without any context instead. */
-export function deserializeFanoutMembershipMintVoucher(
-  context: object,
-  rawAccount: RpcAccount
-): FanoutMembershipMintVoucher;
 export function deserializeFanoutMembershipMintVoucher(
   rawAccount: RpcAccount
-): FanoutMembershipMintVoucher;
-export function deserializeFanoutMembershipMintVoucher(
-  context: RpcAccount | object,
-  rawAccount?: RpcAccount
 ): FanoutMembershipMintVoucher {
   return deserializeAccount(
-    rawAccount ?? (context as RpcAccount),
+    rawAccount,
     getFanoutMembershipMintVoucherAccountDataSerializer()
   );
 }
@@ -180,12 +162,14 @@ export function getFanoutMembershipMintVoucherGpaBuilder(
       fanoutMint: PublicKey;
       lastInflow: number | bigint;
       bumpSeed: number;
+      stakeTime: number | bigint;
     }>({
       discriminator: [0, array(u8(), { size: 8 })],
       fanout: [8, publicKeySerializer()],
       fanoutMint: [40, publicKeySerializer()],
       lastInflow: [72, u64()],
       bumpSeed: [80, u8()],
+      stakeTime: [81, i64()],
     })
     .deserializeUsing<FanoutMembershipMintVoucher>((account) =>
       deserializeFanoutMembershipMintVoucher(account)

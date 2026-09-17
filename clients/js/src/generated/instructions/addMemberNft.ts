@@ -7,7 +7,6 @@
  */
 
 import {
-  AccountMeta,
   Context,
   Pda,
   PublicKey,
@@ -24,7 +23,11 @@ import {
   u64,
   u8,
 } from '@metaplex-foundation/umi/serializers';
-import { addAccountMeta, addObjectProperty } from '../shared';
+import {
+  ResolvedAccount,
+  ResolvedAccountsWithIndices,
+  getAccountMetasAndSigners,
+} from '../shared';
 
 // Accounts.
 export type AddMemberNftInstructionAccounts = {
@@ -46,17 +49,10 @@ export type AddMemberNftInstructionData = {
 
 export type AddMemberNftInstructionDataArgs = { shares: number | bigint };
 
-/** @deprecated Use `getAddMemberNftInstructionDataSerializer()` without any argument instead. */
-export function getAddMemberNftInstructionDataSerializer(
-  _context: object
-): Serializer<AddMemberNftInstructionDataArgs, AddMemberNftInstructionData>;
 export function getAddMemberNftInstructionDataSerializer(): Serializer<
   AddMemberNftInstructionDataArgs,
   AddMemberNftInstructionData
->;
-export function getAddMemberNftInstructionDataSerializer(
-  _context: object = {}
-): Serializer<AddMemberNftInstructionDataArgs, AddMemberNftInstructionData> {
+> {
   return mapSerializer<
     AddMemberNftInstructionDataArgs,
     any,
@@ -76,85 +72,101 @@ export function getAddMemberNftInstructionDataSerializer(
 // Args.
 export type AddMemberNftInstructionArgs = AddMemberNftInstructionDataArgs;
 
+// Instruction discriminator.
+export const addMemberNftInstructionDiscriminator = [
+  92, 255, 105, 209, 25, 41, 3, 7,
+];
+
 // Instruction.
 export function addMemberNft(
-  context: Pick<Context, 'programs' | 'identity'>,
+  context: Pick<Context, 'identity' | 'programs'>,
   input: AddMemberNftInstructionAccounts & AddMemberNftInstructionArgs
 ): TransactionBuilder {
-  const signers: Signer[] = [];
-  const keys: AccountMeta[] = [];
-
   // Program ID.
   const programId = context.programs.getPublicKey(
     'mplHydra',
     'hyDQ4Nz1eYyegS6JfenyKwKzYxRsCWCriYSAjtzP4Vg'
   );
 
-  // Resolved inputs.
+  // Accounts.
   const resolvedAccounts = {
-    fanout: [input.fanout, true] as const,
-    membershipAccount: [input.membershipAccount, true] as const,
-    mint: [input.mint, false] as const,
-    metadata: [input.metadata, false] as const,
-  };
-  const resolvingArgs = {};
-  addObjectProperty(
-    resolvedAccounts,
-    'authority',
-    input.authority
-      ? ([input.authority, true] as const)
-      : ([context.identity, true] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'systemProgram',
-    input.systemProgram
-      ? ([input.systemProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splSystem',
-            '11111111111111111111111111111111'
-          ),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'rent',
-    input.rent
-      ? ([input.rent, false] as const)
-      : ([
-          publicKey('SysvarRent111111111111111111111111111111111'),
-          false,
-        ] as const)
-  );
-  addObjectProperty(
-    resolvedAccounts,
-    'tokenProgram',
-    input.tokenProgram
-      ? ([input.tokenProgram, false] as const)
-      : ([
-          context.programs.getPublicKey(
-            'splToken',
-            'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
-          ),
-          false,
-        ] as const)
-  );
-  const resolvedArgs = { ...input, ...resolvingArgs };
+    authority: {
+      index: 0,
+      isWritable: true as boolean,
+      value: input.authority ?? null,
+    },
+    fanout: {
+      index: 1,
+      isWritable: true as boolean,
+      value: input.fanout ?? null,
+    },
+    membershipAccount: {
+      index: 2,
+      isWritable: true as boolean,
+      value: input.membershipAccount ?? null,
+    },
+    mint: { index: 3, isWritable: false as boolean, value: input.mint ?? null },
+    metadata: {
+      index: 4,
+      isWritable: false as boolean,
+      value: input.metadata ?? null,
+    },
+    systemProgram: {
+      index: 5,
+      isWritable: false as boolean,
+      value: input.systemProgram ?? null,
+    },
+    rent: { index: 6, isWritable: false as boolean, value: input.rent ?? null },
+    tokenProgram: {
+      index: 7,
+      isWritable: false as boolean,
+      value: input.tokenProgram ?? null,
+    },
+  } satisfies ResolvedAccountsWithIndices;
 
-  addAccountMeta(keys, signers, resolvedAccounts.authority, false);
-  addAccountMeta(keys, signers, resolvedAccounts.fanout, false);
-  addAccountMeta(keys, signers, resolvedAccounts.membershipAccount, false);
-  addAccountMeta(keys, signers, resolvedAccounts.mint, false);
-  addAccountMeta(keys, signers, resolvedAccounts.metadata, false);
-  addAccountMeta(keys, signers, resolvedAccounts.systemProgram, false);
-  addAccountMeta(keys, signers, resolvedAccounts.rent, false);
-  addAccountMeta(keys, signers, resolvedAccounts.tokenProgram, false);
+  // Arguments.
+  const resolvedArgs: AddMemberNftInstructionArgs = { ...input };
+
+  // Default values.
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.rent.value) {
+    resolvedAccounts.rent.value = publicKey(
+      'SysvarRent111111111111111111111111111111111'
+    );
+  }
+  if (!resolvedAccounts.tokenProgram.value) {
+    resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
+      'splToken',
+      'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
+    );
+    resolvedAccounts.tokenProgram.isWritable = false;
+  }
+
+  // Accounts in order.
+  const orderedAccounts: ResolvedAccount[] = Object.values(
+    resolvedAccounts
+  ).sort((a, b) => a.index - b.index);
+
+  // Keys and Signers.
+  const [keys, signers] = getAccountMetasAndSigners(
+    orderedAccounts,
+    'programId',
+    programId
+  );
 
   // Data.
-  const data =
-    getAddMemberNftInstructionDataSerializer().serialize(resolvedArgs);
+  const data = getAddMemberNftInstructionDataSerializer().serialize(
+    resolvedArgs as AddMemberNftInstructionDataArgs
+  );
 
   // Bytes Created On Chain.
   const bytesCreatedOnChain = 0;

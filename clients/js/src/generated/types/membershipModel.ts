@@ -16,17 +16,10 @@ export enum MembershipModel {
 
 export type MembershipModelArgs = MembershipModel;
 
-/** @deprecated Use `getMembershipModelSerializer()` without any argument instead. */
-export function getMembershipModelSerializer(
-  _context: object
-): Serializer<MembershipModelArgs, MembershipModel>;
 export function getMembershipModelSerializer(): Serializer<
   MembershipModelArgs,
   MembershipModel
->;
-export function getMembershipModelSerializer(
-  _context: object = {}
-): Serializer<MembershipModelArgs, MembershipModel> {
+> {
   return scalarEnum<MembershipModel>(MembershipModel, {
     description: 'MembershipModel',
   }) as Serializer<MembershipModelArgs, MembershipModel>;
