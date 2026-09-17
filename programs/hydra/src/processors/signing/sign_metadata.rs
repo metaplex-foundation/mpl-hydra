@@ -34,7 +34,7 @@ pub fn sign_metadata(ctx: Context<SignMetadata>) -> Result<()> {
     let holding_account = &ctx.accounts.holding_account;
     assert_owned_by(&metadata, &mpl_token_metadata::ID)?;
     let meta_data = metadata.try_borrow_data()?;
-    if meta_data[0] != MetadataKey::MetadataV1 as u8 {
+    if meta_data.is_empty() || meta_data[0] != MetadataKey::MetadataV1 as u8 {
         return Err(HydraError::InvalidMetadata.into());
     }
     drop(meta_data);
