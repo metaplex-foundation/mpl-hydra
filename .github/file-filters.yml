@@ -10,7 +10,7 @@ program_common: &program_common
 
 programs: &programs
   - *program_common
-  - "submodules/**"
+  - "programs/**"
 
 # Clients.
 
