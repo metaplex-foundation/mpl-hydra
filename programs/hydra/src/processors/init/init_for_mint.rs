@@ -1,7 +1,7 @@
 use crate::{
     error::HydraError,
     state::{Fanout, FanoutMint},
-    utils::validation::assert_ata,
+    utils::{logic::calculation::split_protocol_fee, validation::assert_ata},
 };
 use anchor_lang::prelude::*;
 use anchor_spl::token::{Mint, TokenAccount};
@@ -45,7 +45,10 @@ pub fn init_for_mint(ctx: Context<InitializeFanoutForMint>, bump_seed: u8) -> Re
     let fanout = &ctx.accounts.fanout;
     let mint_holding_account = &ctx.accounts.mint_holding_account;
     fanout_mint.fanout = fanout.to_account_info().key();
-    fanout_mint.total_inflow = mint_holding_account.amount;
+    // Tokens already in the holding account count as inflow, so they pay the protocol fee too.
+    let (net_inflow, fee) = split_protocol_fee(mint_holding_account.amount)?;
+    fanout_mint.total_inflow = net_inflow;
+    fanout_mint.accrued_fees = fee;
     fanout_mint.last_snapshot_amount = mint_holding_account.amount;
     fanout_mint.bump_seed = bump_seed;
     fanout_mint.mint = ctx.accounts.mint.to_account_info().key();

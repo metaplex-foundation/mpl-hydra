@@ -246,6 +246,158 @@
       ]
     },
     {
+      "name": "process_collect_fees",
+      "discriminator": [
+        0,
+        253,
+        41,
+        65,
+        105,
+        247,
+        26,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holding_account",
+          "writable": true
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "address": "HydraFeeTreasury111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "process_collect_mint_fees",
+      "discriminator": [
+        27,
+        118,
+        217,
+        59,
+        165,
+        115,
+        141,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "fanout",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          },
+          "relations": [
+            "fanout_for_mint"
+          ]
+        },
+        {
+          "name": "fanout_for_mint",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "fanout_for_mint.mint",
+                "account": "FanoutMint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holding_account",
+          "writable": true
+        },
+        {
+          "name": "treasury_token_account",
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "process_distribute_nft",
       "discriminator": [
         108,
@@ -1730,6 +1882,16 @@
       "code": 6024,
       "name": "InvalidCloseAccountDestination",
       "msg": "Sending Sol to a non-Native Account destination will render the sol unusable"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidFeeTreasury",
+      "msg": "Fee destination is not the protocol fee treasury"
+    },
+    {
+      "code": 6026,
+      "name": "InsufficientBalanceToCollectFees",
+      "msg": "Holding account balance is lower than the accrued protocol fees"
     }
   ],
   "types": [
@@ -1809,6 +1971,10 @@
             "type": {
               "option": "u64"
             }
+          },
+          {
+            "name": "accrued_fees",
+            "type": "u64"
           }
         ]
       }
@@ -1877,6 +2043,10 @@
           {
             "name": "bump_seed",
             "type": "u8"
+          },
+          {
+            "name": "accrued_fees",
+            "type": "u64"
           }
         ]
       }

@@ -8,6 +8,8 @@
 
 export * from './addMemberNft';
 export * from './addMemberWallet';
+export * from './collectFees';
+export * from './collectMintFees';
 export * from './distributeNft';
 export * from './distributeToken';
 export * from './distributeWallet';

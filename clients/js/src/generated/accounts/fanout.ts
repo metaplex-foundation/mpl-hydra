@@ -55,6 +55,7 @@ export type FanoutAccountData = {
   membershipModel: MembershipModel;
   membershipMint: Option<PublicKey>;
   totalStakedShares: Option<bigint>;
+  accruedFees: bigint;
 };
 
 export type FanoutAccountDataArgs = {
@@ -71,6 +72,7 @@ export type FanoutAccountDataArgs = {
   membershipModel: MembershipModelArgs;
   membershipMint: OptionOrNullable<PublicKey>;
   totalStakedShares: OptionOrNullable<number | bigint>;
+  accruedFees: number | bigint;
 };
 
 export function getFanoutAccountDataSerializer(): Serializer<
@@ -94,6 +96,7 @@ export function getFanoutAccountDataSerializer(): Serializer<
         ['membershipModel', getMembershipModelSerializer()],
         ['membershipMint', option(publicKeySerializer())],
         ['totalStakedShares', option(u64())],
+        ['accruedFees', u64()],
       ],
       { description: 'FanoutAccountData' }
     ),
@@ -185,6 +188,7 @@ export function getFanoutGpaBuilder(
       membershipModel: MembershipModelArgs;
       membershipMint: OptionOrNullable<PublicKey>;
       totalStakedShares: OptionOrNullable<number | bigint>;
+      accruedFees: number | bigint;
     }>({
       discriminator: [0, array(u8(), { size: 8 })],
       authority: [8, publicKeySerializer()],
@@ -200,6 +204,7 @@ export function getFanoutGpaBuilder(
       membershipModel: [null, getMembershipModelSerializer()],
       membershipMint: [null, option(publicKeySerializer())],
       totalStakedShares: [null, option(u64())],
+      accruedFees: [null, u64()],
     })
     .deserializeUsing<Fanout>((account) => deserializeFanout(account))
     .whereField('discriminator', [164, 101, 210, 92, 222, 14, 75, 156]);

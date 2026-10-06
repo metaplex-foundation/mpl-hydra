@@ -365,6 +365,39 @@ nameToErrorMap.set(
   InvalidCloseAccountDestinationError
 );
 
+/** InvalidFeeTreasury: Fee destination is not the protocol fee treasury */
+export class InvalidFeeTreasuryError extends ProgramError {
+  override readonly name: string = 'InvalidFeeTreasury';
+
+  readonly code: number = 0x1789; // 6025
+
+  constructor(program: Program, cause?: Error) {
+    super('Fee destination is not the protocol fee treasury', program, cause);
+  }
+}
+codeToErrorMap.set(0x1789, InvalidFeeTreasuryError);
+nameToErrorMap.set('InvalidFeeTreasury', InvalidFeeTreasuryError);
+
+/** InsufficientBalanceToCollectFees: Holding account balance is lower than the accrued protocol fees */
+export class InsufficientBalanceToCollectFeesError extends ProgramError {
+  override readonly name: string = 'InsufficientBalanceToCollectFees';
+
+  readonly code: number = 0x178a; // 6026
+
+  constructor(program: Program, cause?: Error) {
+    super(
+      'Holding account balance is lower than the accrued protocol fees',
+      program,
+      cause
+    );
+  }
+}
+codeToErrorMap.set(0x178a, InsufficientBalanceToCollectFeesError);
+nameToErrorMap.set(
+  'InsufficientBalanceToCollectFees',
+  InsufficientBalanceToCollectFeesError
+);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

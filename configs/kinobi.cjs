@@ -199,6 +199,22 @@ kinobi.update(
         },
       },
     },
+    collectFees: {
+      accounts: {
+        holdingAccount: {
+          defaultValue: k.pdaValueNode(
+            k.pdaLinkNode("fanoutNativeAccount", "hooked"),
+            [k.pdaSeedValueNode("fanout", k.accountValueNode("fanout"))]
+          ),
+        },
+        treasury: {
+          // Must match `PROTOCOL_FEE_TREASURY` in programs/hydra/src/constants.rs.
+          defaultValue: k.publicKeyValueNode(
+            "HydraFeeTreasury111111111111111111111111111"
+          ),
+        },
+      },
+    },
   })
 );
 
