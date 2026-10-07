@@ -31,11 +31,6 @@ on:
 
 env:
   CACHE: true
-  # How to deploy. `direct` signs the upgrade with the deploy key (Hydra's
-  # upgrade authority on both devnet and mainnet-beta). `squads` writes a
-  # buffer and opens a Squads proposal instead; switch to it if the upgrade
-  # authority ever moves to a multisig.
-  DEPLOY_TYPE: direct
 
 jobs:
   check_tag:
@@ -115,7 +110,7 @@ jobs:
           # Allowlist instead of a blanket `cat .github/.env >> "$GITHUB_ENV"`
           # so a PR-editable key in `.github/.env` cannot inject arbitrary env
           # vars into subsequent steps.
-          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL|DEPLOY_SOLANA_VERSION)=' .github/.env >> "$GITHUB_ENV"
+          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL|DEPLOY_SOLANA_VERSION|DEPLOY_TYPE)=' .github/.env >> "$GITHUB_ENV"
           while IFS='=' read -r key value; do
             case "$key" in
               RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
