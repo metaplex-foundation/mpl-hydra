@@ -220,24 +220,19 @@ test('token distributions take the protocol fee and only the fee authority can c
   t.is((await fetchFanoutMint(umi, fanoutForMint)).accruedFees, fee(deposit));
 
   // When anyone other than the fee authority tries to collect the fees.
+  const promise = collectMintFees(umi, {
+    fanout,
+    mint: mint.publicKey,
+  }).sendAndConfirm(umi);
+
+  // Then it is rejected, the fees stay in the holding account and no treasury
+  // token account is created.
+  await t.throwsAsync(promise, { message: /InvalidFeeAuthority/ });
+  t.is((await fetchToken(umi, holdingAta)).amount, fee(deposit));
+  t.is((await fetchFanoutMint(umi, fanoutForMint)).accruedFees, fee(deposit));
   const [treasuryAta] = findAssociatedTokenPda(umi, {
     mint: mint.publicKey,
     owner: TREASURY,
   });
-  await createAssociatedToken(umi, {
-    mint: mint.publicKey,
-    owner: TREASURY,
-  }).sendAndConfirm(umi);
-  const promise = collectMintFees(umi, {
-    fanout,
-    fanoutForMint,
-    holdingAccount: holdingAta,
-    treasuryTokenAccount: treasuryAta,
-  }).sendAndConfirm(umi);
-
-  // Then it is rejected and the fees stay in the holding account.
-  await t.throwsAsync(promise, { message: /InvalidFeeAuthority/ });
-  t.is((await fetchToken(umi, treasuryAta)).amount, 0n);
-  t.is((await fetchToken(umi, holdingAta)).amount, fee(deposit));
-  t.is((await fetchFanoutMint(umi, fanoutForMint)).accruedFees, fee(deposit));
+  t.false(await umi.rpc.accountExists(treasuryAta));
 });

@@ -5,11 +5,17 @@ use crate::{
     utils::logic::transfer::transfer_from_mint_holding,
 };
 use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, TokenAccount};
+use anchor_spl::{
+    associated_token::AssociatedToken,
+    token::{Mint, Token, TokenAccount},
+};
 
 #[derive(Accounts)]
 pub struct CollectMintFees<'info> {
-    #[account(address = PROTOCOL_FEE_AUTHORITY @ HydraError::InvalidFeeAuthority)]
+    #[account(
+    mut,
+    address = PROTOCOL_FEE_AUTHORITY @ HydraError::InvalidFeeAuthority,
+    )]
     pub authority: Signer<'info>,
     #[account(
     seeds = [b"fanout-config", fanout.name.as_bytes()],
@@ -29,16 +35,30 @@ pub struct CollectMintFees<'info> {
     )]
     pub holding_account: Account<'info, TokenAccount>,
     #[account(
-    mut,
-    constraint = treasury_token_account.owner == PROTOCOL_FEE_TREASURY @ HydraError::InvalidFeeTreasury,
-    constraint = treasury_token_account.mint == fanout_for_mint.mint @ HydraError::MintDoesNotMatch,
+    address = fanout_for_mint.mint @ HydraError::MintDoesNotMatch,
+    )]
+    pub mint: Account<'info, Mint>,
+    #[account(
+    address = PROTOCOL_FEE_TREASURY @ HydraError::InvalidFeeTreasury,
+    )]
+    /// CHECK: Protocol fee treasury
+    pub treasury: UncheckedAccount<'info>,
+    /// The treasury's associated token account for the mint, created if it doesn't exist yet.
+    #[account(
+    init_if_needed,
+    payer = authority,
+    associated_token::mint = mint,
+    associated_token::authority = treasury,
+    associated_token::token_program = token_program,
     )]
     pub treasury_token_account: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
+    pub associated_token_program: Program<'info, AssociatedToken>,
+    pub system_program: Program<'info, System>,
 }
 
-/// Sends the token protocol fees accrued by a fanout mint to a token account owned by the
-/// protocol treasury. Only the protocol fee authority can call it.
+/// Sends the token protocol fees accrued by a fanout mint to the protocol treasury's associated
+/// token account, creating it if needed. Only the protocol fee authority can call it.
 pub fn collect_mint_fees(ctx: Context<CollectMintFees>) -> Result<()> {
     let fanout_for_mint = &mut ctx.accounts.fanout_for_mint;
     let fees = fanout_for_mint.accrued_fees;

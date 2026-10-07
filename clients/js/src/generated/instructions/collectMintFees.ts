@@ -6,12 +6,14 @@
  * @see https://github.com/metaplex-foundation/kinobi
  */
 
+import { findAssociatedTokenPda } from '@metaplex-foundation/mpl-toolbox';
 import {
   Context,
   Pda,
   PublicKey,
   Signer,
   TransactionBuilder,
+  publicKey,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
 import {
@@ -21,9 +23,11 @@ import {
   struct,
   u8,
 } from '@metaplex-foundation/umi/serializers';
+import { findFanoutMintPda } from '../accounts';
 import {
   ResolvedAccount,
   ResolvedAccountsWithIndices,
+  expectPublicKey,
   getAccountMetasAndSigners,
 } from '../shared';
 
@@ -31,10 +35,15 @@ import {
 export type CollectMintFeesInstructionAccounts = {
   authority?: Signer;
   fanout: PublicKey | Pda;
-  fanoutForMint: PublicKey | Pda;
-  holdingAccount: PublicKey | Pda;
-  treasuryTokenAccount: PublicKey | Pda;
+  fanoutForMint?: PublicKey | Pda;
+  holdingAccount?: PublicKey | Pda;
+  mint: PublicKey | Pda;
+  treasury?: PublicKey | Pda;
+  /** The treasury's associated token account for the mint, created if it doesn't exist yet. */
+  treasuryTokenAccount?: PublicKey | Pda;
   tokenProgram?: PublicKey | Pda;
+  associatedTokenProgram?: PublicKey | Pda;
+  systemProgram?: PublicKey | Pda;
 };
 
 // Data.
@@ -72,7 +81,7 @@ export const collectMintFeesInstructionDiscriminator = [
 
 // Instruction.
 export function collectMintFees(
-  context: Pick<Context, 'identity' | 'programs'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'programs'>,
   input: CollectMintFeesInstructionAccounts
 ): TransactionBuilder {
   // Program ID.
@@ -85,7 +94,7 @@ export function collectMintFees(
   const resolvedAccounts = {
     authority: {
       index: 0,
-      isWritable: false as boolean,
+      isWritable: true as boolean,
       value: input.authority ?? null,
     },
     fanout: {
@@ -103,15 +112,31 @@ export function collectMintFees(
       isWritable: true as boolean,
       value: input.holdingAccount ?? null,
     },
+    mint: { index: 4, isWritable: false as boolean, value: input.mint ?? null },
+    treasury: {
+      index: 5,
+      isWritable: false as boolean,
+      value: input.treasury ?? null,
+    },
     treasuryTokenAccount: {
-      index: 4,
+      index: 6,
       isWritable: true as boolean,
       value: input.treasuryTokenAccount ?? null,
     },
     tokenProgram: {
-      index: 5,
+      index: 7,
       isWritable: false as boolean,
       value: input.tokenProgram ?? null,
+    },
+    associatedTokenProgram: {
+      index: 8,
+      isWritable: false as boolean,
+      value: input.associatedTokenProgram ?? null,
+    },
+    systemProgram: {
+      index: 9,
+      isWritable: false as boolean,
+      value: input.systemProgram ?? null,
     },
   } satisfies ResolvedAccountsWithIndices;
 
@@ -119,12 +144,53 @@ export function collectMintFees(
   if (!resolvedAccounts.authority.value) {
     resolvedAccounts.authority.value = context.identity;
   }
+  if (!resolvedAccounts.fanoutForMint.value) {
+    resolvedAccounts.fanoutForMint.value = findFanoutMintPda(context, {
+      fanout: expectPublicKey(resolvedAccounts.fanout.value),
+      mint: expectPublicKey(resolvedAccounts.mint.value),
+    });
+  }
+  if (!resolvedAccounts.holdingAccount.value) {
+    resolvedAccounts.holdingAccount.value = findAssociatedTokenPda(context, {
+      mint: expectPublicKey(resolvedAccounts.mint.value),
+      owner: expectPublicKey(resolvedAccounts.fanout.value),
+    });
+  }
+  if (!resolvedAccounts.treasury.value) {
+    resolvedAccounts.treasury.value = publicKey(
+      'BHkk3RTd4Ue6JnqXpa9QHTXbn575ycR8hxVmYx4E254k'
+    );
+  }
+  if (!resolvedAccounts.treasuryTokenAccount.value) {
+    resolvedAccounts.treasuryTokenAccount.value = findAssociatedTokenPda(
+      context,
+      {
+        mint: expectPublicKey(resolvedAccounts.mint.value),
+        owner: expectPublicKey(resolvedAccounts.treasury.value),
+      }
+    );
+  }
   if (!resolvedAccounts.tokenProgram.value) {
     resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
       'splToken',
       'TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'
     );
     resolvedAccounts.tokenProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.associatedTokenProgram.value) {
+    resolvedAccounts.associatedTokenProgram.value =
+      context.programs.getPublicKey(
+        'splAssociatedToken',
+        'ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL'
+      );
+    resolvedAccounts.associatedTokenProgram.isWritable = false;
+  }
+  if (!resolvedAccounts.systemProgram.value) {
+    resolvedAccounts.systemProgram.value = context.programs.getPublicKey(
+      'splSystem',
+      '11111111111111111111111111111111'
+    );
+    resolvedAccounts.systemProgram.isWritable = false;
   }
 
   // Accounts in order.
