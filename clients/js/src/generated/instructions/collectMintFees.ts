@@ -10,6 +10,7 @@ import {
   Context,
   Pda,
   PublicKey,
+  Signer,
   TransactionBuilder,
   transactionBuilder,
 } from '@metaplex-foundation/umi';
@@ -28,6 +29,7 @@ import {
 
 // Accounts.
 export type CollectMintFeesInstructionAccounts = {
+  authority?: Signer;
   fanout: PublicKey | Pda;
   fanoutForMint: PublicKey | Pda;
   holdingAccount: PublicKey | Pda;
@@ -70,7 +72,7 @@ export const collectMintFeesInstructionDiscriminator = [
 
 // Instruction.
 export function collectMintFees(
-  context: Pick<Context, 'programs'>,
+  context: Pick<Context, 'identity' | 'programs'>,
   input: CollectMintFeesInstructionAccounts
 ): TransactionBuilder {
   // Program ID.
@@ -81,34 +83,42 @@ export function collectMintFees(
 
   // Accounts.
   const resolvedAccounts = {
-    fanout: {
+    authority: {
       index: 0,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
+    fanout: {
+      index: 1,
       isWritable: false as boolean,
       value: input.fanout ?? null,
     },
     fanoutForMint: {
-      index: 1,
+      index: 2,
       isWritable: true as boolean,
       value: input.fanoutForMint ?? null,
     },
     holdingAccount: {
-      index: 2,
+      index: 3,
       isWritable: true as boolean,
       value: input.holdingAccount ?? null,
     },
     treasuryTokenAccount: {
-      index: 3,
+      index: 4,
       isWritable: true as boolean,
       value: input.treasuryTokenAccount ?? null,
     },
     tokenProgram: {
-      index: 4,
+      index: 5,
       isWritable: false as boolean,
       value: input.tokenProgram ?? null,
     },
   } satisfies ResolvedAccountsWithIndices;
 
   // Default values.
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
   if (!resolvedAccounts.tokenProgram.value) {
     resolvedAccounts.tokenProgram.value = context.programs.getPublicKey(
       'splToken',

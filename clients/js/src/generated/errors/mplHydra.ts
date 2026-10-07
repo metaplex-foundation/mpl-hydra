@@ -398,6 +398,19 @@ nameToErrorMap.set(
   InsufficientBalanceToCollectFeesError
 );
 
+/** InvalidFeeAuthority: Only the protocol fee authority can collect fees */
+export class InvalidFeeAuthorityError extends ProgramError {
+  override readonly name: string = 'InvalidFeeAuthority';
+
+  readonly code: number = 0x178b; // 6027
+
+  constructor(program: Program, cause?: Error) {
+    super('Only the protocol fee authority can collect fees', program, cause);
+  }
+}
+codeToErrorMap.set(0x178b, InvalidFeeAuthorityError);
+nameToErrorMap.set('InvalidFeeAuthority', InvalidFeeAuthorityError);
+
 /**
  * Attempts to resolve a custom program error from the provided error code.
  * @category Errors

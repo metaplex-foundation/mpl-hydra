@@ -100,4 +100,7 @@ pub enum HydraError {
 
     #[msg("Holding account balance is lower than the accrued protocol fees")]
     InsufficientBalanceToCollectFees,
+
+    #[msg("Only the protocol fee authority can collect fees")]
+    InvalidFeeAuthority,
 }

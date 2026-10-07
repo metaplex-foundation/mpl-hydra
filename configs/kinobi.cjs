@@ -208,9 +208,10 @@ kinobi.update(
           ),
         },
         treasury: {
-          // Must match `PROTOCOL_FEE_TREASURY` in programs/hydra/src/constants.rs.
+          // The Metaplex DAO wallet. Must match `PROTOCOL_FEE_TREASURY` in
+          // programs/hydra/src/constants.rs.
           defaultValue: k.publicKeyValueNode(
-            "HydraFeeTreasury111111111111111111111111111"
+            "BHkk3RTd4Ue6JnqXpa9QHTXbn575ycR8hxVmYx4E254k"
           ),
         },
       },

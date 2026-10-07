@@ -259,6 +259,11 @@
       ],
       "accounts": [
         {
+          "name": "authority",
+          "signer": true,
+          "address": "Levytx9LLPzAtDJJD7q813Zsm8zg9e1pb53mGxTKpD7"
+        },
+        {
           "name": "fanout",
           "writable": true,
           "pda": {
@@ -296,7 +301,7 @@
         {
           "name": "treasury",
           "writable": true,
-          "address": "HydraFeeTreasury111111111111111111111111111"
+          "address": "BHkk3RTd4Ue6JnqXpa9QHTXbn575ycR8hxVmYx4E254k"
         }
       ],
       "args": []
@@ -314,6 +319,11 @@
         69
       ],
       "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "address": "Levytx9LLPzAtDJJD7q813Zsm8zg9e1pb53mGxTKpD7"
+        },
         {
           "name": "fanout",
           "pda": {
@@ -1892,6 +1902,11 @@
       "code": 6026,
       "name": "InsufficientBalanceToCollectFees",
       "msg": "Holding account balance is lower than the accrued protocol fees"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidFeeAuthority",
+      "msg": "Only the protocol fee authority can collect fees"
     }
   ],
   "types": [

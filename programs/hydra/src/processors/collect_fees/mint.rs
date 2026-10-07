@@ -1,5 +1,5 @@
 use crate::{
-    constants::PROTOCOL_FEE_TREASURY,
+    constants::{PROTOCOL_FEE_AUTHORITY, PROTOCOL_FEE_TREASURY},
     error::{HydraError, OrArithError},
     state::{Fanout, FanoutMint},
     utils::logic::transfer::transfer_from_mint_holding,
@@ -9,6 +9,8 @@ use anchor_spl::token::{Token, TokenAccount};
 
 #[derive(Accounts)]
 pub struct CollectMintFees<'info> {
+    #[account(address = PROTOCOL_FEE_AUTHORITY @ HydraError::InvalidFeeAuthority)]
+    pub authority: Signer<'info>,
     #[account(
     seeds = [b"fanout-config", fanout.name.as_bytes()],
     bump = fanout.bump_seed,
@@ -36,7 +38,7 @@ pub struct CollectMintFees<'info> {
 }
 
 /// Sends the token protocol fees accrued by a fanout mint to a token account owned by the
-/// protocol treasury. Permissionless, since the fees can only ever go to the treasury.
+/// protocol treasury. Only the protocol fee authority can call it.
 pub fn collect_mint_fees(ctx: Context<CollectMintFees>) -> Result<()> {
     let fanout_for_mint = &mut ctx.accounts.fanout_for_mint;
     let fees = fanout_for_mint.accrued_fees;

@@ -36,8 +36,10 @@ import {
 import { createUmi } from './_setup';
 
 // Must match `PROTOCOL_FEE_TREASURY` and `PROTOCOL_FEE_BPS` in the program.
-const TREASURY = publicKey('HydraFeeTreasury111111111111111111111111111');
-const FEE_BPS = 100n;
+// Collecting needs the `PROTOCOL_FEE_AUTHORITY` signer, which tests can't
+// produce, so they only cover fee accrual and the authority check.
+const TREASURY = publicKey('BHkk3RTd4Ue6JnqXpa9QHTXbn575ycR8hxVmYx4E254k');
+const FEE_BPS = 50n;
 const NATIVE_MINT = publicKey('So11111111111111111111111111111111111111112');
 
 const fee = (amount: bigint) => (amount * FEE_BPS) / 10_000n;
@@ -80,14 +82,12 @@ function distributeNative(umi: Umi, fanout: PublicKey, member: PublicKey) {
   });
 }
 
-test('native distributions take the protocol fee and collectFees sends it to the treasury', async (t) => {
+test('native distributions take the protocol fee and only the fee authority can collect it', async (t) => {
   // Given a wallet fanout with two members holding 60 and 40 shares.
   const umi = await createUmi();
   const { fanout, members } = await createWalletFanout(umi, [60, 40]);
   const [holdingAccount] = findFanoutNativeAccountPda(umi, { fanout });
   const holdingRent = (await umi.rpc.getBalance(holdingAccount)).basisPoints;
-  // Make sure the treasury exists so any fee amount can be credited to it.
-  await umi.rpc.airdrop(TREASURY, sol(1));
 
   // When 10 SOL is deposited and every member claims their share.
   const deposit = sol(10).basisPoints;
@@ -111,46 +111,20 @@ test('native distributions take the protocol fee and collectFees sends it to the
   t.is(fanoutAccount.accruedFees, fee(deposit));
   t.is(fanoutAccount.lastSnapshotAmount, fee(deposit));
 
-  // When anyone collects the fees.
-  const treasuryBefore = (await umi.rpc.getBalance(TREASURY)).basisPoints;
-  await collectFees(umi, { fanout }).sendAndConfirm(umi);
+  // When anyone other than the fee authority tries to collect the fees.
+  const promise = collectFees(umi, { fanout }).sendAndConfirm(umi);
 
-  // Then the treasury received them and the holding account is back to its
-  // rent-exempt minimum.
-  const treasuryAfter = (await umi.rpc.getBalance(TREASURY)).basisPoints;
-  t.is(treasuryAfter - treasuryBefore, fee(deposit));
-  t.is((await umi.rpc.getBalance(holdingAccount)).basisPoints, holdingRent);
+  // Then it is rejected and the fees stay put.
+  await t.throwsAsync(promise, { message: /InvalidFeeAuthority/ });
   fanoutAccount = await fetchFanout(umi, fanout);
-  t.is(fanoutAccount.accruedFees, 0n);
-  t.is(fanoutAccount.lastSnapshotAmount, 0n);
-
-  // And a later deposit is still distributed correctly.
-  await transferSol(umi, {
-    destination: holdingAccount,
-    amount: sol(1),
-  }).sendAndConfirm(umi);
-  await distributeNative(umi, fanout, members[0]).sendAndConfirm(umi);
-  const second = sol(1).basisPoints;
+  t.is(fanoutAccount.accruedFees, fee(deposit));
   t.is(
-    (await umi.rpc.getBalance(members[0])).basisPoints,
-    balances[0].basisPoints + ((second - fee(second)) * 60n) / 100n
+    (await umi.rpc.getBalance(holdingAccount)).basisPoints,
+    holdingRent + fee(deposit)
   );
-  t.is((await fetchFanout(umi, fanout)).accruedFees, fee(second));
 });
 
-test('collectFees rejects any destination other than the treasury', async (t) => {
-  const umi = await createUmi();
-  const { fanout } = await createWalletFanout(umi, [100]);
-
-  const promise = collectFees(umi, {
-    fanout,
-    treasury: generateSigner(umi).publicKey,
-  }).sendAndConfirm(umi);
-
-  await t.throwsAsync(promise, { message: /InvalidFeeTreasury/ });
-});
-
-test('token distributions take the protocol fee and collectMintFees sends it to the treasury', async (t) => {
+test('token distributions take the protocol fee and only the fee authority can collect it', async (t) => {
   // Given a wallet fanout with two members and an SPL mint registered on it.
   const umi = await createUmi();
   const { fanout, members } = await createWalletFanout(umi, [70, 30]);
@@ -245,7 +219,7 @@ test('token distributions take the protocol fee and collectMintFees sends it to 
   t.is((await fetchToken(umi, memberAtas[1])).amount, (net * 30n) / 100n);
   t.is((await fetchFanoutMint(umi, fanoutForMint)).accruedFees, fee(deposit));
 
-  // When anyone collects the fees into the treasury's token account.
+  // When anyone other than the fee authority tries to collect the fees.
   const [treasuryAta] = findAssociatedTokenPda(umi, {
     mint: mint.publicKey,
     owner: TREASURY,
@@ -253,21 +227,17 @@ test('token distributions take the protocol fee and collectMintFees sends it to 
   await createAssociatedToken(umi, {
     mint: mint.publicKey,
     owner: TREASURY,
-  })
-    .add(
-      collectMintFees(umi, {
-        fanout,
-        fanoutForMint,
-        holdingAccount: holdingAta,
-        treasuryTokenAccount: treasuryAta,
-      })
-    )
-    .sendAndConfirm(umi);
+  }).sendAndConfirm(umi);
+  const promise = collectMintFees(umi, {
+    fanout,
+    fanoutForMint,
+    holdingAccount: holdingAta,
+    treasuryTokenAccount: treasuryAta,
+  }).sendAndConfirm(umi);
 
-  // Then the treasury holds the fees and the holding account is empty.
-  t.is((await fetchToken(umi, treasuryAta)).amount, fee(deposit));
-  t.is((await fetchToken(umi, holdingAta)).amount, 0n);
-  const fanoutMint = await fetchFanoutMint(umi, fanoutForMint);
-  t.is(fanoutMint.accruedFees, 0n);
-  t.is(fanoutMint.lastSnapshotAmount, 0n);
+  // Then it is rejected and the fees stay in the holding account.
+  await t.throwsAsync(promise, { message: /InvalidFeeAuthority/ });
+  t.is((await fetchToken(umi, treasuryAta)).amount, 0n);
+  t.is((await fetchToken(umi, holdingAta)).amount, fee(deposit));
+  t.is((await fetchFanoutMint(umi, fanoutForMint)).accruedFees, fee(deposit));
 });

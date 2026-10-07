@@ -10,6 +10,7 @@ import {
   Context,
   Pda,
   PublicKey,
+  Signer,
   TransactionBuilder,
   publicKey,
   transactionBuilder,
@@ -31,6 +32,7 @@ import {
 
 // Accounts.
 export type CollectFeesInstructionAccounts = {
+  authority?: Signer;
   fanout: PublicKey | Pda;
   holdingAccount?: PublicKey | Pda;
   treasury?: PublicKey | Pda;
@@ -65,7 +67,7 @@ export const collectFeesInstructionDiscriminator = [
 
 // Instruction.
 export function collectFees(
-  context: Pick<Context, 'eddsa' | 'programs'>,
+  context: Pick<Context, 'eddsa' | 'identity' | 'programs'>,
   input: CollectFeesInstructionAccounts
 ): TransactionBuilder {
   // Program ID.
@@ -76,24 +78,32 @@ export function collectFees(
 
   // Accounts.
   const resolvedAccounts = {
-    fanout: {
+    authority: {
       index: 0,
+      isWritable: false as boolean,
+      value: input.authority ?? null,
+    },
+    fanout: {
+      index: 1,
       isWritable: true as boolean,
       value: input.fanout ?? null,
     },
     holdingAccount: {
-      index: 1,
+      index: 2,
       isWritable: true as boolean,
       value: input.holdingAccount ?? null,
     },
     treasury: {
-      index: 2,
+      index: 3,
       isWritable: true as boolean,
       value: input.treasury ?? null,
     },
   } satisfies ResolvedAccountsWithIndices;
 
   // Default values.
+  if (!resolvedAccounts.authority.value) {
+    resolvedAccounts.authority.value = context.identity;
+  }
   if (!resolvedAccounts.holdingAccount.value) {
     resolvedAccounts.holdingAccount.value = findFanoutNativeAccountPda(
       context,
@@ -102,7 +112,7 @@ export function collectFees(
   }
   if (!resolvedAccounts.treasury.value) {
     resolvedAccounts.treasury.value = publicKey(
-      'HydraFeeTreasury111111111111111111111111111'
+      'BHkk3RTd4Ue6JnqXpa9QHTXbn575ycR8hxVmYx4E254k'
     );
   }
 

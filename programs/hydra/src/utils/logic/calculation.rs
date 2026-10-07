@@ -225,21 +225,21 @@ mod tests {
         fanout.total_staked_shares = Some(5);
         fanout.total_inflow = 1000;
 
-        update_inflow(&mut fanout, 100).unwrap();
+        update_inflow(&mut fanout, 1_000).unwrap();
 
-        // diff 100, fee 1, net 99, shares_diff 5, correction 99 * 5 / 5 = 99
-        assert_eq!(fanout.total_inflow, 1198);
-        assert_eq!(fanout.accrued_fees, 1);
-        assert_eq!(fanout.last_snapshot_amount, 100);
+        // diff 1000, fee 5, net 995, shares_diff 5, correction 995 * 5 / 5 = 995
+        assert_eq!(fanout.total_inflow, 2_990);
+        assert_eq!(fanout.accrued_fees, 5);
+        assert_eq!(fanout.last_snapshot_amount, 1_000);
     }
 
     #[test]
     fn test_split_protocol_fee() {
-        assert_eq!(PROTOCOL_FEE_BPS, 100, "expectations below assume a 1% fee");
+        assert_eq!(PROTOCOL_FEE_BPS, 50, "expectations below assume a 0.5% fee");
         assert_eq!(split_protocol_fee(0).unwrap(), (0, 0));
-        assert_eq!(split_protocol_fee(99).unwrap(), (99, 0));
-        assert_eq!(split_protocol_fee(1_000).unwrap(), (990, 10));
-        assert_eq!(split_protocol_fee(1_050).unwrap(), (1_040, 10));
+        assert_eq!(split_protocol_fee(199).unwrap(), (199, 0));
+        assert_eq!(split_protocol_fee(1_000).unwrap(), (995, 5));
+        assert_eq!(split_protocol_fee(1_050).unwrap(), (1_045, 5));
         let (net, fee) = split_protocol_fee(u64::MAX).unwrap();
         assert_eq!(net + fee, u64::MAX);
     }
@@ -250,19 +250,19 @@ mod tests {
         fanout.total_staked_shares = None;
 
         update_inflow(&mut fanout, 1_000).unwrap();
-        assert_eq!(fanout.total_inflow, 990);
-        assert_eq!(fanout.accrued_fees, 10);
+        assert_eq!(fanout.total_inflow, 995);
+        assert_eq!(fanout.accrued_fees, 5);
         assert_eq!(fanout.last_snapshot_amount, 1_000);
 
         // Same balance again: no new inflow, so no new fee.
         update_inflow(&mut fanout, 1_000).unwrap();
-        assert_eq!(fanout.total_inflow, 990);
-        assert_eq!(fanout.accrued_fees, 10);
+        assert_eq!(fanout.total_inflow, 995);
+        assert_eq!(fanout.accrued_fees, 5);
 
         // Only the new 500 is charged.
         update_inflow(&mut fanout, 1_500).unwrap();
-        assert_eq!(fanout.total_inflow, 1_485);
-        assert_eq!(fanout.accrued_fees, 15);
+        assert_eq!(fanout.total_inflow, 1_493);
+        assert_eq!(fanout.accrued_fees, 7);
     }
 
     #[test]
@@ -284,7 +284,7 @@ mod tests {
             account.last_snapshot_amount -= dist;
         }
 
-        assert_eq!(account.accrued_fees, 100);
+        assert_eq!(account.accrued_fees, 50);
         assert_eq!(account.last_snapshot_amount, account.accrued_fees);
     }
 
@@ -307,8 +307,8 @@ mod tests {
 
         update_inflow_for_mint(&mut account, &mut fanout_for_mint, 2_050).unwrap();
 
-        assert_eq!(fanout_for_mint.total_inflow, 50 + 1_980);
-        assert_eq!(fanout_for_mint.accrued_fees, 3 + 20);
+        assert_eq!(fanout_for_mint.total_inflow, 50 + 1_990);
+        assert_eq!(fanout_for_mint.accrued_fees, 3 + 10);
         assert_eq!(fanout_for_mint.last_snapshot_amount, 2_050);
     }
 

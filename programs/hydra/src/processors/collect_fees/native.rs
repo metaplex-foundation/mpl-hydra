@@ -1,5 +1,5 @@
 use crate::{
-    constants::PROTOCOL_FEE_TREASURY,
+    constants::{PROTOCOL_FEE_AUTHORITY, PROTOCOL_FEE_TREASURY},
     error::{HydraError, OrArithError},
     state::{Fanout, HOLDING_ACCOUNT_SIZE},
     utils::logic::transfer::transfer_native,
@@ -8,6 +8,8 @@ use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
 pub struct CollectFees<'info> {
+    #[account(address = PROTOCOL_FEE_AUTHORITY @ HydraError::InvalidFeeAuthority)]
+    pub authority: Signer<'info>,
     #[account(
     mut,
     seeds = [b"fanout-config", fanout.name.as_bytes()],
@@ -29,8 +31,8 @@ pub struct CollectFees<'info> {
     pub treasury: UncheckedAccount<'info>,
 }
 
-/// Sends the native protocol fees accrued by a fanout to the protocol treasury. Permissionless,
-/// since the fees can only ever go to the treasury.
+/// Sends the native protocol fees accrued by a fanout to the protocol treasury. Only the protocol fee
+/// authority can call it.
 pub fn collect_fees(ctx: Context<CollectFees>) -> Result<()> {
     let fanout = &mut ctx.accounts.fanout;
     let fees = fanout.accrued_fees;
