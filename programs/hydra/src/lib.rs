@@ -1,5 +1,6 @@
 #![allow(clippy::result_large_err)]
 
+pub mod constants;
 pub mod error;
 pub mod processors;
 pub mod state;
@@ -92,5 +93,13 @@ pub mod hydra {
 
     pub fn process_remove_member(ctx: Context<RemoveMember>) -> Result<()> {
         remove_member(ctx)
+    }
+
+    pub fn process_collect_fees(ctx: Context<CollectFees>) -> Result<()> {
+        collect_fees(ctx)
+    }
+
+    pub fn process_collect_mint_fees(ctx: Context<CollectMintFees>) -> Result<()> {
+        collect_mint_fees(ctx)
     }
 }

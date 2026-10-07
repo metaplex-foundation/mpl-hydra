@@ -33,6 +33,8 @@ pub struct Fanout {
     pub membership_model: MembershipModel, //1
     pub membership_mint: Option<Pubkey>,   //32
     pub total_staked_shares: Option<u64>,  //4
+    // Appended after the original layout so existing accounts read it as 0.
+    pub accrued_fees: u64, //8
 }
 
 #[account]
@@ -44,7 +46,9 @@ pub struct FanoutMint {
     pub total_inflow: u64,         //8
     pub last_snapshot_amount: u64, //8
     pub bump_seed: u8,             //1
-                                   // +50 padding
+    // Appended after the original layout so existing accounts read it as 0.
+    pub accrued_fees: u64, //8
+                           // +71 padding
 }
 
 pub const FANOUT_MEMBERSHIP_VOUCHER_SIZE: usize = 32 + 8 + 8 + 1 + 32 + 8 + 8 + 56;

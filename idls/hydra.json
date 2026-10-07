@@ -246,6 +246,240 @@
       ]
     },
     {
+      "name": "process_collect_fees",
+      "discriminator": [
+        0,
+        253,
+        41,
+        65,
+        105,
+        247,
+        26,
+        96
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "signer": true,
+          "address": "Levytx9LLPzAtDJJD7q813Zsm8zg9e1pb53mGxTKpD7"
+        },
+        {
+          "name": "fanout",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holding_account",
+          "writable": true
+        },
+        {
+          "name": "treasury",
+          "writable": true,
+          "address": "BHkk3RTd4Ue6JnqXpa9QHTXbn575ycR8hxVmYx4E254k"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "process_collect_mint_fees",
+      "discriminator": [
+        27,
+        118,
+        217,
+        59,
+        165,
+        115,
+        141,
+        69
+      ],
+      "accounts": [
+        {
+          "name": "authority",
+          "writable": true,
+          "signer": true,
+          "address": "Levytx9LLPzAtDJJD7q813Zsm8zg9e1pb53mGxTKpD7"
+        },
+        {
+          "name": "fanout",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout.name",
+                "account": "Fanout"
+              }
+            ]
+          },
+          "relations": [
+            "fanout_for_mint"
+          ]
+        },
+        {
+          "name": "fanout_for_mint",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  102,
+                  97,
+                  110,
+                  111,
+                  117,
+                  116,
+                  45,
+                  99,
+                  111,
+                  110,
+                  102,
+                  105,
+                  103
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "fanout"
+              },
+              {
+                "kind": "account",
+                "path": "fanout_for_mint.mint",
+                "account": "FanoutMint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "holding_account",
+          "writable": true
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "treasury",
+          "address": "BHkk3RTd4Ue6JnqXpa9QHTXbn575ycR8hxVmYx4E254k"
+        },
+        {
+          "name": "treasury_token_account",
+          "docs": [
+            "The treasury's associated token account for the mint, created if it doesn't exist yet."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "treasury"
+              },
+              {
+                "kind": "account",
+                "path": "token_program"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "associated_token_program",
+          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        }
+      ],
+      "args": []
+    },
+    {
       "name": "process_distribute_nft",
       "discriminator": [
         108,
@@ -1730,6 +1964,21 @@
       "code": 6024,
       "name": "InvalidCloseAccountDestination",
       "msg": "Sending Sol to a non-Native Account destination will render the sol unusable"
+    },
+    {
+      "code": 6025,
+      "name": "InvalidFeeTreasury",
+      "msg": "Fee destination is not the protocol fee treasury"
+    },
+    {
+      "code": 6026,
+      "name": "InsufficientBalanceToCollectFees",
+      "msg": "Holding account balance is lower than the accrued protocol fees"
+    },
+    {
+      "code": 6027,
+      "name": "InvalidFeeAuthority",
+      "msg": "Only the protocol fee authority can collect fees"
     }
   ],
   "types": [
@@ -1809,6 +2058,10 @@
             "type": {
               "option": "u64"
             }
+          },
+          {
+            "name": "accrued_fees",
+            "type": "u64"
           }
         ]
       }
@@ -1877,6 +2130,10 @@
           {
             "name": "bump_seed",
             "type": "u8"
+          },
+          {
+            "name": "accrued_fees",
+            "type": "u64"
           }
         ]
       }

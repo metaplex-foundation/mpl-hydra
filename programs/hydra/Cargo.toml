@@ -27,7 +27,7 @@ unexpected_cfgs = { level = "warn", check-cfg = [
 ] }
 
 [dependencies]
-anchor-lang = "0.32.2"
+anchor-lang = { version = "0.32.2", features = ["init-if-needed"] }
 anchor-spl = "0.32.2"
 spl-token = { version = "8.0.0", features = ["no-entrypoint"] }
 mpl-token-metadata = "5.1.1"

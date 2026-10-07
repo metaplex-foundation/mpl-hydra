@@ -199,6 +199,64 @@ kinobi.update(
         },
       },
     },
+    collectFees: {
+      accounts: {
+        holdingAccount: {
+          defaultValue: k.pdaValueNode(
+            k.pdaLinkNode("fanoutNativeAccount", "hooked"),
+            [k.pdaSeedValueNode("fanout", k.accountValueNode("fanout"))]
+          ),
+        },
+        treasury: {
+          // The Metaplex DAO wallet. Must match `PROTOCOL_FEE_TREASURY` in
+          // programs/hydra/src/constants.rs.
+          defaultValue: k.publicKeyValueNode(
+            "BHkk3RTd4Ue6JnqXpa9QHTXbn575ycR8hxVmYx4E254k"
+          ),
+        },
+      },
+    },
+    collectMintFees: {
+      accounts: {
+        fanoutForMint: {
+          defaultValue: k.pdaValueNode("fanoutMint", [
+            k.pdaSeedValueNode("fanout", k.accountValueNode("fanout")),
+            k.pdaSeedValueNode("mint", k.accountValueNode("mint")),
+          ]),
+        },
+        holdingAccount: {
+          defaultValue: k.pdaValueNode(
+            k.pdaLinkNode("associatedToken", "mplToolbox"),
+            [
+              k.pdaSeedValueNode("mint", k.accountValueNode("mint")),
+              k.pdaSeedValueNode("owner", k.accountValueNode("fanout")),
+            ]
+          ),
+        },
+        treasury: {
+          // The Metaplex DAO wallet. Must match `PROTOCOL_FEE_TREASURY` in
+          // programs/hydra/src/constants.rs.
+          defaultValue: k.publicKeyValueNode(
+            "BHkk3RTd4Ue6JnqXpa9QHTXbn575ycR8hxVmYx4E254k"
+          ),
+        },
+        treasuryTokenAccount: {
+          defaultValue: k.pdaValueNode(
+            k.pdaLinkNode("associatedToken", "mplToolbox"),
+            [
+              k.pdaSeedValueNode("mint", k.accountValueNode("mint")),
+              k.pdaSeedValueNode("owner", k.accountValueNode("treasury")),
+            ]
+          ),
+        },
+        associatedTokenProgram: {
+          defaultValue: k.publicKeyValueNode(
+            "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
+            "splAssociatedToken"
+          ),
+        },
+      },
+    },
   })
 );
 

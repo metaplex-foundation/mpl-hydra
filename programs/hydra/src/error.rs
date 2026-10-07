@@ -94,4 +94,13 @@ pub enum HydraError {
 
     #[msg("Sending Sol to a non-Native Account destination will render the sol unusable")]
     InvalidCloseAccountDestination,
+
+    #[msg("Fee destination is not the protocol fee treasury")]
+    InvalidFeeTreasury,
+
+    #[msg("Holding account balance is lower than the accrued protocol fees")]
+    InsufficientBalanceToCollectFees,
+
+    #[msg("Only the protocol fee authority can collect fees")]
+    InvalidFeeAuthority,
 }

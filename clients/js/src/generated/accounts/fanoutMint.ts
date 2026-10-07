@@ -40,6 +40,7 @@ export type FanoutMintAccountData = {
   totalInflow: bigint;
   lastSnapshotAmount: bigint;
   bumpSeed: number;
+  accruedFees: bigint;
 };
 
 export type FanoutMintAccountDataArgs = {
@@ -49,6 +50,7 @@ export type FanoutMintAccountDataArgs = {
   totalInflow: number | bigint;
   lastSnapshotAmount: number | bigint;
   bumpSeed: number;
+  accruedFees: number | bigint;
 };
 
 export function getFanoutMintAccountDataSerializer(): Serializer<
@@ -65,6 +67,7 @@ export function getFanoutMintAccountDataSerializer(): Serializer<
         ['totalInflow', u64()],
         ['lastSnapshotAmount', u64()],
         ['bumpSeed', u8()],
+        ['accruedFees', u64()],
       ],
       { description: 'FanoutMintAccountData' }
     ),
@@ -149,6 +152,7 @@ export function getFanoutMintGpaBuilder(
       totalInflow: number | bigint;
       lastSnapshotAmount: number | bigint;
       bumpSeed: number;
+      accruedFees: number | bigint;
     }>({
       discriminator: [0, array(u8(), { size: 8 })],
       mint: [8, publicKeySerializer()],
@@ -157,6 +161,7 @@ export function getFanoutMintGpaBuilder(
       totalInflow: [104, u64()],
       lastSnapshotAmount: [112, u64()],
       bumpSeed: [120, u8()],
+      accruedFees: [121, u64()],
     })
     .deserializeUsing<FanoutMint>((account) => deserializeFanoutMint(account))
     .whereField('discriminator', [50, 164, 42, 108, 90, 201, 250, 216]);
