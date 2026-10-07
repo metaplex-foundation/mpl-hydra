@@ -110,7 +110,7 @@ jobs:
           # Allowlist instead of a blanket `cat .github/.env >> "$GITHUB_ENV"`
           # so a PR-editable key in `.github/.env` cannot inject arbitrary env
           # vars into subsequent steps.
-          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL|DEPLOY_SOLANA_VERSION)=' .github/.env >> "$GITHUB_ENV"
+          grep -E '^(CARGO_TERM_COLOR|RUST_VERSION|COMMIT_USER_NAME|COMMIT_USER_EMAIL|DEPLOY_SOLANA_VERSION|DEPLOY_TYPE)=' .github/.env >> "$GITHUB_ENV"
           while IFS='=' read -r key value; do
             case "$key" in
               RUST_VERSION) printf 'rust_version=%s\n' "$value" >> "$GITHUB_OUTPUT" ;;
@@ -153,14 +153,15 @@ jobs:
           # solana-keygen pubkey only emits the public key, not the secret.
           echo "PROGRAM_ID=$(solana-keygen pubkey ./program-id.json)" >> $GITHUB_ENV
 
-          if [ "${{ inputs.cluster }}" == "devnet" ]; then
+          if [ "$DEPLOY_TYPE" == "direct" ]; then
             printf '%s' "$HYDRA_DEPLOY_KEY" > ./deployer-key.json
-            echo DEPLOY_TYPE="direct" >> $GITHUB_ENV
-          else
-            echo DEPLOY_TYPE="squads" >> $GITHUB_ENV
+          elif [ "$DEPLOY_TYPE" == "squads" ]; then
             echo SQUADS_MULTISIG="${{ vars.SQUADS_MULTISIG }}" >> $GITHUB_ENV
             echo SQUADS_VAULT="${{ vars.SQUADS_VAULT }}" >> $GITHUB_ENV
             echo SQUADS_PROGRAM_INDEX="${{ vars.SQUADS_PROGRAM_INDEX }}" >> $GITHUB_ENV
+          else
+            echo "Invalid deploy type: $DEPLOY_TYPE"
+            exit 1
           fi
 
       - name: Sanitize Ref
