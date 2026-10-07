@@ -23,18 +23,6 @@ on:
         options:
           - devnet
           - mainnet-beta
-      deploy_type:
-        description: >-
-          How to deploy. `direct` signs the upgrade with the deploy key (Hydra's
-          upgrade authority on both devnet and mainnet-beta). `squads` writes a
-          buffer and opens a Squads proposal instead; keep this path around in
-          case the upgrade authority moves to a multisig later.
-        required: true
-        default: direct
-        type: choice
-        options:
-          - direct
-          - squads
       dry_run:
         description: Dry run
         required: false
@@ -43,6 +31,11 @@ on:
 
 env:
   CACHE: true
+  # How to deploy. `direct` signs the upgrade with the deploy key (Hydra's
+  # upgrade authority on both devnet and mainnet-beta). `squads` writes a
+  # buffer and opens a Squads proposal instead; switch to it if the upgrade
+  # authority ever moves to a multisig.
+  DEPLOY_TYPE: direct
 
 jobs:
   check_tag:
@@ -165,19 +158,14 @@ jobs:
           # solana-keygen pubkey only emits the public key, not the secret.
           echo "PROGRAM_ID=$(solana-keygen pubkey ./program-id.json)" >> $GITHUB_ENV
 
-          # The deploy method is chosen per run rather than per cluster:
-          # Hydra's upgrade authority is a plain keypair on mainnet-beta too,
-          # so `direct` is the default everywhere. The `squads` path stays
-          # available in case the authority moves to a multisig later.
-          echo DEPLOY_TYPE="${{ inputs.deploy_type }}" >> $GITHUB_ENV
-          if [ "${{ inputs.deploy_type }}" == "direct" ]; then
+          if [ "$DEPLOY_TYPE" == "direct" ]; then
             printf '%s' "$HYDRA_DEPLOY_KEY" > ./deployer-key.json
-          elif [ "${{ inputs.deploy_type }}" == "squads" ]; then
+          elif [ "$DEPLOY_TYPE" == "squads" ]; then
             echo SQUADS_MULTISIG="${{ vars.SQUADS_MULTISIG }}" >> $GITHUB_ENV
             echo SQUADS_VAULT="${{ vars.SQUADS_VAULT }}" >> $GITHUB_ENV
             echo SQUADS_PROGRAM_INDEX="${{ vars.SQUADS_PROGRAM_INDEX }}" >> $GITHUB_ENV
           else
-            echo "Invalid deploy type: ${{ inputs.deploy_type }}"
+            echo "Invalid deploy type: $DEPLOY_TYPE"
             exit 1
           fi
 
