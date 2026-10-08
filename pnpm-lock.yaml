@@ -12,8 +12,8 @@ importers:
         specifier: ^0.12.1
         version: 0.12.1(bufferutil@4.1.0)(typescript@5.7.3)(utf-8-validate@6.0.6)
       '@metaplex-foundation/kinobi':
-        specifier: 1.0.0-alpha.2
-        version: 1.0.0-alpha.2(fastestsmallesttextencoderdecoder@1.0.22)
+        specifier: 1.0.0-alpha.5
+        version: 1.0.0-alpha.5(fastestsmallesttextencoderdecoder@1.0.22)
       '@metaplex-foundation/shank-js':
         specifier: ^0.1.7
         version: 0.1.7
@@ -46,8 +46,8 @@ packages:
   '@metaplex-foundation/cusper@0.0.2':
     resolution: {integrity: sha512-S9RulC2fFCFOQraz61bij+5YCHhSO9llJegK8c8Y6731fSi6snUSQJdCUqYS8AIgR0TKbQvdvgSyIIdbDFZbBA==}
 
-  '@metaplex-foundation/kinobi@1.0.0-alpha.2':
-    resolution: {integrity: sha512-tA/D/CEX6fA/GPwDX4t+ci/nflS2gYeLSFgsYlnceMjXd2WSKU9CkTdXKtkYsRUZD+k8QzCcFfopdlG1LTVRSw==}
+  '@metaplex-foundation/kinobi@1.0.0-alpha.5':
+    resolution: {integrity: sha512-tvadgLx4zNNBCLfw1NTpX1V4wWQQh/yA5f0vFpuAOFrzXjvDEwtP3awtdUwUdzwBeTjiPVTa5Q8XiH+Wn2oJrQ==}
 
   '@metaplex-foundation/rustbin@0.3.5':
     resolution: {integrity: sha512-m0wkRBEQB/8krwMwKBvFugufZtYwMXiGHud2cTDAv+aGXK4M90y0Hx67/wpu+AqqoQfdV8VM9YezUOHKD+Z5kA==}
@@ -252,10 +252,6 @@ packages:
 
   call-bind@1.0.9:
     resolution: {integrity: sha512-a/hy+pNsFUTR+Iz8TCJvXudKVLAnz/DyeSUo10I5yvFDQJBFU2s9uqQpoSrJlroHUKoKqzg+epxyP9lqFdzfBQ==}
-    engines: {node: '>= 0.4'}
-
-  call-bound@1.0.4:
-    resolution: {integrity: sha512-+ys997U96po4Kx/ABpBCqhA9EuxJaQWDQg7295H4hBphv3IZg0boBKuwYpt4YXp6MZ5AmZQnU/tyMTlRpaSejg==}
     engines: {node: '>= 0.4'}
 
   chalk@4.1.2:
@@ -530,8 +526,8 @@ packages:
   js-sha3@0.8.0:
     resolution: {integrity: sha512-gF1cRrHhIzNfToc802P800N8PpXS+evLLXfsVpowqmAFR9uwbi89WvXg2QspOmXL8QL86J4T1EpFu+yUkwJY3Q==}
 
-  json-stable-stringify@1.3.0:
-    resolution: {integrity: sha512-qtYiSSFlwot9XHtF9bD9c7rwKjr+RecWT//ZnPvSmEjpV5mmPOCN4j8UjY5hbjNkOwZ/jQv3J6R1/pL7RwgMsg==}
+  json-stable-stringify@1.1.1:
+    resolution: {integrity: sha512-SU/971Kt5qVQfJpyDveVhQ/vya+5hvrjClFOcr8c0Fq5aODJjMwutrOfCU+eCnVD5gpx1Q3fEqkyom77zH1iIg==}
     engines: {node: '>= 0.4'}
 
   json-stringify-safe@5.0.1:
@@ -646,8 +642,8 @@ packages:
     resolution: {integrity: sha512-2QkdCeuGLfu1jDxiiwOnafCgVFsMQXMEWvUVx9SMNq+4k6HDKiyA9YVRhmoMvJGg5ZhqEjblpj+1wdWMqn7scw==}
     engines: {node: '>=8'}
 
-  prettier@3.9.7:
-    resolution: {integrity: sha512-T3mF5P7HFzZVLDQuCUNtJj6WK1pcpLMweMNUVwGb01bLNkH9AkKxtZvmInw8K6bnn2O3d6/5RHl6zSHiBAD0Og==}
+  prettier@3.2.5:
+    resolution: {integrity: sha512-3/GWa9aOC0YeD7LUfvOG2NiDyhOWRvt1k+rcKhOuYnMY24iiCphgneUfJDyFXd6rZCAnuLBv6UeAULtrhT/F4A==}
     engines: {node: '>=14'}
     hasBin: true
 
@@ -925,15 +921,15 @@ snapshots:
 
   '@metaplex-foundation/cusper@0.0.2': {}
 
-  '@metaplex-foundation/kinobi@1.0.0-alpha.2(fastestsmallesttextencoderdecoder@1.0.22)':
+  '@metaplex-foundation/kinobi@1.0.0-alpha.5(fastestsmallesttextencoderdecoder@1.0.22)':
     dependencies:
       '@noble/hashes': 1.8.0
-      '@prettier/sync': 0.5.5(prettier@3.9.7)
+      '@prettier/sync': 0.5.5(prettier@3.2.5)
       '@solana/codecs-strings': 2.0.0-preview.1(fastestsmallesttextencoderdecoder@1.0.22)
       chalk: 4.1.2
-      json-stable-stringify: 1.3.0
+      json-stable-stringify: 1.1.1
       nunjucks: 3.2.4
-      prettier: 3.9.7
+      prettier: 3.2.5
     transitivePeerDependencies:
       - chokidar
       - fastestsmallesttextencoderdecoder
@@ -961,10 +957,10 @@ snapshots:
 
   '@noble/hashes@1.8.0': {}
 
-  '@prettier/sync@0.5.5(prettier@3.9.7)':
+  '@prettier/sync@0.5.5(prettier@3.2.5)':
     dependencies:
       make-synchronized: 0.4.2
-      prettier: 3.9.7
+      prettier: 3.2.5
 
   '@sideway/address@4.1.5':
     dependencies:
@@ -1194,11 +1190,6 @@ snapshots:
       es-define-property: 1.0.1
       get-intrinsic: 1.3.0
       set-function-length: 1.2.2
-
-  call-bound@1.0.4:
-    dependencies:
-      call-bind-apply-helpers: 1.0.2
-      get-intrinsic: 1.3.0
 
   chalk@4.1.2:
     dependencies:
@@ -1481,10 +1472,9 @@ snapshots:
 
   js-sha3@0.8.0: {}
 
-  json-stable-stringify@1.3.0:
+  json-stable-stringify@1.1.1:
     dependencies:
       call-bind: 1.0.9
-      call-bound: 1.0.4
       isarray: 2.0.5
       jsonify: 0.0.1
       object-keys: 1.1.1
@@ -1563,7 +1553,7 @@ snapshots:
       netstats: 0.0.6
       selective-whitespace: 1.0.4
 
-  prettier@3.9.7: {}
+  prettier@3.2.5: {}
 
   ps-tree@1.2.0:
     dependencies:
