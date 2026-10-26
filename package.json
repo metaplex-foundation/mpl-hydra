@@ -26,7 +26,10 @@
     "typescript": "5.7.3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": []
+    "onlyBuiltDependencies": [],
+    "overrides": {
+      "follow-redirects": "^1.16.1"
+    }
   },
   "packageManager": "pnpm@10.33.2"
 }
