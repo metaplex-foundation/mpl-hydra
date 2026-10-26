@@ -19,7 +19,7 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@metaplex-foundation/kinobi": "1.0.0-alpha.2",
+    "@metaplex-foundation/kinobi": "1.0.0-alpha.5",
     "@metaplex-foundation/shank-js": "^0.1.7",
     "@metaplex-foundation/amman": "^0.12.1",
     "husky": "^9.0.11",
